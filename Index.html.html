@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="RollCalc" />
+<title>Roll Calculator</title>
+<style>
+:root{
+  --bg:#ffffff;
+  --text:#111114;
+  --muted:#777982;
+  --line:#e2e3e8;
+  --field:#f7f8fa;
+  --field-border:#d6d8de;
+  --black:#151519;
+  --card:#ffffff;
+  --soft:#f8f8f9;
+  --danger:#df2f2f;
+  --success:#118a32;
+  --shadow:0 10px 30px rgba(20,20,25,.06);
+}
+body.dark{
+  --bg:#080b10;
+  --text:#f7f8fb;
+  --muted:#9aa1ad;
+  --line:#2a313b;
+  --field:#10151c;
+  --field-border:#333b46;
+  --black:#f5f6f8;
+  --card:#141a22;
+  --soft:#0f151c;
+  --danger:#ff6b6b;
+  --success:#63d471;
+  --shadow:0 14px 34px rgba(0,0,0,.24);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  padding:18px 10px 32px;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+.wrap{
+  width:100%;
+  max-width:none;
+  margin:0;
+}
+header{
+  padding:22px 0 22px;
+}
+.header-row{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:8px;
+}
+.header-row > div:first-child{
+  min-width:0;
+  flex:1;
+}
+.header-row p{
+  margin:10px 0 0;
+  font-size:15px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:clip;
+  letter-spacing:-.02em;
+}
+.header-icons{
+  display:flex;
+  gap:6px;
+  padding-top:2px;
+  flex-shrink:0;
+}
+.icon-btn{
+  width:34px;
+  height:34px;
+  min-width:34px;
+  margin:0;
+  padding:0;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:var(--soft);
+  color:var(--text);
+  font-size:15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  box-shadow:none;
+}
+.settings-card{
+  margin-top:-4px;
+}
+h1{
+  margin:0;
+  font-size:31px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:-.055em;
+}
+header p{
+  margin:14px 0 0;
+  color:#7a7d86;
+  font-size:17px;
+  line-height:1.25;
+}
+.top-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:18px;
+}
+.action-btn,
+button{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--soft);
+  color:var(--text);
+  padding:16px 12px;
+  font-size:17px;
+  font-weight:800;
+  text-align:center;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.primary{
+  background:var(--black);
+  color:var(--bg);
+  border-color:var(--black);
+}
+.danger-outline{
+  background:var(--card);
+  color:var(--danger);
+  border-color:#ffbfc0;
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:18px;
+  margin:14px 0;
+  box-shadow:var(--shadow);
+}
+.scan-card{
+  padding:14px;
+  margin-top:10px;
+}
+.scan-title{
+  font-size:18px;
+  letter-spacing:-.02em;
+  margin-bottom:8px;
+}
+.scan-card .top-actions{
+  margin-top:14px;
+  margin-bottom:0;
+}
+.scan-card button{
+  margin-top:12px;
+}
+h2{
+  margin:0;
+  font-size:24px;
+  line-height:1.1;
+  font-weight:900;
+  letter-spacing:-.035em;
+}
+.card-sub{
+  margin:12px 0 2px;
+  color:#7b7d86;
+  font-size:17px;
+  line-height:1.35;
+}
+.formula-title{
+  margin:10px 0 18px;
+  color:#7b7d86;
+  font-size:17px;
+  line-height:1.25;
+}
+label{
+  display:block;
+  margin:18px 0 8px;
+  font-size:16px;
+  font-weight:850;
+  color:var(--text);
+}
+input{
+  width:100%;
+  border:1px solid var(--field-border);
+  border-radius:13px;
+  background:var(--field);
+  color:var(--text);
+  padding:16px 14px;
+  font-size:22px;
+  outline:none;
+  box-shadow:inset 0 1px 1px rgba(0,0,0,.02);
+}
+input::placeholder{color:#a0a3ac}
+input:focus{
+  border-color:#1a1a1d;
+  background:var(--card);
+  box-shadow:0 0 0 3px rgba(0,0,0,.06);
+}
+input[type=file]{
+  display:none;
+}
+.button-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:12px;
+}
+.answer-card{
+  margin-top:14px;
+  padding:16px;
+  border-radius:16px;
+  background:var(--soft);
+  border:1px solid var(--line);
+}
+.answer-label{
+  color:#8a8d96;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+.answer{
+  font-size:38px;
+  font-weight:950;
+  letter-spacing:-.05em;
+  line-height:1;
+  color:var(--text);
+  word-break:break-word;
+}
+.answer-formula{
+  margin-top:12px;
+  color:#7b7d86;
+  font-size:15px;
+  line-height:1.3;
+}
+.error{
+  display:none;
+  color:var(--danger);
+  font-size:14px;
+  line-height:1.35;
+  margin-top:10px;
+}
+.success{
+  display:none;
+  color:var(--success);
+  font-size:14px;
+  line-height:1.35;
+  margin-top:10px;
+}
+.segmented{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:7px;
+  margin-top:16px;
+}
+.segmented button{
+  padding:14px 8px;
+  min-height:54px;
+  background:var(--card);
+  border:1px solid var(--line);
+  color:#3e4048;
+  font-size:15px;
+  line-height:1.05;
+  border-radius:12px;
+}
+.segmented button.active{
+  background:var(--black);
+  color:var(--bg);
+  border-color:var(--black);
+}
+.table-wrap{
+  margin-top:14px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  overflow:hidden;
+  background:var(--card);
+}
+table{
+  width:100%;
+  min-width:0;
+  table-layout:fixed;
+  border-collapse:collapse;
+}
+th,td{
+  padding:11px 5px;
+  border-bottom:1px solid var(--line);
+  text-align:right;
+  white-space:nowrap;
+  font-size:13px;
+}
+th:first-child,td:first-child{text-align:left;width:18%}
+th:nth-child(2),td:nth-child(2){width:39%}
+th:nth-child(3),td:nth-child(3){width:43%}
+th{
+  color:#777982;
+  font-size:11px;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  background:var(--soft);
+}
+tr:last-child td{border-bottom:0}
+.empty{
+  text-align:center!important;
+  color:#878a93;
+  padding:18px;
+}
+.labels-cell{
+  color:#777982;
+  font-style:italic;
+  font-size:13px;
+}
+.scan-preview{
+  display:none;
+}
+.scan-preview code{
+  display:block;
+  white-space:pre-wrap;
+  background:var(--soft);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px;
+  margin-top:8px;
+  color:var(--text);
+}
+.hidden{display:none!important}
+body.dark input::placeholder{color:#69717e}
+body.dark .danger-outline{background:var(--card)}
+body.dark .action-btn{background:var(--soft)}
+
+.ecci-radius-row{
+  display:grid;
+  grid-template-columns:1fr 100px;
+  gap:10px;
+  align-items:center;
+}
+.ecci-radius-row input[type="range"]{
+  padding:0;
+  accent-color:var(--black);
+}
+body.dark .ecci-radius-row input[type="range"]{
+  accent-color:#63d471;
+}
+.ecci-display{
+  margin-top:16px;
+  padding:18px;
+  border-radius:16px;
+  background:#111114;
+  border:1px solid #111114;
+  text-align:center;
+}
+.ecci-label{
+  color:#9ca3af;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  margin-bottom:9px;
+}
+.ecci-number{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+  font-size:52px;
+  font-weight:950;
+  line-height:1;
+  color:#63d471;
+  letter-spacing:-.05em;
+  text-shadow:0 0 18px rgba(99,212,113,.35);
+  word-break:break-word;
+}
+.ecci-breakdown{
+  margin-top:14px;
+  padding:14px;
+  border-radius:14px;
+  background:var(--soft);
+  border:1px solid var(--line);
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.7;
+}
+.ecci-breakdown strong{color:var(--text)}
+body.dark .ecci-display{
+  background:#05070a;
+  border-color:#2a313b;
+}
+
+
+.clear-mini{
+  margin-top:10px;
+  background:var(--card);
+  color:var(--danger);
+  border-color:#ffbfc0;
+}
+.section-clear{
+  margin-top:10px;
+  background:var(--card);
+  color:var(--danger);
+  border-color:#ffbfc0;
+}
+
+@media(max-width:480px){
+  .wrap{width:100%;max-width:none}
+  .card{margin-left:0;margin-right:0}
+  .top-actions{gap:10px}
+}
+@media(max-width:390px){
+  body{padding-left:12px;padding-right:12px}
+  h1{font-size:29px}
+  .header-row p{font-size:14px}
+  .icon-btn{width:32px;height:32px;min-width:32px;font-size:14px}
+  header p{font-size:16px}
+  .segmented{gap:6px}
+  .segmented button{font-size:14px;padding:13px 5px}
+  .answer{font-size:34px}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="header-row">
+      <div>
+        <h1>Roll Calculator</h1>
+        <p>Impressions • Presscounts • Finished roll</p>
+      </div>
+      <div class="header-icons">
+        <button id="themeToggleBtn" class="icon-btn" aria-label="Toggle theme" type="button">🌙</button>
+        <button id="settingsToggleBtn" class="icon-btn" aria-label="Settings" type="button">⚙️</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="card scan-card">
+    <h2 class="scan-title">1. Label / Paper Spec Scan</h2>
+    <p class="card-sub">Scan the material label first. This fills Material Thickness / Caliper and keeps it saved.</p>
+    <div class="top-actions">
+      <label class="action-btn" for="labelCameraInput">Take Label Photo</label>
+      <label class="action-btn" for="labelUploadInput">Upload Label</label>
+      <input id="labelCameraInput" type="file" accept="image/*" capture="environment">
+      <input id="labelUploadInput" type="file" accept="image/*">
+    </div>
+    <button id="labelScanBtn" class="primary">Scan Label / Paper Spec</button>
+    <button id="clearLabelScanBtn" class="clear-mini">Clear Label Scan</button>
+    <div id="labelScanError" class="error"></div>
+    <div id="labelScanSuccess" class="success">No label photo selected.</div>
+  </section>
+
+  <section class="card scan-card">
+    <h2 class="scan-title">2. Printing Docket Scan</h2>
+    <p class="card-sub">Scan the docket after the label scan. This fills Repeat, Across, Count, and Labels.</p>
+    <div class="top-actions">
+      <label class="action-btn" for="docketCameraInput">Take Docket Photo</label>
+      <label class="action-btn" for="docketUploadInput">Upload Docket</label>
+      <input id="docketCameraInput" type="file" accept="image/*" capture="environment">
+      <input id="docketUploadInput" type="file" accept="image/*">
+    </div>
+    <button id="docketScanBtn" class="primary">Scan Printing Docket</button>
+    <button id="clearDocketScanBtn" class="clear-mini">Clear Docket Scan</button>
+    <div id="docketScanError" class="error"></div>
+    <div id="docketScanSuccess" class="success">No docket photo selected.</div>
+  </section>
+
+
+  <section class="card settings-card" id="settingsPanel">
+    <h2>API Key</h2>
+    <label for="apiKey">Gemini API Key</label>
+    <input id="apiKey" type="password" placeholder="Paste Gemini API key" autocomplete="off">
+    <div class="button-row">
+      <button id="saveKeyBtn" class="primary">Save Key</button>
+      <button id="clearKeyBtn" class="danger-outline">Clear Key</button>
+    </div>
+    <div id="keySuccess" class="success"></div>
+    <p class="card-sub">Model: gemini-2.5-flash, fallback: gemini-2.5-flash-lite.</p>
+    <p class="card-sub">Photo scan is optional. Manual calculator works without the key.</p>
+  </section>
+
+  <section class="card">
+    <h2 style="font-size:18px;letter-spacing:-.02em;">Decimal Display</h2>
+    <div class="segmented" id="decimalControls">
+      <button data-mode="exact" class="active">Exact</button>
+      <button data-mode="up">Round Up</button>
+      <button data-mode="down">Round<br>Down</button>
+      <button data-mode="nearest">Nearest</button>
+    </div>
+  </section>
+
+
+  <section class="card" id="ecciCard">
+    <h2>ECCI Counter</h2>
+    <div class="formula-title">Target counter setting from paper thickness, repeat, across, and roll radius</div>
+
+    <label for="manualSpecSearch">Manual Spec Number Lookup</label>
+    <input id="manualSpecSearch" placeholder="Example: 54320" inputmode="numeric">
+    <button id="lookupSpecBtn" class="section-clear">Lookup Thickness by Spec</button>
+    <div class="answer-formula" id="thicknessSourceOut">Thickness source: —</div>
+
+    <label for="ecciThickness">Material Thickness / Caliper</label>
+    <input id="ecciThickness" placeholder="0.00566" inputmode="decimal">
+
+    <label for="ecciRepeat">Repeat Length</label>
+    <input id="ecciRepeat" placeholder="1.375" inputmode="decimal">
+
+    <label for="ecciAcross">Labels Across</label>
+    <input id="ecciAcross" placeholder="2" inputmode="numeric">
+
+    <label for="ecciRadius">Target Radius From Core Center</label>
+    <div class="ecci-radius-row">
+      <input id="ecciRadiusSlider" type="range" min="3" max="16" step="0.25" value="11.5">
+      <input id="ecciRadius" placeholder="11.5" value="11.5" inputmode="decimal">
+    </div>
+
+    <button id="ecciCalculateBtn" class="primary">Calculate ECCI Counter</button>
+    <button id="clearEcciBtn" class="section-clear">Clear ECCI Values</button>
+    <div id="ecciError" class="error"></div>
+
+    <div class="ecci-display">
+      <div class="ecci-label">ECCI Counter Preset</div>
+      <div id="ecciCounterOut" class="ecci-number">—</div>
+    </div>
+
+    <div class="ecci-breakdown">
+      <div>Total Diameter: <strong id="ecciDiameterOut">—</strong></div>
+      <div>Total Web Length: <strong id="ecciLengthOut">—</strong></div>
+      <div>Total Impressions: <strong id="ecciImpressionsOut">—</strong></div>
+      <div>Total Labels: <strong id="ecciLabelsOut">—</strong></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Impressions</h2>
+    <div class="formula-title">Labels × Repeat ÷ Across ÷ 10</div>
+    <label>Labels</label>
+    <input id="impLabels" placeholder="320000" inputmode="decimal">
+    <label>Repeat</label>
+    <input id="impRepeat" placeholder="2.125" inputmode="decimal">
+    <label>Across</label>
+    <input id="impAcross" placeholder="2" inputmode="decimal">
+    <button id="impBtn" class="primary">Calculate Impressions</button>
+    <button id="clearImpBtn" class="section-clear">Clear Impressions</button>
+    <div id="impError" class="error"></div>
+    <div class="answer-card">
+      <div class="answer-label">Impressions Answer</div>
+      <div id="impAnswer" class="answer">—</div>
+      <div class="answer-formula">Labels × Repeat ÷ Across ÷ 10</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Press Counts</h2>
+    <div class="formula-title">Count × 10 × Across ÷ Repeat</div>
+    <label>Count</label>
+    <input id="pcCount" placeholder="8500" inputmode="decimal">
+    <label>Repeat</label>
+    <input id="pcRepeat" placeholder="2.125" inputmode="decimal">
+    <label>Across</label>
+    <input id="pcAcross" placeholder="2" inputmode="decimal">
+    <button id="pcBtn" class="primary">Calculate Press Counts</button>
+    <button id="clearPcBtn" class="section-clear">Clear Press Counts</button>
+    <div id="pcError" class="error"></div>
+    <div class="answer-card">
+      <div class="answer-label">Press Counts Answer</div>
+      <div id="pcAnswer" class="answer">—</div>
+      <div class="answer-formula">Count × 10 × Across ÷ Repeat</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Finished Roll</h2>
+    <div class="formula-title">Labels = Finished Roll × Across × Level</div>
+    <label>Finished Roll</label>
+    <input id="frRoll" placeholder="1000" inputmode="decimal">
+    <label>Across</label>
+    <input id="frAcross" placeholder="2" inputmode="decimal">
+    <label>Repeat</label>
+    <input id="frRepeat" placeholder="2.125" inputmode="decimal">
+    <label>Levels</label>
+    <input id="frLevels" value="50" placeholder="50" inputmode="numeric">
+    <button id="frBtn" class="primary">Generate Finished Roll Table</button>
+    <button id="clearFrBtn" class="section-clear">Clear Finished Roll</button>
+    <div id="frError" class="error"></div>
+
+    <div class="answer-card">
+      <div class="answer-label">Increase Per Level</div>
+      <div id="frBase" class="answer">—</div>
+      <div class="answer-formula">Finished Roll × Across</div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Level</th><th>Labels</th><th>Press Count</th></tr>
+        </thead>
+        <tbody id="frTable">
+          <tr><td colspan="3" class="empty">Enter values and tap Generate Table.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
+const GEMINI_MODEL = GEMINI_MODELS[0];
+function getGeminiEndpoint(model){
+  return "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent";
+}
+const GEMINI_ENDPOINT = getGeminiEndpoint(GEMINI_MODEL);
+let labelPhotoFile = null;
+let docketPhotoFile = null;
+  lastDocketMaterialScanData = null;
+  lastAISpecLookupData = null;
+let currentDecimalMode = "exact";
+
+const DOCKET_SCAN_MODEL = "gemini-2.5-flash-lite";
+const SPEC_LOOKUP_MODEL = "gemini-2.5-flash-lite";
+let lastDocketMaterialScanData = null;
+let lastAISpecLookupData = null;
+
+const docketFieldMap = {
+  labels: ["impLabels"],
+  count: ["pcCount"],
+  repeat: ["impRepeat", "pcRepeat", "frRepeat", "ecciRepeat"],
+  across: ["impAcross", "pcAcross", "frAcross", "ecciAcross"],
+  finishedRoll: ["frRoll"]
+};
+
+const labelFieldMap = {
+  thickness: ["ecciThickness"],
+  caliper: ["ecciThickness"],
+  materialThickness: ["ecciThickness"]
+};
+
+function cleanNumber(id){
+  const raw = String(document.getElementById(id).value || "").replace(/,/g,"").trim();
+  if(raw === "") return NaN;
+  return Number(raw);
+}
+function applyDisplayMode(n){
+  if(!Number.isFinite(n)) return n;
+  if(currentDecimalMode === "up") return Math.ceil(n);
+  if(currentDecimalMode === "down") return Math.floor(n);
+  if(currentDecimalMode === "nearest") return Math.round(n);
+  return n;
+}
+function formatNumber(n){
+  if(!Number.isFinite(n)) return "—";
+  const value = applyDisplayMode(n);
+  const max = currentDecimalMode === "exact" ? 4 : 0;
+  return new Intl.NumberFormat("en-US",{maximumFractionDigits:max}).format(value);
+}
+function showError(id,msg){
+  const el=document.getElementById(id);
+  el.textContent=msg;
+  el.style.display=msg?"block":"none";
+}
+function showSuccess(id,msg){
+  const el=document.getElementById(id);
+  el.textContent=msg;
+  el.style.display=msg?"block":"none";
+}
+function calculateImpressions(){
+  const labels=cleanNumber("impLabels"), repeat=cleanNumber("impRepeat"), across=cleanNumber("impAcross");
+  showError("impError","");
+  if(!Number.isFinite(labels)||!Number.isFinite(repeat)||!Number.isFinite(across)||across===0){
+    document.getElementById("impAnswer").textContent="—";
+    showError("impError","Enter Labels, Repeat, and Across. Across cannot be 0.");
+    return;
+  }
+  document.getElementById("impAnswer").textContent=formatNumber(labels*repeat/across/10);
+}
+function calculatePressCounts(){
+  const count=cleanNumber("pcCount"), repeat=cleanNumber("pcRepeat"), across=cleanNumber("pcAcross");
+  showError("pcError","");
+  if(!Number.isFinite(count)||!Number.isFinite(repeat)||repeat===0||!Number.isFinite(across)){
+    document.getElementById("pcAnswer").textContent="—";
+    showError("pcError","Enter Count, Repeat, and Across. Repeat cannot be 0.");
+    return;
+  }
+  document.getElementById("pcAnswer").textContent=formatNumber(count*10*across/repeat);
+}
+function calculateFinishedRoll(){
+  const roll=cleanNumber("frRoll"), across=cleanNumber("frAcross"), repeat=cleanNumber("frRepeat"), levels=Math.floor(cleanNumber("frLevels"));
+  const table=document.getElementById("frTable");
+  showError("frError","");
+  if(!Number.isFinite(roll)||!Number.isFinite(across)||!Number.isFinite(repeat)||repeat===0||!Number.isFinite(levels)||levels<1){
+    document.getElementById("frBase").textContent="—";
+    table.innerHTML='<tr><td colspan="3" class="empty">Enter values and tap Generate Table.</td></tr>';
+    showError("frError","Enter Finished Roll, Across, Repeat, and Levels. Repeat cannot be 0. Levels must be 1 or higher.");
+    return;
+  }
+  const base=roll*across;
+  document.getElementById("frBase").textContent=formatNumber(base);
+  let rows="";
+  for(let level=1; level<=levels; level++){
+    const labels=base*level;
+    const count=labels*repeat/across/10;
+    rows += `<tr><td>${level}</td><td class="labels-cell">${formatNumber(labels)}</td><td>${formatNumber(count)}</td></tr>`;
+  }
+  table.innerHTML=rows;
+}
+function ensureDefaultLevels(){
+  const levelsInput = document.getElementById("frLevels");
+  if(levelsInput && String(levelsInput.value || "").trim() === ""){
+    levelsInput.value = "50";
+  }
+}
+
+const ECCI_CORE_OUTER_DIAMETER = 3.0;
+const ECCI_COUNTER_MULTIPLIER = 15;
+const ECCI_MECHANICAL_ADJUSTMENT_FACTOR = 3.702;
+const ECCI_COUNTER_GEAR_RATE_DIVISOR = 2;
+
+function calculateECCICounter(t, L, A, targetRadius){
+  const thickness = Number(String(t).replace(/,/g,""));
+  const repeatLength = Number(String(L).replace(/,/g,""));
+  const labelsAcross = Number(String(A).replace(/,/g,""));
+  const radius = Number(String(targetRadius).replace(/,/g,""));
+
+  if(!Number.isFinite(thickness) || thickness <= 0){
+    throw new Error("Material thickness must be greater than 0.");
+  }
+  if(!Number.isFinite(repeatLength) || repeatLength <= 0){
+    throw new Error("Repeat length must be greater than 0.");
+  }
+  if(!Number.isFinite(labelsAcross) || labelsAcross <= 0){
+    throw new Error("Labels Across must be greater than 0.");
+  }
+  if(!Number.isFinite(radius) || radius <= 0){
+    throw new Error("Target radius must be greater than 0.");
+  }
+
+  const D = radius * 2;
+  const d = ECCI_CORE_OUTER_DIAMETER;
+  const C = ECCI_COUNTER_MULTIPLIER;
+
+  const totalLength = (D ** 2 - d ** 2) / (4 * thickness);
+  const totalImpressions = totalLength / repeatLength;
+  const totalLabels = totalImpressions * labelsAcross;
+
+  const rawCounterReading = totalLabels / C;
+  const calibratedCounterReading =
+    rawCounterReading * ECCI_MECHANICAL_ADJUSTMENT_FACTOR;
+
+  const pressFloorCounterReading =
+    calibratedCounterReading / ECCI_COUNTER_GEAR_RATE_DIVISOR;
+
+  return {
+    counterReading: Math.round(pressFloorCounterReading),
+    targetDiameter: D,
+    totalLength,
+    totalImpressions,
+    totalLabels,
+    rawCounterReading,
+    calibratedCounterReading,
+    pressFloorCounterReading,
+    adjustmentFactor: ECCI_MECHANICAL_ADJUSTMENT_FACTOR,
+    gearRateDivisor: ECCI_COUNTER_GEAR_RATE_DIVISOR
+  };
+}
+
+
+function normalizeSpecCode(value){
+  return String(value || "").trim();
+}
+
+function resolveFinalMaterialThickness(){
+  const manualThickness = normalizeNumber(document.getElementById("ecciThickness")?.value);
+
+  if(manualThickness !== null && manualThickness > 0){
+    return { thickness: manualThickness, source: "Manual thickness override" };
+  }
+
+  const aiLookupThickness = normalizeNumber(lastAISpecLookupData?.materialThickness ?? lastAISpecLookupData?.material_thickness);
+  if(aiLookupThickness !== null && aiLookupThickness > 0){
+    return {
+      thickness: aiLookupThickness,
+      source: "AI spec lookup: " + (lastAISpecLookupData?.materialSpecCode || lastAISpecLookupData?.extracted_spec || lastAISpecLookupData?.spec || "material")
+    };
+  }
+
+  const docketThickness = normalizeNumber(lastDocketMaterialScanData?.materialThickness ?? lastDocketMaterialScanData?.aiEstimatedThickness);
+  if(docketThickness !== null && docketThickness > 0){
+    return {
+      thickness: docketThickness,
+      source: "Docket AI material thickness: " + (lastDocketMaterialScanData?.materialSpecCode || lastDocketMaterialScanData?.extractedPaperSpec || "material")
+    };
+  }
+
+  return { thickness: null, source: "No thickness available" };
+}
+
+async function lookupMaterialSpecWithAI(){
+  const apiKey = document.getElementById("apiKey").value.trim();
+  const specText = document.getElementById("manualSpecSearch").value.replace(/[^0-9A-Za-z]/g,"").trim();
+  const sourceOut = document.getElementById("thicknessSourceOut");
+
+  if(!apiKey){
+    if(sourceOut) sourceOut.textContent = "Thickness source: Missing Gemini API key";
+    throw new Error("Missing Gemini API key. Tap ⚙️ and paste your Google AI Studio API key first.");
+  }
+
+  if(!specText){
+    if(sourceOut) sourceOut.textContent = "Thickness source: Enter a spec number first";
+    throw new Error("Enter a material spec number first.");
+  }
+
+  const prompt = `You are an industrial label-material engineering lookup engine.
+
+Given a manufacturer material spec number typed by a printing press operator, identify the nominal total construction caliper/thickness in inches.
+
+Return JSON only. No markdown. No explanation.
+
+Schema:
+{
+  "materialSpecCode": string | null,
+  "manufacturer": string | null,
+  "productName": string | null,
+  "materialThickness": number | null,
+  "thicknessUnit": "inches",
+  "confidenceScore": number
+}
+
+Rules:
+- materialThickness must be total construction caliper in inches.
+- Total construction = facestock + adhesive + liner.
+- Use your engineering/material knowledge when the spec code is identifiable.
+- Do not confuse roll weight, carton weight, or basis weight with caliper.
+- 215 LB is weight, not thickness.
+- 40# or 50# is basis weight, not material thickness.
+- If the exact thickness cannot be confidently identified, return materialThickness: null and confidenceScore below 0.80.
+- Reference: if the input clearly identifies spec 54320 from "DT 300HD FSC AT2550 40 7.875\\" 54320", return materialThickness: 0.00560.
+
+Operator input:
+${specText}`;
+
+  const endpoint = getGeminiEndpoint(SPEC_LOOKUP_MODEL);
+  const requestBody = {
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: prompt }]
+      }
+    ],
+    generationConfig: { temperature: 0 }
+  };
+
+  const response = await fetch(endpoint + "?key=" + encodeURIComponent(apiKey), {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(requestBody)
+  });
+
+  const body = await response.json().catch(()=>null);
+  if(!response.ok){
+    throw new Error(body?.error?.message || "AI spec lookup failed.");
+  }
+
+  const text = extractText(body);
+  const parsed = parseGeminiJson(text);
+  const confidence = normalizeNumber(parsed.confidenceScore ?? parsed.confidence_score);
+  const thickness = normalizeNumber(parsed.materialThickness ?? parsed.material_thickness ?? parsed.thickness);
+
+  lastAISpecLookupData = parsed;
+
+  if(confidence !== null && confidence < 0.80){
+    if(sourceOut) sourceOut.textContent = "Thickness source: AI lookup confidence too low";
+    throw new Error("AI could not confidently identify this material thickness.");
+  }
+
+  if(thickness === null || thickness <= 0){
+    if(sourceOut) sourceOut.textContent = "Thickness source: AI lookup found no thickness";
+    throw new Error("AI lookup did not return a usable thickness.");
+  }
+
+  document.getElementById("ecciThickness").value = thickness;
+  localStorage.setItem("ROLL_CALC_MATERIAL_THICKNESS", String(thickness));
+
+  if(sourceOut){
+    sourceOut.textContent = "Thickness source: AI spec lookup: " + (parsed.materialSpecCode || parsed.extracted_spec || parsed.productName || specText);
+  }
+
+  calculateAndRenderECCI();
+  return parsed;
+}
+
+function applyDocketMaterialScanData(data){
+  lastDocketMaterialScanData = data || null;
+
+  if(data?.repeatLength){
+    ["ecciRepeat","impRepeat","pcRepeat","frRepeat"].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.value = data.repeatLength;
+    });
+  }
+
+  if(data?.labelsAcross){
+    ["ecciAcross","impAcross","pcAcross","frAcross"].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.value = data.labelsAcross;
+    });
+  }
+
+  if(data?.materialSpecCode || data?.extractedPaperSpec){
+    const specInput = document.getElementById("manualSpecSearch");
+    if(specInput && !specInput.value){
+      specInput.value = data.materialSpecCode || data.extractedPaperSpec;
+    }
+  }
+
+  if(data?.materialThickness && !document.getElementById("ecciThickness").value){
+    document.getElementById("ecciThickness").value = data.materialThickness;
+  }
+
+  const sourceOut = document.getElementById("thicknessSourceOut");
+  const resolved = resolveFinalMaterialThickness();
+  if(sourceOut){
+    sourceOut.textContent = "Thickness source: " + resolved.source;
+  }
+
+  recalculateAll();
+}
+
+function calculateAndRenderECCI(){
+  const errorEl = document.getElementById("ecciError");
+  if(!errorEl) return;
+
+  try{
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+
+    const resolvedThickness = resolveFinalMaterialThickness();
+    const sourceOut = document.getElementById("thicknessSourceOut");
+    if(sourceOut){
+      sourceOut.textContent = "Thickness source: " + resolvedThickness.source;
+    }
+
+    if(!resolvedThickness.thickness){
+      throw new Error("Material thickness is required.");
+    }
+
+    const result = calculateECCICounter(
+      resolvedThickness.thickness,
+      document.getElementById("ecciRepeat").value,
+      document.getElementById("ecciAcross").value,
+      document.getElementById("ecciRadius").value
+    );
+
+    document.getElementById("ecciCounterOut").textContent = new Intl.NumberFormat("en-US").format(result.counterReading);
+    document.getElementById("ecciDiameterOut").textContent = new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(result.targetDiameter) + " in";
+    document.getElementById("ecciLengthOut").textContent = new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(result.totalLength) + " in";
+    document.getElementById("ecciImpressionsOut").textContent = new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(result.totalImpressions);
+    document.getElementById("ecciLabelsOut").textContent = new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(result.totalLabels);
+  }catch(err){
+    document.getElementById("ecciCounterOut").textContent = "—";
+    document.getElementById("ecciDiameterOut").textContent = "—";
+    document.getElementById("ecciLengthOut").textContent = "—";
+    document.getElementById("ecciImpressionsOut").textContent = "—";
+    document.getElementById("ecciLabelsOut").textContent = "—";
+    errorEl.textContent = err.message;
+    errorEl.style.display = "block";
+  }
+}
+
+function syncECCIRadiusFromSlider(){
+  const slider = document.getElementById("ecciRadiusSlider");
+  const input = document.getElementById("ecciRadius");
+  input.value = slider.value;
+  calculateAndRenderECCI();
+}
+
+function syncECCIRadiusFromInput(){
+  const slider = document.getElementById("ecciRadiusSlider");
+  const input = document.getElementById("ecciRadius");
+  slider.value = input.value || "11.5";
+  calculateAndRenderECCI();
+}
+
+function recalculateAll(){
+  ensureDefaultLevels();
+  calculateAndRenderECCI();
+  calculateImpressions();
+  calculatePressCounts();
+  calculateFinishedRoll();
+  calculateAndRenderECCI();
+}
+
+function applySavedTheme(){
+  const savedTheme = localStorage.getItem("ROLL_CALC_THEME") || "light";
+  const isDark = savedTheme === "dark";
+  document.body.classList.toggle("dark", isDark);
+  const btn = document.getElementById("themeToggleBtn");
+  if(btn) btn.textContent = isDark ? "☀️" : "🌙";
+}
+
+function toggleTheme(){
+  const isDark = !document.body.classList.contains("dark");
+  document.body.classList.toggle("dark", isDark);
+  localStorage.setItem("ROLL_CALC_THEME", isDark ? "dark" : "light");
+  const btn = document.getElementById("themeToggleBtn");
+  if(btn) btn.textContent = isDark ? "☀️" : "🌙";
+}
+
+function toggleSettings(){
+  const panel = document.getElementById("settingsPanel");
+  if(panel) panel.classList.toggle("hidden");
+}
+
+function saveKey(){
+  const key=document.getElementById("apiKey").value.trim();
+  if(!key){showSuccess("keySuccess","No key entered.");return;}
+  localStorage.setItem("ROLL_CALC_GEMINI_API_KEY",key);
+  showSuccess("keySuccess","API key saved.");
+}
+function clearKey(){
+  localStorage.removeItem("ROLL_CALC_GEMINI_API_KEY");
+  document.getElementById("apiKey").value="";
+  showSuccess("keySuccess","API key cleared.");
+}
+function loadSavedKey(){
+  const saved=localStorage.getItem("ROLL_CALC_GEMINI_API_KEY");
+  if(saved) document.getElementById("apiKey").value=saved;
+}
+function escapeHtml(value){
+  return String(value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+async function fileToBase64Parts(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error("Image upload failure: unable to read file."));
+    reader.onload=()=>{
+      const dataUrl=String(reader.result||"");
+      const match=dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+      if(!match) reject(new Error("Image upload failure: invalid image file."));
+      else resolve({mimeType:match[1],base64Data:match[2]});
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function parseGeminiJson(text){
+  const cleaned=String(text||"").replace(/^```json\s*/i,"").replace(/^```\s*/i,"").replace(/```$/i,"").trim();
+  try{
+    const parsed = JSON.parse(cleaned);
+    return Array.isArray(parsed) ? parsed[0] : parsed;
+  }catch{
+    const match=cleaned.match(/\{[\s\S]*\}/);
+    if(!match) throw new Error("JSON parsing failure: Gemini did not return structured JSON.");
+    const parsed = JSON.parse(match[0]);
+    return Array.isArray(parsed) ? parsed[0] : parsed;
+  }
+}
+function normalizeNumber(value){
+  if(value===null||value===undefined||value==="") return null;
+  if(typeof value==="number"&&Number.isFinite(value)) return value;
+  const cleaned=String(value).replace(/,/g,"").replace(/[^0-9.-]/g,"").trim();
+  if(!cleaned) return null;
+  const n=Number(cleaned);
+  return Number.isFinite(n)?n:null;
+}
+function normalizeFields(fields){
+  const src=fields&&typeof fields==="object"?fields:{};
+  return {
+    labels:normalizeNumber(src.labels),
+    count:normalizeNumber(src.count),
+    repeat:normalizeNumber(src.repeat),
+    across:normalizeNumber(src.across),
+    finishedRoll:normalizeNumber(src.finishedRoll ?? src.finished_roll),
+    thickness:normalizeNumber(
+      src.thickness ??
+      src.caliper ??
+      src.materialThickness ??
+      src.material_thickness ??
+      src.totalCaliper ??
+      src.total_caliper ??
+      src.totalThickness ??
+      src.total_thickness ??
+      src.productCaliper ??
+      src.product_caliper ??
+      src.stockCaliper ??
+      src.stock_caliper
+    ),
+    extractedSpec: src.extracted_spec ?? src.extractedSpec ?? src.specNumber ?? src.productCode ?? null,
+    manufacturer: src.manufacturer ?? src.company ?? src.brand ?? null,
+    productCode: src.productCode ?? src.product_code ?? src.itemNumber ?? src.specNumber ?? src.stockCode ?? src.extracted_spec ?? null,
+    productName: src.productName ?? src.product_name ?? src.materialName ?? src.description ?? null,
+    confidenceScore: normalizeNumber(src.confidence_score ?? src.confidenceScore),
+    thicknessSource: src.thicknessSource ?? src.thickness_source ?? null
+  };
+}
+function extractText(responseJson){
+  const text=responseJson?.candidates?.[0]?.content?.parts?.map(part=>part.text||"").join("\\n").trim();
+  if(!text) throw new Error("Empty Gemini response: no OCR text or JSON was returned.");
+  return text;
+}
+function fillFieldsFromMap(fields, map, overwrite = false){
+  if(!fields||typeof fields!=="object") return;
+  Object.entries(map).forEach(([key,ids])=>{
+    const value=fields[key];
+    if(value===null||value===undefined||value==="") return;
+    ids.forEach(id=>{
+      const el=document.getElementById(id);
+      if(el && (overwrite || !el.value)) el.value=String(value);
+    });
+  });
+}
+
+
+function getDetectedThickness(parsed, fields){
+  const confidence = normalizeNumber(parsed?.confidence_score ?? parsed?.confidenceScore ?? fields?.confidenceScore);
+
+  const sources = [
+    parsed?.material_thickness,
+    parsed?.materialThickness,
+    parsed?.thickness,
+    parsed?.caliper,
+    parsed?.total_caliper,
+    parsed?.totalCaliper,
+    parsed?.fields?.material_thickness,
+    parsed?.fields?.materialThickness,
+    parsed?.fields?.thickness,
+    parsed?.fields?.caliper,
+    parsed?.fields?.total_caliper,
+    parsed?.fields?.totalCaliper,
+    fields?.thickness,
+    fields?.caliper,
+    fields?.materialThickness,
+    fields?.material_thickness,
+    fields?.totalCaliper,
+    fields?.total_caliper,
+    fields?.totalThickness,
+    fields?.total_thickness
+  ];
+
+  for(const value of sources){
+    let n = normalizeNumber(value);
+    if(n !== null){
+      if(n > 0.02 && n < 50) n = n / 1000;
+      if(confidence !== null && confidence < 0.80) return null;
+      return n;
+    }
+  }
+
+  const raw = String(parsed?.rawText || parsed?.raw_text || "");
+  const patterns = [
+    /(?:total\s+caliper|total\s+thickness|material\s+thickness|stock\s+caliper|product\s+caliper|caliper|calliper|thickness)[^0-9]{0,35}([0-9]+(?:\.[0-9]+)?)/i,
+    /([0-9]+(?:\.[0-9]+)?)\s*(?:mil|mils)/i,
+    /([0-9]*\.[0-9]{4,6})/
+  ];
+
+  for(const pattern of patterns){
+    const match = raw.match(pattern);
+    if(match){
+      let n = normalizeNumber(match[1]);
+      if(n !== null){
+        if((/mil|mils/i.test(match[0]) || n > 0.02) && n < 50) n = n / 1000;
+        return n;
+      }
+    }
+  }
+
+  return null;
+}
+
+function setMaterialThickness(value){
+  let n = normalizeNumber(value);
+  if(n === null) return false;
+  if(n > 0.02 && n < 50) n = n / 1000;
+  const formatted = n < 0.02 ? n.toFixed(6).replace(/0+$/,"").replace(/\.$/,"") : String(n);
+  document.getElementById("ecciThickness").value = formatted;
+  localStorage.setItem("ROLL_CALC_MATERIAL_THICKNESS", formatted);
+  return true;
+}
+
+function googleErrorMessage(status,body){
+  const message=body?.error?.message||"Gemini API request failed.";
+  if(status===400 && /API key/i.test(message)) return "Invalid API key.";
+  if(status===403) return "Invalid API key or Gemini API access is blocked.";
+  if(status===404 || /model/i.test(message)) return "Unsupported model for this API key.";
+  return message;
+}
+
+async function callGeminiWithFallback(apiKey, requestBody){
+  const errors = [];
+
+  for(const model of GEMINI_MODELS){
+    const endpoint = getGeminiEndpoint(model);
+
+    const response = await fetch(endpoint + "?key=" + encodeURIComponent(apiKey), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    const body = await response.json().catch(()=>null);
+
+    if(response.ok){
+      return { body, model, endpoint };
+    }
+
+    const message = body?.error?.message || googleErrorMessage(response.status, body);
+    errors.push(model + ": " + message);
+
+    const isKeyOrPermissionProblem =
+      response.status === 401 ||
+      response.status === 403 ||
+      /api key|permission|forbidden|denied|quota|billing/i.test(message);
+
+    if(isKeyOrPermissionProblem){
+      throw new Error(message);
+    }
+
+    const isModelProblem =
+      response.status === 400 ||
+      response.status === 404 ||
+      /model|unsupported|not found|not supported|not available/i.test(message);
+
+    if(!isModelProblem){
+      throw new Error(message);
+    }
+
+    // Continue to next supported current model.
+  }
+
+  throw new Error("No supported Gemini 2.5 Flash model worked with this API key. Tried: " + errors.join(" | "));
+}
+
+async function runGeminiScan(file, scanType){
+  const apiKey=document.getElementById("apiKey").value.trim();
+
+  const errorId = scanType === "label" ? "labelScanError" : "docketScanError";
+  const successId = scanType === "label" ? "labelScanSuccess" : "docketScanSuccess";
+  const btnId = scanType === "label" ? "labelScanBtn" : "docketScanBtn";
+  const btn=document.getElementById(btnId);
+
+  showError(errorId,"");
+  showSuccess(successId,"");
+
+  if(!apiKey){showError(errorId,"Missing API key. Tap ⚙️ and paste your Google AI Studio API key first.");return;}
+  if(!file){showError(errorId, scanType === "label" ? "Choose or take a label photo first." : "Choose or take a docket photo first.");return;}
+  if(!file.type.startsWith("image/")){showError(errorId,"Unsupported upload. Please choose an image file.");return;}
+
+  try{
+    btn.disabled=true;
+    btn.textContent=scanType === "label" ? "Scanning Label..." : "Scanning Docket...";
+
+    const {mimeType,base64Data}=await fileToBase64Parts(file);
+
+    const labelPrompt=`You are a strict OCR + industrial label-material engineering extraction engine.
+
+Your task: from a photo of a paper/label stock label, identify the material spec and return the exact nominal engineering caliper/thickness needed for an ECCI roll-size calculation.
+
+Return JSON only. No markdown. No explanation.
+
+Required JSON schema:
+{
+  "extracted_spec": string | null,
+  "manufacturer": string | null,
+  "product_name": string | null,
+  "components": {
+    "facestock": string | null,
+    "adhesive": string | null,
+    "liner": string | null
+  },
+  "material_thickness": number | null,
+  "thickness_unit": "inches",
+  "confidence_score": number,
+  "raw_text": "short OCR transcription"
+}
+
+Strict extraction logic:
+1. Identify the manufacturer and material spec number. Example: Avery Dennison / Fasson 53710.
+2. Scan all label text for component clues:
+   - facestock name
+   - adhesive type
+   - liner type, such as 40#SCK, 40# SCK, 50#, BG40, PET liner, paper liner, kraft liner.
+3. Determine the combined nominal material caliper:
+   total caliper = facestock thickness + adhesive layer + liner thickness.
+4. Return the final combined nominal caliper in inches as material_thickness.
+5. If the label explicitly shows total caliper/thickness, use that value.
+6. If the label shows mils, convert mils to inches. Example: 5.66 mil = 0.00566 inches.
+7. If the label shows microns, convert microns to inches. Example: 144 microns = 0.005669 inches.
+8. CRITICAL: Do not confuse roll weight, carton weight, or basis weight with caliper.
+   - 215 LB is total roll/carton weight, not material thickness.
+   - 40# or 50# is liner basis weight, not material thickness.
+   - Do not use 40 or 50 as caliper.
+9. If the exact total caliper is not visible, only infer it from the manufacturer/spec/components if you are highly confident from industrial label-material knowledge.
+10. If confidence is below 0.80, return material_thickness: null.
+11. For Avery Dennison / Fasson 53710, return material_thickness: 0.00566 when the spec is clearly identified.
+
+Output mapping requirement:
+- extracted_spec must contain the detected spec number, such as "53710".
+- material_thickness must be a decimal inch value, such as 0.00566.
+- confidence_score must be between 0 and 1.`;
+
+    const docketPrompt=`You are a strict OCR + printing docket extraction engine.
+
+This is a separate docket scan. Do not use label-scan rules.
+
+Look directly at the field labeled "Material" or "Material Description" on the printing docket. Extract the material/spec/stock code from that exact Material line and also extract the job dimensions.
+
+Reference Example text line:
+"Material - DT 300HD FSC AT2550 40 7.875\" 54320 - 50D08ABA007.875F"
+
+Reference Example instructions:
+- In that Material line, identify "54320" as the manufacturer spec number.
+- Use your background engineering knowledge of industrial label materials to determine that spec's total construction thickness is 0.00560 inches.
+- Also pull job dimensions from the docket, such as repeat depth "2.375\"" and "Run 2 across".
+
+Return JSON only. No markdown. No explanation.
+
+Required JSON schema:
+{
+  "repeatLength": number | null,
+  "labelsAcross": number | null,
+  "materialSpecCode": string | null,
+  "materialThickness": number | null
+}
+
+Strict rules:
+1. repeatLength must come from Carrier Depth / Depth / Repeat Depth only.
+   - Prefer Carrier Depth if visible.
+   - If the docket says repeat but also has Carrier Depth, use Carrier Depth.
+   - If the docket shows "2.375\"" as the repeat/depth value, return repeatLength: 2.375.
+2. labelsAcross must come from Across / Run 2 across / Labels Across / number across.
+3. materialSpecCode must come from the Material or Material Description line only.
+   - Use the manufacturer/spec/stock code from that line.
+   - In the reference example, return materialSpecCode: "54320".
+4. materialThickness must be the total construction caliper in inches.
+   - Total construction = facestock + adhesive + liner.
+   - Use your engineering/material knowledge when the spec code is identifiable.
+   - For materialSpecCode "54320", return materialThickness: 0.00560.
+5. Do not confuse roll weight, carton weight, or basis weight with caliper.
+   - 215 LB is weight, not thickness.
+   - 40# or 50# is basis weight, not material thickness.
+   - Do not use 40, 50, or 215 as caliper.
+6. If a value is uncertain, return null for that specific field, but still return all other detected fields.`; 
+
+    const requestBody={
+      contents:[{role:"user",parts:[{text: scanType === "label" ? labelPrompt : docketPrompt},{inline_data:{mime_type:mimeType,data:base64Data}}]}],
+      generationConfig:{responseMimeType:"application/json",temperature:0}
+    };
+
+    let geminiResult;
+    if(scanType === "docket"){
+      const endpoint = getGeminiEndpoint(DOCKET_SCAN_MODEL);
+      const response = await fetch(endpoint + "?key=" + encodeURIComponent(apiKey), {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(requestBody)
+      });
+      const body = await response.json().catch(()=>null);
+      if(!response.ok){
+        throw new Error(body?.error?.message || "Docket scan failed.");
+      }
+      geminiResult = { body, model: DOCKET_SCAN_MODEL, endpoint };
+    }else{
+      geminiResult = await callGeminiWithFallback(apiKey, requestBody);
+    }
+    const body = geminiResult.body;
+
+    const text=extractText(body);
+    const parsed=parseGeminiJson(text);
+    const fields=normalizeFields(parsed.fields||parsed);
+
+    if(scanType === "label"){
+      const detectedThickness = getDetectedThickness(parsed, fields);
+      if(!setMaterialThickness(detectedThickness)){
+        throw new Error("Label scan completed, but no material thickness/caliper value was found. Enter the thickness manually.");
+      }
+      calculateAndRenderECCI();
+      showSuccess(successId,"Label scan complete. Material thickness is saved and ready.");
+    }else{
+      const docketData = {
+        repeatLength: normalizeNumber(parsed.repeatLength ?? parsed.repeat_length ?? fields.repeat),
+        labelsAcross: normalizeNumber(parsed.labelsAcross ?? parsed.labels_across ?? fields.across),
+        extractedPaperSpec: parsed.extractedPaperSpec ?? parsed.extracted_paper_spec ?? parsed.extracted_spec ?? fields.extractedSpec ?? fields.productCode ?? null,
+        aiEstimatedThickness: normalizeNumber(parsed.aiEstimatedThickness ?? parsed.ai_estimated_thickness ?? fields.thickness)
+      };
+
+      // Always populate all visible job values first, even if no paper spec/thickness was found.
+      if(docketData.repeatLength){
+        ["ecciRepeat","impRepeat","pcRepeat","frRepeat"].forEach(id=>{
+          const el=document.getElementById(id);
+          if(el) el.value=docketData.repeatLength;
+        });
+      }
+
+      if(docketData.labelsAcross){
+        ["ecciAcross","impAcross","pcAcross","frAcross"].forEach(id=>{
+          const el=document.getElementById(id);
+          if(el) el.value=docketData.labelsAcross;
+        });
+      }
+
+      fillFieldsFromMap(fields, docketFieldMap, true);
+
+      // Material spec/thickness is optional and must never block the rest of the scan.
+      lastDocketMaterialScanData = docketData;
+
+      if(docketData.extractedPaperSpec){
+        const specInput=document.getElementById("manualSpecSearch");
+        if(specInput && !specInput.value){
+          specInput.value=docketData.extractedPaperSpec;
+        }
+        
+      }else{
+        const sourceOut=document.getElementById("thicknessSourceOut");
+        if(sourceOut){
+          sourceOut.textContent="Thickness source: No material spec found on docket";
+        }
+      }
+
+      // If no database match but AI returned a thickness and manual field is blank, use the AI fallback.
+      if(!document.getElementById("ecciThickness").value && docketData.aiEstimatedThickness){
+        document.getElementById("ecciThickness").value=docketData.aiEstimatedThickness;
+      }
+
+      recalculateAll();
+
+      if(docketData.extractedPaperSpec){
+        showSuccess(successId,"Docket scan complete. Job values populated. Material spec detected: " + docketData.extractedPaperSpec + ". Model used: " + geminiResult.model + ".");
+      }else{
+        showSuccess(successId,"Docket scan complete. Job values populated. No material spec found; enter/search spec manually if needed. Model used: " + geminiResult.model + ".");
+      }
+    }
+  }catch(err){
+    showError(errorId,err.message||"Unexpected image OCR failure.");
+  }finally{
+    btn.disabled=false;
+    btn.textContent=scanType === "label" ? "Scan Label / Paper Spec" : "Scan Printing Docket";
+  }
+}
+
+function handleLabelPhoto(file){
+  labelPhotoFile=file;
+  showError("labelScanError","");
+  showSuccess("labelScanSuccess", file ? "Label photo selected. Tap Scan Label / Paper Spec." : "No label photo selected.");
+}
+
+function handleDocketPhoto(file){
+  docketPhotoFile=file;
+  showError("docketScanError","");
+  showSuccess("docketScanSuccess", file ? "Docket photo selected. Tap Scan Printing Docket." : "No docket photo selected.");
+}
+
+
+function clearInputValue(id){
+  const el = document.getElementById(id);
+  if(el) el.value = "";
+}
+
+function clearFileInput(id){
+  const el = document.getElementById(id);
+  if(el) el.value = "";
+}
+
+function clearLabelScan(){
+  labelPhotoFile = null;
+  clearFileInput("labelCameraInput");
+  clearFileInput("labelUploadInput");
+  clearInputValue("ecciThickness");
+  localStorage.removeItem("ROLL_CALC_MATERIAL_THICKNESS");
+  showError("labelScanError","");
+  showSuccess("labelScanSuccess","Label scan cleared.");
+  calculateAndRenderECCI();
+}
+
+function clearDocketScan(){
+  docketPhotoFile = null;
+  clearFileInput("docketCameraInput");
+  clearFileInput("docketUploadInput");
+
+  ["manualSpecSearch","impLabels","impRepeat","impAcross","pcCount","pcRepeat","pcAcross","frRoll","frAcross","frRepeat","ecciRepeat","ecciAcross"].forEach(clearInputValue);
+
+  showError("docketScanError","");
+  showSuccess("docketScanSuccess","Docket scan cleared.");
+  calculateImpressions();
+  calculatePressCounts();
+  calculateFinishedRoll();
+  calculateAndRenderECCI();
+}
+
+function clearECCIValues(){
+  ["manualSpecSearch","ecciThickness","ecciRepeat","ecciAcross"].forEach(clearInputValue);
+  document.getElementById("ecciRadius").value = "11.5";
+  document.getElementById("ecciRadiusSlider").value = "11.5";
+  localStorage.removeItem("ROLL_CALC_MATERIAL_THICKNESS");
+  showError("ecciError","");
+  calculateAndRenderECCI();
+}
+
+function clearImpressionsValues(){
+  ["impLabels","impRepeat","impAcross"].forEach(clearInputValue);
+  document.getElementById("impAnswer").textContent = "—";
+  showError("impError","");
+}
+
+function clearPressCountsValues(){
+  ["pcCount","pcRepeat","pcAcross"].forEach(clearInputValue);
+  document.getElementById("pcAnswer").textContent = "—";
+  showError("pcError","");
+}
+
+function clearFinishedRollValues(){
+  ["frRoll","frAcross","frRepeat"].forEach(clearInputValue);
+  document.getElementById("frLevels").value = "50";
+  document.getElementById("frBase").textContent = "—";
+  document.getElementById("frTable").innerHTML = '<tr><td colspan="3" class="empty">Enter values and tap Generate Table.</td></tr>';
+  showError("frError","");
+}
+
+
+document.addEventListener("DOMContentLoaded",()=>{
+  try{
+    applySavedTheme();
+    loadSavedKey();
+
+    const savedThickness = localStorage.getItem("ROLL_CALC_MATERIAL_THICKNESS");
+    const thicknessInput = document.getElementById("ecciThickness");
+    if(savedThickness && thicknessInput) thicknessInput.value = savedThickness;
+
+    ensureDefaultLevels();
+
+    const bind = (id, eventName, handler) => {
+      const el = document.getElementById(id);
+      if(el) el.addEventListener(eventName, handler);
+    };
+
+    bind("themeToggleBtn","click",toggleTheme);
+    bind("settingsToggleBtn","click",toggleSettings);
+    bind("saveKeyBtn","click",saveKey);
+    bind("clearKeyBtn","click",clearKey);
+
+    bind("clearLabelScanBtn","click",clearLabelScan);
+    bind("clearDocketScanBtn","click",clearDocketScan);
+    bind("clearEcciBtn","click",clearECCIValues);
+    bind("clearImpBtn","click",clearImpressionsValues);
+    bind("clearPcBtn","click",clearPressCountsValues);
+    bind("clearFrBtn","click",clearFinishedRollValues);
+
+    bind("labelScanBtn","click",()=>runGeminiScan(labelPhotoFile,"label"));
+    bind("docketScanBtn","click",()=>runGeminiScan(docketPhotoFile,"docket"));
+
+    bind("labelCameraInput","change",e=>handleLabelPhoto(e.target.files[0]));
+    bind("labelUploadInput","change",e=>handleLabelPhoto(e.target.files[0]));
+    bind("docketCameraInput","change",e=>handleDocketPhoto(e.target.files[0]));
+    bind("docketUploadInput","change",e=>handleDocketPhoto(e.target.files[0]));
+
+    bind("impBtn","click",calculateImpressions);
+    bind("pcBtn","click",calculatePressCounts);
+    bind("frBtn","click",calculateFinishedRoll);
+    bind("ecciCalculateBtn","click",calculateAndRenderECCI);
+    bind("ecciRadiusSlider","input",syncECCIRadiusFromSlider);
+    bind("ecciRadius","input",syncECCIRadiusFromInput);
+
+    bind("manualSpecSearch","input",()=>{
+      lastAISpecLookupData = null;
+      calculateAndRenderECCI();
+    });
+
+    bind("lookupSpecBtn","click",()=>{
+      lookupMaterialSpecWithAI().catch(err=>{
+        const errorEl = document.getElementById("ecciError");
+        if(errorEl){
+          errorEl.textContent = err.message;
+          errorEl.style.display = "block";
+        }
+      });
+    });
+
+    ["ecciThickness","ecciRepeat","ecciAcross","ecciRadius"].forEach(id=>{
+      bind(id,"input",()=>{
+        if(id==="ecciThickness"){
+          localStorage.setItem("ROLL_CALC_MATERIAL_THICKNESS", document.getElementById("ecciThickness").value || "");
+        }
+        calculateAndRenderECCI();
+      });
+    });
+
+    document.querySelectorAll("#decimalControls button").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        document.querySelectorAll("#decimalControls button").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        currentDecimalMode=btn.dataset.mode;
+        recalculateAll();
+      });
+    });
+
+    ["impLabels","impRepeat","impAcross"].forEach(id=>bind(id,"input",calculateImpressions));
+    ["pcCount","pcRepeat","pcAcross"].forEach(id=>bind(id,"input",calculatePressCounts));
+    ["frRoll","frAcross","frRepeat","frLevels"].forEach(id=>bind(id,"input",calculateFinishedRoll));
+
+  }catch(err){
+    alert("App startup error: " + (err.message || err));
+  }
+});
+</script>
+</body>
+</html>
