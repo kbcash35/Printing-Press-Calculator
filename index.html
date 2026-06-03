@@ -433,11 +433,13 @@ body.dark .ecci-display{
         <p>Impressions • Presscounts • Finished roll</p>
       </div>
       <div class="header-icons">
-        <button id="themeToggleBtn" class="icon-btn" aria-label="Toggle theme" type="button" onclick="toggleTheme()">🌙</button>
-        <button id="settingsToggleBtn" class="icon-btn" aria-label="Settings" type="button" onclick="toggleSettings()">⚙️</button>
+        <button id="themeToggleBtn" class="icon-btn" aria-label="Toggle theme" type="button">🌙</button>
+        <button id="settingsToggleBtn" class="icon-btn" aria-label="Settings" type="button">⚙️</button>
       </div>
     </div>
   </header>
+
+  <div id="appStatus" class="success" style="display:none;"></div>
 
   <section class="card scan-card">
     <h2 class="scan-title">1. Label / Paper Spec Scan</h2>
@@ -445,11 +447,11 @@ body.dark .ecci-display{
     <div class="top-actions">
       <label class="action-btn" for="labelCameraInput">Take Label Photo</label>
       <label class="action-btn" for="labelUploadInput">Upload Label</label>
-      <input id="labelCameraInput" type="file" accept="image/*" capture="environment" onchange="handleLabelPhoto(this.files[0])">
-      <input id="labelUploadInput" type="file" accept="image/*" onchange="handleLabelPhoto(this.files[0])">
+      <input id="labelCameraInput" type="file" accept="image/*" capture="environment">
+      <input id="labelUploadInput" type="file" accept="image/*">
     </div>
-    <button id="labelScanBtn" class="primary" type="button" onclick="runGeminiScan(labelPhotoFile,'label')">Scan Label / Paper Spec</button>
-    <button id="clearLabelScanBtn" class="clear-mini" type="button" onclick="clearLabelScan()">Clear Label Scan</button>
+    <button id="labelScanBtn" class="primary" type="button">Scan Label / Paper Spec</button>
+    <button id="clearLabelScanBtn" class="clear-mini" type="button">Clear Label Scan</button>
     <div id="labelScanError" class="error"></div>
     <div id="labelScanSuccess" class="success">No label photo selected.</div>
   </section>
@@ -460,11 +462,11 @@ body.dark .ecci-display{
     <div class="top-actions">
       <label class="action-btn" for="docketCameraInput">Take Docket Photo</label>
       <label class="action-btn" for="docketUploadInput">Upload Docket</label>
-      <input id="docketCameraInput" type="file" accept="image/*" capture="environment" onchange="handleDocketPhoto(this.files[0])">
-      <input id="docketUploadInput" type="file" accept="image/*" onchange="handleDocketPhoto(this.files[0])">
+      <input id="docketCameraInput" type="file" accept="image/*" capture="environment">
+      <input id="docketUploadInput" type="file" accept="image/*">
     </div>
-    <button id="docketScanBtn" class="primary" type="button" onclick="runGeminiScan(docketPhotoFile,'docket')">Scan Printing Docket</button>
-    <button id="clearDocketScanBtn" class="clear-mini" type="button" onclick="clearDocketScan()">Clear Docket Scan</button>
+    <button id="docketScanBtn" class="primary" type="button">Scan Printing Docket</button>
+    <button id="clearDocketScanBtn" class="clear-mini" type="button">Clear Docket Scan</button>
     <div id="docketScanError" class="error"></div>
     <div id="docketScanSuccess" class="success">No docket photo selected.</div>
   </section>
@@ -475,8 +477,8 @@ body.dark .ecci-display{
     <label for="apiKey">Gemini API Key</label>
     <input id="apiKey" type="password" placeholder="Paste Gemini API key" autocomplete="off">
     <div class="button-row">
-      <button id="saveKeyBtn" class="primary">Save Key</button>
-      <button id="clearKeyBtn" class="danger-outline">Clear Key</button>
+      <button type="button" id="saveKeyBtn" class="primary">Save Key</button>
+      <button type="button" id="clearKeyBtn" class="danger-outline">Clear Key</button>
     </div>
     <div id="keySuccess" class="success"></div>
     <p class="card-sub">Model: gemini-2.5-flash, fallback: gemini-2.5-flash-lite.</p>
@@ -486,10 +488,10 @@ body.dark .ecci-display{
   <section class="card">
     <h2 style="font-size:18px;letter-spacing:-.02em;">Decimal Display</h2>
     <div class="segmented" id="decimalControls">
-      <button data-mode="exact" class="active" type="button" onclick="setDecimalModeFromButton(this)">Exact</button>
-      <button data-mode="up" type="button" onclick="setDecimalModeFromButton(this)">Round Up</button>
-      <button data-mode="down" type="button" onclick="setDecimalModeFromButton(this)">Round<br>Down</button>
-      <button data-mode="nearest" type="button" onclick="setDecimalModeFromButton(this)">Nearest</button>
+      <button data-mode="exact" class="active" type="button">Exact</button>
+      <button data-mode="up" type="button">Round Up</button>
+      <button data-mode="down" type="button">Round<br>Down</button>
+      <button data-mode="nearest" type="button">Nearest</button>
     </div>
   </section>
 
@@ -500,7 +502,7 @@ body.dark .ecci-display{
 
     <label for="manualSpecSearch">Manual Spec Number Lookup</label>
     <input id="manualSpecSearch" placeholder="Example: 54320" inputmode="numeric">
-    <button id="lookupSpecBtn" class="section-clear" type="button" onclick="lookupMaterialSpecWithAI().catch(err=>{document.getElementById('ecciError').textContent=err.message;document.getElementById('ecciError').style.display='block';})">Lookup Thickness by Spec</button>
+    <button id="lookupSpecBtn" class="section-clear" type="button">Lookup Thickness by Spec</button>
     <div class="answer-formula" id="thicknessSourceOut">Thickness source: —</div>
 
     <label for="ecciThickness">Material Thickness / Caliper</label>
@@ -518,8 +520,8 @@ body.dark .ecci-display{
       <input id="ecciRadius" placeholder="11.5" value="11.5" inputmode="decimal">
     </div>
 
-    <button id="ecciCalculateBtn" class="primary" type="button" onclick="calculateAndRenderECCI()">Calculate ECCI Counter</button>
-    <button id="clearEcciBtn" class="section-clear" type="button" onclick="clearECCIValues()">Clear ECCI Values</button>
+    <button id="ecciCalculateBtn" class="primary" type="button">Calculate ECCI Counter</button>
+    <button id="clearEcciBtn" class="section-clear" type="button">Clear ECCI Values</button>
     <div id="ecciError" class="error"></div>
 
     <div class="ecci-display">
@@ -544,8 +546,8 @@ body.dark .ecci-display{
     <input id="impRepeat" placeholder="2.125" inputmode="decimal">
     <label>Across</label>
     <input id="impAcross" placeholder="2" inputmode="decimal">
-    <button id="impBtn" class="primary" type="button" onclick="calculateImpressions()">Calculate Impressions</button>
-    <button id="clearImpBtn" class="section-clear" type="button" onclick="clearImpressionsValues()">Clear Impressions</button>
+    <button id="impBtn" class="primary" type="button">Calculate Impressions</button>
+    <button id="clearImpBtn" class="section-clear" type="button">Clear Impressions</button>
     <div id="impError" class="error"></div>
     <div class="answer-card">
       <div class="answer-label">Impressions Answer</div>
@@ -563,8 +565,8 @@ body.dark .ecci-display{
     <input id="pcRepeat" placeholder="2.125" inputmode="decimal">
     <label>Across</label>
     <input id="pcAcross" placeholder="2" inputmode="decimal">
-    <button id="pcBtn" class="primary" type="button" onclick="calculatePressCounts()">Calculate Press Counts</button>
-    <button id="clearPcBtn" class="section-clear" type="button" onclick="clearPressCountsValues()">Clear Press Counts</button>
+    <button id="pcBtn" class="primary" type="button">Calculate Press Counts</button>
+    <button id="clearPcBtn" class="section-clear" type="button">Clear Press Counts</button>
     <div id="pcError" class="error"></div>
     <div class="answer-card">
       <div class="answer-label">Press Counts Answer</div>
@@ -584,8 +586,8 @@ body.dark .ecci-display{
     <input id="frRepeat" placeholder="2.125" inputmode="decimal">
     <label>Levels</label>
     <input id="frLevels" value="50" placeholder="50" inputmode="numeric">
-    <button id="frBtn" class="primary" type="button" onclick="calculateFinishedRoll()">Generate Finished Roll Table</button>
-    <button id="clearFrBtn" class="section-clear" type="button" onclick="clearFinishedRollValues()">Clear Finished Roll</button>
+    <button id="frBtn" class="primary" type="button">Generate Finished Roll Table</button>
+    <button id="clearFrBtn" class="section-clear" type="button">Clear Finished Roll</button>
     <div id="frError" class="error"></div>
 
     <div class="answer-card">
@@ -802,6 +804,35 @@ function resolveFinalMaterialThickness(){
   }
 
   return { thickness: null, source: "No thickness available" };
+}
+
+async function handleSpecLookupClick(){
+  const btn = document.getElementById("lookupSpecBtn");
+  const errorEl = document.getElementById("ecciError");
+
+  try{
+    if(errorEl){
+      errorEl.textContent = "";
+      errorEl.style.display = "none";
+    }
+    if(btn){
+      btn.disabled = true;
+      btn.textContent = "Looking Up...";
+    }
+    await lookupMaterialSpecWithAI();
+  }catch(err){
+    if(errorEl){
+      errorEl.textContent = err.message || "AI spec lookup failed.";
+      errorEl.style.display = "block";
+    }else{
+      alert(err.message || "AI spec lookup failed.");
+    }
+  }finally{
+    if(btn){
+      btn.disabled = false;
+      btn.textContent = "Lookup Thickness by Spec";
+    }
+  }
 }
 
 async function lookupMaterialSpecWithAI(){
@@ -1021,16 +1052,47 @@ function toggleSettings(){
 }
 
 function saveKey(){
-  const key=document.getElementById("apiKey").value.trim();
-  if(!key){showSuccess("keySuccess","No key entered.");return;}
-  localStorage.setItem("ROLL_CALC_GEMINI_API_KEY",key);
-  showSuccess("keySuccess","API key saved.");
+  const input = document.getElementById("apiKey");
+  const key = input ? input.value.trim() : "";
+  const el = document.getElementById("keySuccess");
+
+  if(!key){
+    if(el){
+      el.textContent = "No API key entered.";
+      el.style.display = "block";
+      el.style.color = "var(--danger)";
+    }
+    return;
+  }
+
+  try{
+    localStorage.setItem("ROLL_CALC_GEMINI_API_KEY", key);
+    if(el){
+      el.textContent = "API key saved.";
+      el.style.display = "block";
+      el.style.color = "var(--success)";
+    }
+  }catch(err){
+    if(el){
+      el.textContent = "Could not save API key: " + (err.message || err);
+      el.style.display = "block";
+      el.style.color = "var(--danger)";
+    }
+  }
 }
+
 function clearKey(){
-  localStorage.removeItem("ROLL_CALC_GEMINI_API_KEY");
-  document.getElementById("apiKey").value="";
-  showSuccess("keySuccess","API key cleared.");
+  try{ localStorage.removeItem("ROLL_CALC_GEMINI_API_KEY"); }catch(err){}
+  const input = document.getElementById("apiKey");
+  if(input) input.value = "";
+  const el = document.getElementById("keySuccess");
+  if(el){
+    el.textContent = "API key cleared.";
+    el.style.display = "block";
+    el.style.color = "var(--success)";
+  }
 }
+
 function loadSavedKey(){
   const saved=localStorage.getItem("ROLL_CALC_GEMINI_API_KEY");
   if(saved) document.getElementById("apiKey").value=saved;
@@ -1527,6 +1589,29 @@ function clearFinishedRollValues(){
 
 
 document.addEventListener("DOMContentLoaded",()=>{
+  const status = document.getElementById("appStatus");
+
+  const setStatus = (message, isError=false) => {
+    if(status){
+      status.textContent = message;
+      status.style.display = "block";
+      status.style.color = isError ? "var(--danger)" : "var(--success)";
+    }
+  };
+
+  const bind = (id, eventName, handler) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener(eventName, (event)=>{
+      try{
+        handler(event);
+      }catch(err){
+        console.error("Button error:", id, err);
+        setStatus("Button error on " + id + ": " + (err.message || err), true);
+      }
+    });
+  };
+
   try{
     applySavedTheme();
     loadSavedKey();
@@ -1537,11 +1622,10 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     ensureDefaultLevels();
 
-    const bind = (id, eventName, handler) => {
-      const el = document.getElementById(id);
-      if(el) el.addEventListener(eventName, handler);
-    };
-
+    bind("themeToggleBtn","click",toggleTheme);
+    bind("settingsToggleBtn","click",toggleSettings);
+    bind("saveKeyBtn","click",saveKey);
+    bind("clearKeyBtn","click",clearKey);
 
     bind("clearLabelScanBtn","click",clearLabelScan);
     bind("clearDocketScanBtn","click",clearDocketScan);
@@ -1550,6 +1634,8 @@ document.addEventListener("DOMContentLoaded",()=>{
     bind("clearPcBtn","click",clearPressCountsValues);
     bind("clearFrBtn","click",clearFinishedRollValues);
 
+    bind("labelScanBtn","click",()=>runGeminiScan(labelPhotoFile,"label"));
+    bind("docketScanBtn","click",()=>runGeminiScan(docketPhotoFile,"docket"));
 
     bind("labelCameraInput","change",e=>handleLabelPhoto(e.target.files[0]));
     bind("labelUploadInput","change",e=>handleLabelPhoto(e.target.files[0]));
@@ -1568,15 +1654,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       calculateAndRenderECCI();
     });
 
-    bind("lookupSpecBtn","click",()=>{
-      lookupMaterialSpecWithAI().catch(err=>{
-        const errorEl = document.getElementById("ecciError");
-        if(errorEl){
-          errorEl.textContent = err.message;
-          errorEl.style.display = "block";
-        }
-      });
-    });
+    bind("lookupSpecBtn","click",handleSpecLookupClick);
 
     ["ecciThickness","ecciRepeat","ecciAcross","ecciRadius"].forEach(id=>{
       bind(id,"input",()=>{
@@ -1589,10 +1667,11 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     document.querySelectorAll("#decimalControls button").forEach(btn=>{
       btn.addEventListener("click",()=>{
-        document.querySelectorAll("#decimalControls button").forEach(b=>b.classList.remove("active"));
-        btn.classList.add("active");
-        currentDecimalMode=btn.dataset.mode;
-        recalculateAll();
+        try{
+          setDecimalModeFromButton(btn);
+        }catch(err){
+          setStatus("Decimal button error: " + (err.message || err), true);
+        }
       });
     });
 
@@ -1600,8 +1679,12 @@ document.addEventListener("DOMContentLoaded",()=>{
     ["pcCount","pcRepeat","pcAcross"].forEach(id=>bind(id,"input",calculatePressCounts));
     ["frRoll","frAcross","frRepeat","frLevels"].forEach(id=>bind(id,"input",calculateFinishedRoll));
 
+    setStatus("App ready.");
+    setTimeout(()=>{ if(status && status.textContent === "App ready.") status.style.display = "none"; }, 1800);
+
   }catch(err){
-    alert("App startup error: " + (err.message || err));
+    console.error("App startup error:", err);
+    setStatus("App startup error: " + (err.message || err), true);
   }
 });
 </script>
