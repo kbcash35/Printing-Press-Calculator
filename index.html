@@ -433,8 +433,8 @@ body.dark .ecci-display{
         <p>Impressions • Presscounts • Finished roll</p>
       </div>
       <div class="header-icons">
-        <button id="themeToggleBtn" class="icon-btn" aria-label="Toggle theme" type="button">🌙</button>
-        <button id="settingsToggleBtn" class="icon-btn" aria-label="Settings" type="button">⚙️</button>
+        <button id="themeToggleBtn" class="icon-btn" aria-label="Toggle theme" type="button" onclick="toggleTheme()">🌙</button>
+        <button id="settingsToggleBtn" class="icon-btn" aria-label="Settings" type="button" onclick="toggleSettings()">⚙️</button>
       </div>
     </div>
   </header>
@@ -445,11 +445,11 @@ body.dark .ecci-display{
     <div class="top-actions">
       <label class="action-btn" for="labelCameraInput">Take Label Photo</label>
       <label class="action-btn" for="labelUploadInput">Upload Label</label>
-      <input id="labelCameraInput" type="file" accept="image/*" capture="environment">
-      <input id="labelUploadInput" type="file" accept="image/*">
+      <input id="labelCameraInput" type="file" accept="image/*" capture="environment" onchange="handleLabelPhoto(this.files[0])">
+      <input id="labelUploadInput" type="file" accept="image/*" onchange="handleLabelPhoto(this.files[0])">
     </div>
-    <button id="labelScanBtn" class="primary">Scan Label / Paper Spec</button>
-    <button id="clearLabelScanBtn" class="clear-mini">Clear Label Scan</button>
+    <button id="labelScanBtn" class="primary" type="button" onclick="runGeminiScan(labelPhotoFile,'label')">Scan Label / Paper Spec</button>
+    <button id="clearLabelScanBtn" class="clear-mini" type="button" onclick="clearLabelScan()">Clear Label Scan</button>
     <div id="labelScanError" class="error"></div>
     <div id="labelScanSuccess" class="success">No label photo selected.</div>
   </section>
@@ -460,11 +460,11 @@ body.dark .ecci-display{
     <div class="top-actions">
       <label class="action-btn" for="docketCameraInput">Take Docket Photo</label>
       <label class="action-btn" for="docketUploadInput">Upload Docket</label>
-      <input id="docketCameraInput" type="file" accept="image/*" capture="environment">
-      <input id="docketUploadInput" type="file" accept="image/*">
+      <input id="docketCameraInput" type="file" accept="image/*" capture="environment" onchange="handleDocketPhoto(this.files[0])">
+      <input id="docketUploadInput" type="file" accept="image/*" onchange="handleDocketPhoto(this.files[0])">
     </div>
-    <button id="docketScanBtn" class="primary">Scan Printing Docket</button>
-    <button id="clearDocketScanBtn" class="clear-mini">Clear Docket Scan</button>
+    <button id="docketScanBtn" class="primary" type="button" onclick="runGeminiScan(docketPhotoFile,'docket')">Scan Printing Docket</button>
+    <button id="clearDocketScanBtn" class="clear-mini" type="button" onclick="clearDocketScan()">Clear Docket Scan</button>
     <div id="docketScanError" class="error"></div>
     <div id="docketScanSuccess" class="success">No docket photo selected.</div>
   </section>
@@ -486,10 +486,10 @@ body.dark .ecci-display{
   <section class="card">
     <h2 style="font-size:18px;letter-spacing:-.02em;">Decimal Display</h2>
     <div class="segmented" id="decimalControls">
-      <button data-mode="exact" class="active">Exact</button>
-      <button data-mode="up">Round Up</button>
-      <button data-mode="down">Round<br>Down</button>
-      <button data-mode="nearest">Nearest</button>
+      <button data-mode="exact" class="active" type="button" onclick="setDecimalModeFromButton(this)">Exact</button>
+      <button data-mode="up" type="button" onclick="setDecimalModeFromButton(this)">Round Up</button>
+      <button data-mode="down" type="button" onclick="setDecimalModeFromButton(this)">Round<br>Down</button>
+      <button data-mode="nearest" type="button" onclick="setDecimalModeFromButton(this)">Nearest</button>
     </div>
   </section>
 
@@ -500,7 +500,7 @@ body.dark .ecci-display{
 
     <label for="manualSpecSearch">Manual Spec Number Lookup</label>
     <input id="manualSpecSearch" placeholder="Example: 54320" inputmode="numeric">
-    <button id="lookupSpecBtn" class="section-clear">Lookup Thickness by Spec</button>
+    <button id="lookupSpecBtn" class="section-clear" type="button" onclick="lookupMaterialSpecWithAI().catch(err=>{document.getElementById('ecciError').textContent=err.message;document.getElementById('ecciError').style.display='block';})">Lookup Thickness by Spec</button>
     <div class="answer-formula" id="thicknessSourceOut">Thickness source: —</div>
 
     <label for="ecciThickness">Material Thickness / Caliper</label>
@@ -518,8 +518,8 @@ body.dark .ecci-display{
       <input id="ecciRadius" placeholder="11.5" value="11.5" inputmode="decimal">
     </div>
 
-    <button id="ecciCalculateBtn" class="primary">Calculate ECCI Counter</button>
-    <button id="clearEcciBtn" class="section-clear">Clear ECCI Values</button>
+    <button id="ecciCalculateBtn" class="primary" type="button" onclick="calculateAndRenderECCI()">Calculate ECCI Counter</button>
+    <button id="clearEcciBtn" class="section-clear" type="button" onclick="clearECCIValues()">Clear ECCI Values</button>
     <div id="ecciError" class="error"></div>
 
     <div class="ecci-display">
@@ -544,8 +544,8 @@ body.dark .ecci-display{
     <input id="impRepeat" placeholder="2.125" inputmode="decimal">
     <label>Across</label>
     <input id="impAcross" placeholder="2" inputmode="decimal">
-    <button id="impBtn" class="primary">Calculate Impressions</button>
-    <button id="clearImpBtn" class="section-clear">Clear Impressions</button>
+    <button id="impBtn" class="primary" type="button" onclick="calculateImpressions()">Calculate Impressions</button>
+    <button id="clearImpBtn" class="section-clear" type="button" onclick="clearImpressionsValues()">Clear Impressions</button>
     <div id="impError" class="error"></div>
     <div class="answer-card">
       <div class="answer-label">Impressions Answer</div>
@@ -563,8 +563,8 @@ body.dark .ecci-display{
     <input id="pcRepeat" placeholder="2.125" inputmode="decimal">
     <label>Across</label>
     <input id="pcAcross" placeholder="2" inputmode="decimal">
-    <button id="pcBtn" class="primary">Calculate Press Counts</button>
-    <button id="clearPcBtn" class="section-clear">Clear Press Counts</button>
+    <button id="pcBtn" class="primary" type="button" onclick="calculatePressCounts()">Calculate Press Counts</button>
+    <button id="clearPcBtn" class="section-clear" type="button" onclick="clearPressCountsValues()">Clear Press Counts</button>
     <div id="pcError" class="error"></div>
     <div class="answer-card">
       <div class="answer-label">Press Counts Answer</div>
@@ -584,8 +584,8 @@ body.dark .ecci-display{
     <input id="frRepeat" placeholder="2.125" inputmode="decimal">
     <label>Levels</label>
     <input id="frLevels" value="50" placeholder="50" inputmode="numeric">
-    <button id="frBtn" class="primary">Generate Finished Roll Table</button>
-    <button id="clearFrBtn" class="section-clear">Clear Finished Roll</button>
+    <button id="frBtn" class="primary" type="button" onclick="calculateFinishedRoll()">Generate Finished Roll Table</button>
+    <button id="clearFrBtn" class="section-clear" type="button" onclick="clearFinishedRollValues()">Clear Finished Roll</button>
     <div id="frError" class="error"></div>
 
     <div class="answer-card">
@@ -650,6 +650,12 @@ function applyDisplayMode(n){
   if(currentDecimalMode === "down") return Math.floor(n);
   if(currentDecimalMode === "nearest") return Math.round(n);
   return n;
+}
+function setDecimalModeFromButton(btn){
+  document.querySelectorAll("#decimalControls button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  currentDecimalMode = btn.dataset.mode;
+  recalculateAll();
 }
 function formatNumber(n){
   if(!Number.isFinite(n)) return "—";
@@ -1536,10 +1542,6 @@ document.addEventListener("DOMContentLoaded",()=>{
       if(el) el.addEventListener(eventName, handler);
     };
 
-    bind("themeToggleBtn","click",toggleTheme);
-    bind("settingsToggleBtn","click",toggleSettings);
-    bind("saveKeyBtn","click",saveKey);
-    bind("clearKeyBtn","click",clearKey);
 
     bind("clearLabelScanBtn","click",clearLabelScan);
     bind("clearDocketScanBtn","click",clearDocketScan);
@@ -1548,8 +1550,6 @@ document.addEventListener("DOMContentLoaded",()=>{
     bind("clearPcBtn","click",clearPressCountsValues);
     bind("clearFrBtn","click",clearFinishedRollValues);
 
-    bind("labelScanBtn","click",()=>runGeminiScan(labelPhotoFile,"label"));
-    bind("docketScanBtn","click",()=>runGeminiScan(docketPhotoFile,"docket"));
 
     bind("labelCameraInput","change",e=>handleLabelPhoto(e.target.files[0]));
     bind("labelUploadInput","change",e=>handleLabelPhoto(e.target.files[0]));
