@@ -441,24 +441,22 @@ body.dark .ecci-display{
 
   <div id="appStatus" class="success" style="display:none;"></div>
 
-  <section class="card scan-card">
-    <h2 class="scan-title">1. Label / Paper Spec Scan</h2>
-    <p class="card-sub">Scan the material label first. This fills Material Thickness / Caliper and keeps it saved.</p>
-    <div class="top-actions">
-      <label class="action-btn" for="labelCameraInput">Take Label Photo</label>
-      <label class="action-btn" for="labelUploadInput">Upload Label</label>
-      <input id="labelCameraInput" type="file" accept="image/*" capture="environment">
-      <input id="labelUploadInput" type="file" accept="image/*">
+  <section class="card settings-card" id="settingsPanel">
+    <h2>API Key</h2>
+    <label for="apiKey">Gemini API Key</label>
+    <input id="apiKey" type="password" placeholder="Paste Gemini API key" autocomplete="off">
+    <div class="button-row">
+      <button type="button" id="saveKeyBtn" class="primary">Save Key</button>
+      <button type="button" id="clearKeyBtn" class="danger-outline">Clear Key</button>
     </div>
-    <button id="labelScanBtn" class="primary" type="button">Scan Label / Paper Spec</button>
-    <button id="clearLabelScanBtn" class="clear-mini" type="button">Clear Label Scan</button>
-    <div id="labelScanError" class="error"></div>
-    <div id="labelScanSuccess" class="success">No label photo selected.</div>
+    <div id="keySuccess" class="success"></div>
+    <p class="card-sub">Model: gemini-2.5-flash, fallback: gemini-2.5-flash-lite.</p>
+    <p class="card-sub">Photo scan is optional. Manual calculator works without the key.</p>
   </section>
 
   <section class="card scan-card">
-    <h2 class="scan-title">2. Printing Docket Scan</h2>
-    <p class="card-sub">Scan the docket after the label scan. This fills Repeat, Across, Count, and Labels.</p>
+    <h2 class="scan-title">Docket Scan</h2>
+    <p class="card-sub">One scan fills Repeat, Across, Quantity, Finished Roll, Core Size, plus material spec and thickness.</p>
     <div class="top-actions">
       <label class="action-btn" for="docketCameraInput">Take Docket Photo</label>
       <label class="action-btn" for="docketUploadInput">Upload Docket</label>
@@ -471,18 +469,15 @@ body.dark .ecci-display{
     <div id="docketScanSuccess" class="success">No docket photo selected.</div>
   </section>
 
-
-  <section class="card settings-card" id="settingsPanel">
-    <h2>API Key</h2>
-    <label for="apiKey">Gemini API Key</label>
-    <input id="apiKey" type="password" placeholder="Paste Gemini API key" autocomplete="off">
-    <div class="button-row">
-      <button type="button" id="saveKeyBtn" class="primary">Save Key</button>
-      <button type="button" id="clearKeyBtn" class="danger-outline">Clear Key</button>
-    </div>
-    <div id="keySuccess" class="success"></div>
-    <p class="card-sub">Model: gemini-2.5-flash, fallback: gemini-2.5-flash-lite.</p>
-    <p class="card-sub">Photo scan is optional. Manual calculator works without the key.</p>
+  <section class="card">
+    <h2>Job Info</h2>
+    <div class="formula-title">Auto-filled from the docket scan. Edit if needed.</div>
+    <label for="docketNumber">Docket Number</label>
+    <input id="docketNumber" placeholder="1371660" inputmode="numeric">
+    <label for="jobQuantity">Total Quantity</label>
+    <input id="jobQuantity" placeholder="525000" inputmode="numeric">
+    <label for="salesQuantity">Sales Quantity</label>
+    <input id="salesQuantity" placeholder="105" inputmode="numeric">
   </section>
 
   <section class="card">
@@ -607,6 +602,23 @@ body.dark .ecci-display{
       </table>
     </div>
   </section>
+
+  <section class="card">
+    <h2>Core Size</h2>
+    <div class="formula-title">Carrier Width × Across</div>
+    <label>Carrier Width</label>
+    <input id="coreCarrierWidth" placeholder="3.3125" inputmode="decimal">
+    <label>Across</label>
+    <input id="coreAcross" placeholder="2" inputmode="decimal">
+    <button id="coreBtn" class="primary" type="button">Calculate Core Size</button>
+    <button id="clearCoreBtn" class="section-clear" type="button">Clear Core Size</button>
+    <div id="coreError" class="error"></div>
+    <div class="answer-card">
+      <div class="answer-label">Core Size Answer</div>
+      <div id="coreAnswer" class="answer">—</div>
+      <div class="answer-formula">Carrier Width × Across</div>
+    </div>
+  </section>
 </main>
 
 <script>
@@ -719,11 +731,22 @@ function ensureDefaultLevels(){
     levelsInput.value = "50";
   }
 }
+function calculateCoreSize(){
+  const width=cleanNumber("coreCarrierWidth"), across=cleanNumber("coreAcross");
+  showError("coreError","");
+  if(!Number.isFinite(width)||!Number.isFinite(across)){
+    document.getElementById("coreAnswer").textContent="—";
+    showError("coreError","Enter Carrier Width and Across.");
+    return;
+  }
+  document.getElementById("coreAnswer").textContent=formatNumber(width*across);
+}
 
 const ECCI_CORE_OUTER_DIAMETER = 3.0;
-const ECCI_COUNTER_MULTIPLIER = 15;
-const ECCI_MECHANICAL_ADJUSTMENT_FACTOR = 3.702;
-const ECCI_COUNTER_GEAR_RATE_DIVISOR = 2;
+// The press counter advances once per 10 inches of web length.
+// Validated against a real job: 50,924 labels at 6,050 counter (repeat 2.375, across 2)
+// -> 50924 * 2.375 / 2 / 10 = 6,047 ≈ 6,050. This matches the Impressions formula exactly.
+const ECCI_COUNTER_LENGTH_DIVISOR = 10;
 
 function calculateECCICounter(t, L, A, targetRadius){
   const thickness = Number(String(t).replace(/,/g,""));
@@ -746,30 +769,22 @@ function calculateECCICounter(t, L, A, targetRadius){
 
   const D = radius * 2;
   const d = ECCI_CORE_OUTER_DIAMETER;
-  const C = ECCI_COUNTER_MULTIPLIER;
 
-  const totalLength = (D ** 2 - d ** 2) / (4 * thickness);
+  // Length of material wound into the roll: cross-sectional area / thickness.
+  // Annulus area = (pi/4)(D^2 - d^2), so length = pi(D^2 - d^2) / (4 * thickness).
+  const totalLength = Math.PI * (D ** 2 - d ** 2) / (4 * thickness);
   const totalImpressions = totalLength / repeatLength;
   const totalLabels = totalImpressions * labelsAcross;
 
-  const rawCounterReading = totalLabels / C;
-  const calibratedCounterReading =
-    rawCounterReading * ECCI_MECHANICAL_ADJUSTMENT_FACTOR;
-
-  const pressFloorCounterReading =
-    calibratedCounterReading / ECCI_COUNTER_GEAR_RATE_DIVISOR;
+  // Counter preset = web length / 10 (== Labels * Repeat / Across / 10, the Impressions formula).
+  const counterReading = totalLength / ECCI_COUNTER_LENGTH_DIVISOR;
 
   return {
-    counterReading: Math.round(pressFloorCounterReading),
+    counterReading: Math.round(counterReading),
     targetDiameter: D,
     totalLength,
     totalImpressions,
-    totalLabels,
-    rawCounterReading,
-    calibratedCounterReading,
-    pressFloorCounterReading,
-    adjustmentFactor: ECCI_MECHANICAL_ADJUSTMENT_FACTOR,
-    gearRateDivisor: ECCI_COUNTER_GEAR_RATE_DIVISOR
+    totalLabels
   };
 }
 
@@ -923,6 +938,16 @@ materialThickness must be the total construction caliper expressed in inches as 
 
   calculateAndRenderECCI();
   return parsed;
+}
+
+function deriveDocketNumber(explicit, productionOrder){
+  const clean = v => String(v ?? "").trim();
+  const e = clean(explicit).replace(/[^0-9A-Za-z]/g,"");
+  if(e) return e;
+  const po = clean(productionOrder).replace(/[^0-9A-Za-z]/g,"");
+  if(!po) return "";
+  // Drop the first 3 characters: "D201371660" -> "1371660".
+  return po.length > 3 ? po.slice(3) : po;
 }
 
 function applyDocketMaterialScanData(data){
@@ -1379,15 +1404,22 @@ Output mapping requirement:
 
 This is a separate docket scan. Do not use label-scan rules.
 
-Look directly at the field labeled "Material" or "Material Description" on the printing docket. Extract the material/spec/stock code from that exact Material line and also extract the job dimensions.
+The material/spec info is on the line labeled "Material", "Material Description", OR "Stock". Read whichever one is present. Also extract the job dimensions.
 
-Reference Example text line:
+Reference Example A (Material line):
 "Material - DT 300HD FSC AT2550 40 7.875\" 54320 - 50D08ABA007.875F"
+- Identify "54320" as the manufacturer spec number.
+- Total construction thickness for 54320 is 0.00560 inches.
+- Pull dimensions such as repeat depth "2.375\"" and "Run 2 across".
 
-Reference Example instructions:
-- In that Material line, identify "54320" as the manufacturer spec number.
-- Use your background engineering knowledge of industrial label materials to determine that spec's total construction thickness is 0.00560 inches.
-- Also pull job dimensions from the docket, such as repeat depth "2.375\"" and "Run 2 across".
+Reference Example B (Stock line + Carrier Size line):
+"Stock: 2.5MIL GLS.WH BOPP TC LP50 40 FM6TC 13\" (25BPL9BA013.000B)"
+"Label Size: 3.0000\" wide x 1.5000\" depth   Carrier Size: 3.1250\" wide x 1.6250\" depth"
+"Run 4 across"   "Quantity: 525000"   "5000/ roll"
+- materialSpecCode: "25BPL9BA013.000B" (the code in parentheses on the Stock line).
+- carrierWidth: 3.1250 (the "wide" value on the CARRIER Size line, NOT the Label Size 3.0000).
+- repeatLength: 1.6250 (the carrier/depth value).
+- labelsAcross: 4. totalQuantity: 525000. finishedRollQuantity: 5000.
 
 Return JSON only. No markdown. No explanation.
 
@@ -1395,6 +1427,12 @@ Required JSON schema:
 {
   "repeatLength": number | null,
   "labelsAcross": number | null,
+  "totalQuantity": number | null,
+  "salesQuantity": number | null,
+  "finishedRollQuantity": number | null,
+  "carrierWidth": number | null,
+  "productionOrder": string | null,
+  "docketNumber": string | null,
   "materialSpecCode": string | null,
   "materialThickness": number | null
 }
@@ -1402,43 +1440,44 @@ Required JSON schema:
 Strict rules:
 1. repeatLength must come from Carrier Depth / Depth / Repeat Depth only.
    - Prefer Carrier Depth if visible.
-   - If the docket says repeat but also has Carrier Depth, use Carrier Depth.
+   - On a "Carrier Size: X\" wide x Y\" depth" line, repeatLength is the DEPTH value Y.
    - If the docket shows "2.375\"" as the repeat/depth value, return repeatLength: 2.375.
-2. labelsAcross must come from Across / Run 2 across / Labels Across / number across.
-3. materialSpecCode must come from the Material or Material Description line only.
-   - Use the manufacturer/spec/stock code from that line.
-   - In the reference example, return materialSpecCode: "54320".
-4. materialThickness must be the total construction caliper in inches.
+2. labelsAcross must come from Across / Run 4 across / Labels Across / number across.
+3. totalQuantity is the TOTAL label/order quantity for the whole job.
+   - Look for "Quantity", "Total Quantity", "Order Qty", "Total Qty", "Finished Qty", "Total Labels".
+   - Strip commas. "320,000" -> 320000.
+   - This is the grand total, not the per-roll amount.
+4. finishedRollQuantity is the labels PER finished roll (the put-up / roll size).
+   - Look for "Per Roll", "Roll Qty", "/ roll", "Labels per Roll", "Rewind Qty", "M/Roll", "5000/ roll" -> 5000.
+   - Strip commas.
+5. salesQuantity is the "Sales quantity" value (the number of rolls), e.g. "Sales quantity: 105 RL5000" -> 105.
+   - Return only the leading count number, not the "RL5000" part.
+6. productionOrder is the full "Production order" value, e.g. "D201371660".
+7. docketNumber is the productionOrder with the first 3 characters removed, e.g. "D201371660" -> "1371660". If unsure, leave docketNumber null and just return productionOrder.
+8. carrierWidth must come ONLY from the "Carrier Size" or "Carrier" line, and is the value labeled "wide" (the WIDTH, not the depth).
+   - The width is the number that comes right after the word "Carrier" and before "wide".
+   - NEVER use the "Label Size" width for carrierWidth. In Example B, Label Size width is 3.0000 but carrierWidth is 3.1250.
+   - Return a decimal inch value, such as 3.1250.
+9. materialSpecCode must come from the Material, Material Description, OR Stock line.
+   - Prefer the code in parentheses (e.g. "25BPL9BA013.000B" or "54320").
+   - If there is no parenthetical code, return the full stock/material description text (e.g. "2.5MIL GLS.WH BOPP TC LP50 40 FM6TC").
+10. materialThickness must be the total construction caliper in inches.
    - Total construction = facestock + adhesive + liner.
-   - Use your engineering/material knowledge when the spec code is identifiable.
+   - Use your engineering/material knowledge of the stock description when identifiable (e.g. a 2.5MIL BOPP face with a 40# liner).
    - For materialSpecCode "54320", return materialThickness: 0.00560.
-5. Do not confuse roll weight, carton weight, or basis weight with caliper.
+11. Do not confuse roll weight, carton weight, or basis weight with caliper.
    - 215 LB is weight, not thickness.
    - 40# or 50# is basis weight, not material thickness.
    - Do not use 40, 50, or 215 as caliper.
-6. If a value is uncertain, return null for that specific field, but still return all other detected fields.`; 
+12. If a value is uncertain, return null for that specific field, but still return all other detected fields.`; 
 
     const requestBody={
       contents:[{role:"user",parts:[{text: scanType === "label" ? labelPrompt : docketPrompt},{inline_data:{mime_type:mimeType,data:base64Data}}]}],
       generationConfig:{responseMimeType:"application/json",temperature:0}
     };
 
-    let geminiResult;
-    if(scanType === "docket"){
-      const endpoint = getGeminiEndpoint(DOCKET_SCAN_MODEL);
-      const response = await fetch(endpoint + "?key=" + encodeURIComponent(apiKey), {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify(requestBody)
-      });
-      const body = await response.json().catch(()=>null);
-      if(!response.ok){
-        throw new Error(body?.error?.message || "Docket scan failed.");
-      }
-      geminiResult = { body, model: DOCKET_SCAN_MODEL, endpoint };
-    }else{
-      geminiResult = await callGeminiWithFallback(apiKey, requestBody);
-    }
+    // Both label and docket scans now try gemini-2.5-flash, then fall back to gemini-2.5-flash-lite.
+    const geminiResult = await callGeminiWithFallback(apiKey, requestBody);
     const body = geminiResult.body;
 
     const text=extractText(body);
@@ -1456,8 +1495,14 @@ Strict rules:
       const docketData = {
         repeatLength: normalizeNumber(parsed.repeatLength ?? parsed.repeat_length ?? fields.repeat),
         labelsAcross: normalizeNumber(parsed.labelsAcross ?? parsed.labels_across ?? fields.across),
+        totalQuantity: normalizeNumber(parsed.totalQuantity ?? parsed.total_quantity ?? parsed.totalLabels ?? parsed.total_labels ?? parsed.quantity ?? parsed.orderQty ?? fields.labels),
+        finishedRollQuantity: normalizeNumber(parsed.finishedRollQuantity ?? parsed.finished_roll_quantity ?? parsed.finishedRoll ?? parsed.finished_roll ?? parsed.perRoll ?? parsed.labelsPerRoll ?? fields.finishedRoll),
         extractedPaperSpec: parsed.materialSpecCode ?? parsed.material_spec_code ?? parsed.extractedPaperSpec ?? parsed.extracted_paper_spec ?? parsed.extracted_spec ?? fields.extractedSpec ?? fields.productCode ?? null,
-        aiEstimatedThickness: normalizeNumber(parsed.materialThickness ?? parsed.material_thickness ?? parsed.aiEstimatedThickness ?? parsed.ai_estimated_thickness ?? fields.thickness)
+        aiEstimatedThickness: normalizeNumber(parsed.materialThickness ?? parsed.material_thickness ?? parsed.aiEstimatedThickness ?? parsed.ai_estimated_thickness ?? fields.thickness),
+        carrierWidth: normalizeNumber(parsed.carrierWidth ?? parsed.carrier_width ?? parsed.laneWidth ?? parsed.lane_width ?? parsed.labelWidth ?? parsed.label_width),
+        salesQuantity: normalizeNumber(parsed.salesQuantity ?? parsed.sales_quantity ?? parsed.rolls ?? parsed.rollCount),
+        productionOrder: parsed.productionOrder ?? parsed.production_order ?? parsed.prodOrder ?? null,
+        docketNumber: deriveDocketNumber(parsed.docketNumber ?? parsed.docket_number ?? parsed.docket, parsed.productionOrder ?? parsed.production_order ?? parsed.prodOrder)
       };
 
       // Always populate all visible job values first, even if no paper spec/thickness was found.
@@ -1473,6 +1518,41 @@ Strict rules:
           const el=document.getElementById(id);
           if(el) el.value=docketData.labelsAcross;
         });
+      }
+
+      if(docketData.totalQuantity){
+        const el=document.getElementById("impLabels");
+        if(el) el.value=docketData.totalQuantity;
+        const jq=document.getElementById("jobQuantity");
+        if(jq) jq.value=docketData.totalQuantity;
+      }
+
+      if(docketData.salesQuantity){
+        const el=document.getElementById("salesQuantity");
+        if(el) el.value=docketData.salesQuantity;
+      }
+
+      if(docketData.docketNumber){
+        const el=document.getElementById("docketNumber");
+        if(el) el.value=docketData.docketNumber;
+      }
+
+      if(docketData.finishedRollQuantity){
+        const el=document.getElementById("frRoll");
+        if(el) el.value=docketData.finishedRollQuantity;
+      }
+
+      // Core Size: share the detected across, and fill carrier width if the docket had it.
+      if(docketData.labelsAcross){
+        const el=document.getElementById("coreAcross");
+        if(el) el.value=docketData.labelsAcross;
+      }
+      if(docketData.carrierWidth){
+        const el=document.getElementById("coreCarrierWidth");
+        if(el) el.value=docketData.carrierWidth;
+      }
+      if(document.getElementById("coreCarrierWidth").value && document.getElementById("coreAcross").value){
+        calculateCoreSize();
       }
 
       fillFieldsFromMap(fields, docketFieldMap, true);
@@ -1565,13 +1645,15 @@ function clearDocketScan(){
   clearFileInput("docketCameraInput");
   clearFileInput("docketUploadInput");
 
-  ["manualSpecSearch","impLabels","impRepeat","impAcross","pcCount","pcRepeat","pcAcross","frRoll","frAcross","frRepeat","ecciRepeat","ecciAcross"].forEach(clearInputValue);
+  ["manualSpecSearch","impLabels","impRepeat","impAcross","pcCount","pcRepeat","pcAcross","frRoll","frAcross","frRepeat","ecciRepeat","ecciAcross","coreCarrierWidth","coreAcross","docketNumber","jobQuantity","salesQuantity"].forEach(clearInputValue);
 
   showError("docketScanError","");
   showSuccess("docketScanSuccess","Docket scan cleared.");
   calculateImpressions();
   calculatePressCounts();
   calculateFinishedRoll();
+  document.getElementById("coreAnswer").textContent = "—";
+  showError("coreError","");
   calculateAndRenderECCI();
 }
 
@@ -1602,6 +1684,12 @@ function clearFinishedRollValues(){
   document.getElementById("frBase").textContent = "—";
   document.getElementById("frTable").innerHTML = '<tr><td colspan="3" class="empty">Enter values and tap Generate Table.</td></tr>';
   showError("frError","");
+}
+
+function clearCoreValues(){
+  ["coreCarrierWidth","coreAcross"].forEach(clearInputValue);
+  document.getElementById("coreAnswer").textContent = "—";
+  showError("coreError","");
 }
 
 
@@ -1644,18 +1732,16 @@ document.addEventListener("DOMContentLoaded",()=>{
     bind("saveKeyBtn","click",saveKey);
     bind("clearKeyBtn","click",clearKey);
 
-    bind("clearLabelScanBtn","click",clearLabelScan);
     bind("clearDocketScanBtn","click",clearDocketScan);
     bind("clearEcciBtn","click",clearECCIValues);
     bind("clearImpBtn","click",clearImpressionsValues);
     bind("clearPcBtn","click",clearPressCountsValues);
     bind("clearFrBtn","click",clearFinishedRollValues);
+    bind("coreBtn","click",calculateCoreSize);
+    bind("clearCoreBtn","click",clearCoreValues);
 
-    bind("labelScanBtn","click",()=>runGeminiScan(labelPhotoFile,"label"));
     bind("docketScanBtn","click",()=>runGeminiScan(docketPhotoFile,"docket"));
 
-    bind("labelCameraInput","change",e=>handleLabelPhoto(e.target.files[0]));
-    bind("labelUploadInput","change",e=>handleLabelPhoto(e.target.files[0]));
     bind("docketCameraInput","change",e=>handleDocketPhoto(e.target.files[0]));
     bind("docketUploadInput","change",e=>handleDocketPhoto(e.target.files[0]));
 
@@ -1701,6 +1787,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     ["impLabels","impRepeat","impAcross"].forEach(id=>bind(id,"input",calculateImpressions));
     ["pcCount","pcRepeat","pcAcross"].forEach(id=>bind(id,"input",calculatePressCounts));
     ["frRoll","frAcross","frRepeat","frLevels"].forEach(id=>bind(id,"input",calculateFinishedRoll));
+    ["coreCarrierWidth","coreAcross"].forEach(id=>bind(id,"input",calculateCoreSize));
 
     setStatus("App ready.");
     setTimeout(()=>{ if(status && status.textContent === "App ready.") status.style.display = "none"; }, 1800);
