@@ -501,7 +501,7 @@ body.dark .ecci-display{
     <div class="formula-title">Target counter setting from paper thickness, repeat, across, and roll radius</div>
 
     <label for="manualSpecSearch">Manual Spec Number Lookup</label>
-    <input id="manualSpecSearch" placeholder="Example: 54320" inputmode="numeric">
+    <input id="manualSpecSearch" placeholder="e.g. 54320 or Fasson S2045N" inputmode="text" autocapitalize="characters" autocomplete="off">
     <button id="lookupSpecBtn" class="section-clear" type="button">Lookup Thickness by Spec</button>
     <div class="answer-formula" id="thicknessSourceOut">Thickness source: —</div>
 
@@ -621,7 +621,7 @@ let docketPhotoFile = null;
 let currentDecimalMode = "exact";
 
 const DOCKET_SCAN_MODEL = "gemini-2.5-flash-lite";
-const SPEC_LOOKUP_MODEL = "gemini-2.5-flash-lite";
+const SPEC_LOOKUP_MODEL = "gemini-2.5-flash";
 let lastDocketMaterialScanData = null;
 let lastAISpecLookupData = null;
 
@@ -835,12 +835,12 @@ async function handleSpecLookupClick(){
 
 async function lookupMaterialSpecWithAI(){
   const apiKey = document.getElementById("apiKey").value.trim();
-  const specText = document.getElementById("manualSpecSearch").value.replace(/[^0-9A-Za-z]/g,"").trim();
+  const specText = document.getElementById("manualSpecSearch").value.replace(/[^0-9A-Za-z .#/-]/g,"").trim();
   const sourceOut = document.getElementById("thicknessSourceOut");
 
   if(!apiKey){
     if(sourceOut) sourceOut.textContent = "Thickness source: Missing Gemini API key";
-    throw new Error("Missing Gemini API key. Tap ⚙️ and paste your Google AI Studio API key first.");
+    throw new Error("Missing Gemini API key. Tap \u2699\uFE0F and paste your Google AI Studio API key first.");
   }
 
   if(!specText){
@@ -848,34 +848,26 @@ async function lookupMaterialSpecWithAI(){
     throw new Error("Enter a material spec number first.");
   }
 
-  const prompt = `You are an industrial label-material engineering lookup engine.
+  if(sourceOut) sourceOut.textContent = "Thickness source: Searching the web for spec " + specText + "...";
 
-Given a manufacturer material spec number typed by a printing press operator, identify the nominal total construction caliper/thickness in inches.
+  const prompt = `You are an industrial pressure-sensitive label-material lookup engine for a printing press operator.
 
-Return JSON only. No markdown. No explanation.
+Use Google Search to find the published construction caliper/thickness for this material spec number, then return the answer.
 
-Schema:
-{
-  "materialSpecCode": string | null,
-  "manufacturer": string | null,
-  "productName": string | null,
-  "materialThickness": number | null,
-  "thicknessUnit": "inches",
-  "confidenceScore": number
-}
+Material spec / product code to look up: "${specText}"
 
-Rules:
-- materialThickness must be total construction caliper in inches.
-- Total construction = facestock + adhesive + liner.
-- Use your engineering/material knowledge when the spec code is identifiable.
-- Do not confuse roll weight, carton weight, or basis weight with caliper.
-- 215 LB is weight, not thickness.
-- 40# or 50# is basis weight, not material thickness.
-- If the exact thickness cannot be confidently identified, return materialThickness: null and confidenceScore below 0.80.
-- Reference: if the input clearly identifies spec 54320 from "DT 300HD FSC AT2550 40 7.875\\" 54320", return materialThickness: 0.00560.
+Search the manufacturer's product datasheets (Avery Dennison / Fasson, UPM Raflatac, FLEXcon, Mactac, Ritrama, 3M, Technicote, and similar) for this exact code. Find the TOTAL construction caliper (facestock + adhesive + liner) in inches or mils.
 
-Operator input:
-${specText}`;
+Conversions: 1 mil = 0.001 inch. 1 micron = 0.0000393701 inch.
+
+Do NOT confuse these with caliper:
+- "215 LB", roll weight, or carton weight is weight, not thickness.
+- "40#", "50#", "BG40" is liner basis weight, not thickness.
+
+After searching, respond with a short sentence, then on the FINAL line output ONLY this JSON object (no markdown fences):
+{"materialSpecCode": string|null, "manufacturer": string|null, "productName": string|null, "materialThickness": number|null, "thicknessUnit": "inches", "confidenceScore": number}
+
+materialThickness must be the total construction caliper expressed in inches as a decimal (example 0.00566). confidenceScore is 0 to 1 based on how directly the datasheet supported the value.`;
 
   const endpoint = getGeminiEndpoint(SPEC_LOOKUP_MODEL);
   const requestBody = {
@@ -885,6 +877,7 @@ ${specText}`;
         parts: [{ text: prompt }]
       }
     ],
+    tools: [{ google_search: {} }],
     generationConfig: { temperature: 0 }
   };
 
@@ -896,31 +889,36 @@ ${specText}`;
 
   const body = await response.json().catch(()=>null);
   if(!response.ok){
+    if(sourceOut) sourceOut.textContent = "Thickness source: Lookup request failed";
     throw new Error(body?.error?.message || "AI spec lookup failed.");
   }
 
   const text = extractText(body);
   const parsed = parseGeminiJson(text);
   const confidence = normalizeNumber(parsed.confidenceScore ?? parsed.confidence_score);
-  const thickness = normalizeNumber(parsed.materialThickness ?? parsed.material_thickness ?? parsed.thickness);
+  let thickness = normalizeNumber(parsed.materialThickness ?? parsed.material_thickness ?? parsed.thickness);
+
+  // Guard against the model returning mils instead of inches (e.g. 5.66 -> 0.00566).
+  if(thickness !== null && thickness > 0.02 && thickness < 50){
+    thickness = thickness / 1000;
+  }
 
   lastAISpecLookupData = parsed;
 
-  if(confidence !== null && confidence < 0.80){
-    if(sourceOut) sourceOut.textContent = "Thickness source: AI lookup confidence too low";
-    throw new Error("AI could not confidently identify this material thickness.");
-  }
-
   if(thickness === null || thickness <= 0){
-    if(sourceOut) sourceOut.textContent = "Thickness source: AI lookup found no thickness";
-    throw new Error("AI lookup did not return a usable thickness.");
+    if(sourceOut) sourceOut.textContent = "Thickness source: Web lookup found no published thickness for " + specText;
+    throw new Error("Couldn't find a published thickness for \u201c" + specText + "\u201d. Try the full code (manufacturer + spec), or enter the caliper manually.");
   }
 
   document.getElementById("ecciThickness").value = thickness;
   safeSet("ROLL_CALC_MATERIAL_THICKNESS", String(thickness));
 
+  const lowConfidence = (confidence !== null && confidence < 0.80);
+  const specLabel = parsed.materialSpecCode || parsed.productName || specText;
   if(sourceOut){
-    sourceOut.textContent = "Thickness source: AI spec lookup: " + (parsed.materialSpecCode || parsed.extracted_spec || parsed.productName || specText);
+    sourceOut.textContent = lowConfidence
+      ? "Thickness source: Web estimate for " + specLabel + " (low confidence \u2014 verify before running)"
+      : "Thickness source: Web lookup: " + specLabel + (parsed.manufacturer ? " (" + parsed.manufacturer + ")" : "");
   }
 
   calculateAndRenderECCI();
@@ -1458,8 +1456,8 @@ Strict rules:
       const docketData = {
         repeatLength: normalizeNumber(parsed.repeatLength ?? parsed.repeat_length ?? fields.repeat),
         labelsAcross: normalizeNumber(parsed.labelsAcross ?? parsed.labels_across ?? fields.across),
-        extractedPaperSpec: parsed.extractedPaperSpec ?? parsed.extracted_paper_spec ?? parsed.extracted_spec ?? fields.extractedSpec ?? fields.productCode ?? null,
-        aiEstimatedThickness: normalizeNumber(parsed.aiEstimatedThickness ?? parsed.ai_estimated_thickness ?? fields.thickness)
+        extractedPaperSpec: parsed.materialSpecCode ?? parsed.material_spec_code ?? parsed.extractedPaperSpec ?? parsed.extracted_paper_spec ?? parsed.extracted_spec ?? fields.extractedSpec ?? fields.productCode ?? null,
+        aiEstimatedThickness: normalizeNumber(parsed.materialThickness ?? parsed.material_thickness ?? parsed.aiEstimatedThickness ?? parsed.ai_estimated_thickness ?? fields.thickness)
       };
 
       // Always populate all visible job values first, even if no paper spec/thickness was found.
@@ -1484,10 +1482,9 @@ Strict rules:
 
       if(docketData.extractedPaperSpec){
         const specInput=document.getElementById("manualSpecSearch");
-        if(specInput && !specInput.value){
+        if(specInput){
           specInput.value=docketData.extractedPaperSpec;
         }
-        
       }else{
         const sourceOut=document.getElementById("thicknessSourceOut");
         if(sourceOut){
@@ -1495,17 +1492,30 @@ Strict rules:
         }
       }
 
-      // If no database match but AI returned a thickness and manual field is blank, use the AI fallback.
+      // If the docket scan itself returned a thickness and the field is blank, use it as a starting value.
       if(!document.getElementById("ecciThickness").value && docketData.aiEstimatedThickness){
         document.getElementById("ecciThickness").value=docketData.aiEstimatedThickness;
+        safeSet("ROLL_CALC_MATERIAL_THICKNESS", String(docketData.aiEstimatedThickness));
       }
 
       recalculateAll();
 
       if(docketData.extractedPaperSpec){
-        showSuccess(successId,"Docket scan complete. Job values populated. Material spec detected: " + docketData.extractedPaperSpec + ". Model used: " + geminiResult.model + ".");
+        showSuccess(successId,"Docket scan complete. Job values populated. Material spec detected: " + docketData.extractedPaperSpec + ". Looking up thickness...");
       }else{
         showSuccess(successId,"Docket scan complete. Job values populated. No material spec found; enter/search spec manually if needed. Model used: " + geminiResult.model + ".");
+      }
+
+      // True one-scan flow: if a spec was detected but we still have no thickness, search for it automatically.
+      if(docketData.extractedPaperSpec && !document.getElementById("ecciThickness").value){
+        try{
+          await lookupMaterialSpecWithAI();
+          showSuccess(successId,"Docket scan complete. Job values populated. Material spec detected: " + docketData.extractedPaperSpec + ". Thickness found and applied.");
+        }catch(lookupErr){
+          showSuccess(successId,"Docket scan complete. Job values populated. Material spec detected: " + docketData.extractedPaperSpec + ". Thickness not found automatically \u2014 tap \u201cLookup Thickness by Spec\u201d or enter it manually.");
+        }
+      }else if(docketData.extractedPaperSpec){
+        showSuccess(successId,"Docket scan complete. Job values populated. Material spec detected: " + docketData.extractedPaperSpec + ". Model used: " + geminiResult.model + ".");
       }
     }
   }catch(err){
@@ -1659,6 +1669,12 @@ document.addEventListener("DOMContentLoaded",()=>{
     bind("manualSpecSearch","input",()=>{
       lastAISpecLookupData = null;
       calculateAndRenderECCI();
+    });
+    bind("manualSpecSearch","keydown",(e)=>{
+      if(e.key === "Enter"){
+        e.preventDefault();
+        handleSpecLookupClick();
+      }
     });
 
     bind("lookupSpecBtn","click",handleSpecLookupClick);
