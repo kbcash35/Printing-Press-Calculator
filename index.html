@@ -279,6 +279,43 @@ input[type=file]{
   color:var(--bg);
   border-color:var(--black);
 }
+/* Compact Job Info grid */
+.compact-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px 12px;
+}
+.compact-grid label{
+  margin:8px 0 4px;
+  font-size:13px;
+}
+.compact-grid input{
+  padding:9px 10px;
+  font-size:16px;
+  border-radius:10px;
+}
+.compact-grid .full{grid-column:1 / -1;}
+/* Per-section decimal/fraction toggle */
+.unit-toggle{
+  display:inline-flex;
+  gap:0;
+  margin:10px 0 4px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  overflow:hidden;
+}
+.unit-toggle button{
+  padding:7px 14px;
+  background:var(--card);
+  color:#3e4048;
+  border:none;
+  font-size:13px;
+  font-weight:800;
+}
+.unit-toggle button.active{
+  background:var(--black);
+  color:var(--bg);
+}
 .table-wrap{
   margin-top:14px;
   border:1px solid var(--line);
@@ -471,13 +508,32 @@ body.dark .ecci-display{
 
   <section class="card">
     <h2>Job Info</h2>
-    <div class="formula-title">Auto-filled from the docket scan. Edit if needed.</div>
-    <label for="docketNumber">Docket Number</label>
-    <input id="docketNumber" placeholder="1371660" inputmode="numeric">
-    <label for="jobQuantity">Total Quantity</label>
-    <input id="jobQuantity" placeholder="525000" inputmode="numeric">
-    <label for="salesQuantity">Sales Quantity</label>
-    <input id="salesQuantity" placeholder="105" inputmode="numeric">
+    <div class="compact-grid">
+      <div class="full">
+        <label for="docketNumber">Docket Number</label>
+        <input id="docketNumber" placeholder="1371660" inputmode="numeric">
+      </div>
+      <div>
+        <label for="jobQuantity">Total Quantity</label>
+        <input id="jobQuantity" placeholder="525000" inputmode="numeric">
+      </div>
+      <div>
+        <label for="salesQuantity">Sales Quantity</label>
+        <input id="salesQuantity" placeholder="105" inputmode="numeric">
+      </div>
+      <div>
+        <label for="crossPerfTPI">Cross Perf TPI</label>
+        <input id="crossPerfTPI" placeholder="10" inputmode="text">
+      </div>
+      <div>
+        <label for="rollDirection">Roll Direction</label>
+        <input id="rollDirection" placeholder="1" inputmode="text">
+      </div>
+      <div class="full">
+        <label for="labelColor">Color</label>
+        <input id="labelColor" placeholder="Plain" inputmode="text">
+      </div>
+    </div>
   </section>
 
   <section class="card">
@@ -493,7 +549,6 @@ body.dark .ecci-display{
 
   <section class="card" id="ecciCard">
     <h2>ECCI Counter</h2>
-    <div class="formula-title">Target counter setting from paper thickness, repeat, across, and roll radius</div>
 
     <label for="manualSpecSearch">Manual Spec Number Lookup</label>
     <input id="manualSpecSearch" placeholder="e.g. 54320 or Fasson S2045N" inputmode="text" autocapitalize="characters" autocomplete="off">
@@ -520,10 +575,14 @@ body.dark .ecci-display{
     <div id="ecciError" class="error"></div>
 
     <div class="ecci-display">
-      <div class="ecci-label">ECCI Counter Preset</div>
+      <div class="ecci-label">Estimated ECCI Counter Preset</div>
       <div id="ecciCounterOut" class="ecci-number">—</div>
     </div>
 
+    <div class="unit-toggle" data-section="ecci">
+      <button data-unit="decimal" class="active" type="button">Decimal</button>
+      <button data-unit="fraction" type="button">Fraction</button>
+    </div>
     <div class="ecci-breakdown">
       <div>Total Diameter: <strong id="ecciDiameterOut">—</strong></div>
       <div>Total Web Length: <strong id="ecciLengthOut">—</strong></div>
@@ -534,7 +593,6 @@ body.dark .ecci-display{
 
   <section class="card">
     <h2>Impressions</h2>
-    <div class="formula-title">Labels × Repeat ÷ Across ÷ 10</div>
     <label>Labels</label>
     <input id="impLabels" placeholder="320000" inputmode="decimal">
     <label>Repeat</label>
@@ -545,15 +603,13 @@ body.dark .ecci-display{
     <button id="clearImpBtn" class="section-clear" type="button">Clear Impressions</button>
     <div id="impError" class="error"></div>
     <div class="answer-card">
-      <div class="answer-label">Impressions Answer</div>
+      <div class="answer-label">Total Impressions</div>
       <div id="impAnswer" class="answer">—</div>
-      <div class="answer-formula">Labels × Repeat ÷ Across ÷ 10</div>
     </div>
   </section>
 
   <section class="card">
     <h2>Press Counts</h2>
-    <div class="formula-title">Count × 10 × Across ÷ Repeat</div>
     <label>Count</label>
     <input id="pcCount" placeholder="8500" inputmode="decimal">
     <label>Repeat</label>
@@ -566,13 +622,11 @@ body.dark .ecci-display{
     <div class="answer-card">
       <div class="answer-label">Press Counts Answer</div>
       <div id="pcAnswer" class="answer">—</div>
-      <div class="answer-formula">Count × 10 × Across ÷ Repeat</div>
     </div>
   </section>
 
   <section class="card">
     <h2>Finished Roll</h2>
-    <div class="formula-title">Labels = Finished Roll × Across × Level</div>
     <label>Finished Roll</label>
     <input id="frRoll" placeholder="1000" inputmode="decimal">
     <label>Across</label>
@@ -588,7 +642,6 @@ body.dark .ecci-display{
     <div class="answer-card">
       <div class="answer-label">Increase Per Level</div>
       <div id="frBase" class="answer">—</div>
-      <div class="answer-formula">Finished Roll × Across</div>
     </div>
 
     <div class="table-wrap">
@@ -605,7 +658,6 @@ body.dark .ecci-display{
 
   <section class="card">
     <h2>Core Size</h2>
-    <div class="formula-title">Carrier Width × Across</div>
     <label>Carrier Width</label>
     <input id="coreCarrierWidth" placeholder="3.3125" inputmode="decimal">
     <label>Across</label>
@@ -613,10 +665,13 @@ body.dark .ecci-display{
     <button id="coreBtn" class="primary" type="button">Calculate Core Size</button>
     <button id="clearCoreBtn" class="section-clear" type="button">Clear Core Size</button>
     <div id="coreError" class="error"></div>
+    <div class="unit-toggle" data-section="core">
+      <button data-unit="decimal" class="active" type="button">Decimal</button>
+      <button data-unit="fraction" type="button">Fraction</button>
+    </div>
     <div class="answer-card">
-      <div class="answer-label">Core Size Answer</div>
+      <div class="answer-label">Core Size Needed</div>
       <div id="coreAnswer" class="answer">—</div>
-      <div class="answer-formula">Carrier Width × Across</div>
     </div>
   </section>
 </main>
@@ -674,6 +729,29 @@ function formatNumber(n){
   const value = applyDisplayMode(n);
   const max = currentDecimalMode === "exact" ? 4 : 0;
   return new Intl.NumberFormat("en-US",{maximumFractionDigits:max}).format(value);
+}
+// Decimal/Fraction toggle, per section. Default decimal.
+const sectionUnits = { core: "decimal", ecci: "decimal" };
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); return b ? gcd(b, a%b) : a; }
+function toFraction(value, denom=32){
+  if(!Number.isFinite(value)) return "—";
+  const neg = value < 0;
+  value = Math.abs(value);
+  let whole = Math.floor(value);
+  let num = Math.round((value - whole) * denom);
+  let d = denom;
+  if(num === d){ whole += 1; num = 0; }
+  if(num !== 0){ const g = gcd(num, d); num /= g; d /= g; }
+  let s;
+  if(num === 0) s = String(whole);
+  else if(whole === 0) s = num + "/" + d;
+  else s = whole + " " + num + "/" + d;
+  return (neg ? "-" : "") + s + "\"";
+}
+function renderMeasure(value, section){
+  if(!Number.isFinite(value)) return "—";
+  if(sectionUnits[section] === "fraction") return toFraction(value);
+  return formatNumber(value);
 }
 function showError(id,msg){
   const el=document.getElementById(id);
@@ -739,7 +817,7 @@ function calculateCoreSize(){
     showError("coreError","Enter Carrier Width and Across.");
     return;
   }
-  document.getElementById("coreAnswer").textContent=formatNumber(width*across);
+  document.getElementById("coreAnswer").textContent=renderMeasure(width*across,"core");
 }
 
 const ECCI_CORE_OUTER_DIAMETER = 3.0;
@@ -778,12 +856,14 @@ function calculateECCICounter(t, L, A, targetRadius){
 
   // Counter preset = web length / 10 (== Labels * Repeat / Across / 10, the Impressions formula).
   const counterReading = totalLength / ECCI_COUNTER_LENGTH_DIVISOR;
+  // Press-counter "impressions" = the same 10-inch-unit count the press shows (aligns with the Impressions/Press Counts cards).
+  const pressCounterImpressions = totalLength / ECCI_COUNTER_LENGTH_DIVISOR;
 
   return {
     counterReading: Math.round(counterReading),
     targetDiameter: D,
     totalLength,
-    totalImpressions,
+    totalImpressions: pressCounterImpressions,
     totalLabels
   };
 }
@@ -1013,7 +1093,9 @@ function calculateAndRenderECCI(){
     );
 
     document.getElementById("ecciCounterOut").textContent = new Intl.NumberFormat("en-US").format(result.counterReading);
-    document.getElementById("ecciDiameterOut").textContent = new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(result.targetDiameter) + " in";
+    document.getElementById("ecciDiameterOut").textContent = sectionUnits.ecci === "fraction"
+      ? toFraction(result.targetDiameter)
+      : (new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(result.targetDiameter) + " in");
     document.getElementById("ecciLengthOut").textContent = new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(result.totalLength) + " in";
     document.getElementById("ecciImpressionsOut").textContent = new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(result.totalImpressions);
     document.getElementById("ecciLabelsOut").textContent = new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(result.totalLabels);
@@ -1433,6 +1515,9 @@ Required JSON schema:
   "carrierWidth": number | null,
   "productionOrder": string | null,
   "docketNumber": string | null,
+  "crossPerfTPI": string | null,
+  "labelColor": string | null,
+  "rollDirection": string | null,
   "materialSpecCode": string | null,
   "materialThickness": number | null
 }
@@ -1454,6 +1539,16 @@ Strict rules:
    - Return only the leading count number, not the "RL5000" part.
 6. productionOrder is the full "Production order" value, e.g. "D201371660".
 7. docketNumber is the productionOrder with the first 3 characters removed, e.g. "D201371660" -> "1371660". If unsure, leave docketNumber null and just return productionOrder.
+7b. crossPerfTPI is the cross perforation teeth-per-inch.
+   - Look for "TPI" near "Cross perf", e.g. "Cross perf between each label at 1.6250\" - 10TPI" -> "10".
+   - If there is ONE TPI value, return just the number as a string, e.g. "10".
+   - If there are TWO different TPI values where one is the "on" perf and one is the "off" perf, return them labeled, e.g. "12 on / 8 off".
+   - If no cross perf TPI is present, return null.
+7c. labelColor is the print color.
+   - If the docket says "Plain" (no print), return "Plain".
+   - Otherwise return the color text exactly as written on the docket (e.g. "Black", "PMS 185 Red").
+7d. rollDirection is the roll/rewind direction.
+   - Look for "Roll Direction", e.g. "Roll Direction # 1" -> "1". Return just the number/letter if clear, otherwise the full text.
 8. carrierWidth must come ONLY from the "Carrier Size" or "Carrier" line, and is the value labeled "wide" (the WIDTH, not the depth).
    - The width is the number that comes right after the word "Carrier" and before "wide".
    - NEVER use the "Label Size" width for carrierWidth. In Example B, Label Size width is 3.0000 but carrierWidth is 3.1250.
@@ -1502,7 +1597,10 @@ Strict rules:
         carrierWidth: normalizeNumber(parsed.carrierWidth ?? parsed.carrier_width ?? parsed.laneWidth ?? parsed.lane_width ?? parsed.labelWidth ?? parsed.label_width),
         salesQuantity: normalizeNumber(parsed.salesQuantity ?? parsed.sales_quantity ?? parsed.rolls ?? parsed.rollCount),
         productionOrder: parsed.productionOrder ?? parsed.production_order ?? parsed.prodOrder ?? null,
-        docketNumber: deriveDocketNumber(parsed.docketNumber ?? parsed.docket_number ?? parsed.docket, parsed.productionOrder ?? parsed.production_order ?? parsed.prodOrder)
+        docketNumber: deriveDocketNumber(parsed.docketNumber ?? parsed.docket_number ?? parsed.docket, parsed.productionOrder ?? parsed.production_order ?? parsed.prodOrder),
+        crossPerfTPI: parsed.crossPerfTPI ?? parsed.cross_perf_tpi ?? parsed.tpi ?? null,
+        labelColor: parsed.labelColor ?? parsed.label_color ?? parsed.color ?? parsed.colour ?? null,
+        rollDirection: parsed.rollDirection ?? parsed.roll_direction ?? parsed.rewindDirection ?? null
       };
 
       // Always populate all visible job values first, even if no paper spec/thickness was found.
@@ -1535,6 +1633,19 @@ Strict rules:
       if(docketData.docketNumber){
         const el=document.getElementById("docketNumber");
         if(el) el.value=docketData.docketNumber;
+      }
+
+      if(docketData.crossPerfTPI){
+        const el=document.getElementById("crossPerfTPI");
+        if(el) el.value=docketData.crossPerfTPI;
+      }
+      if(docketData.labelColor){
+        const el=document.getElementById("labelColor");
+        if(el) el.value=docketData.labelColor;
+      }
+      if(docketData.rollDirection){
+        const el=document.getElementById("rollDirection");
+        if(el) el.value=docketData.rollDirection;
       }
 
       if(docketData.finishedRollQuantity){
@@ -1645,7 +1756,7 @@ function clearDocketScan(){
   clearFileInput("docketCameraInput");
   clearFileInput("docketUploadInput");
 
-  ["manualSpecSearch","impLabels","impRepeat","impAcross","pcCount","pcRepeat","pcAcross","frRoll","frAcross","frRepeat","ecciRepeat","ecciAcross","coreCarrierWidth","coreAcross","docketNumber","jobQuantity","salesQuantity"].forEach(clearInputValue);
+  ["manualSpecSearch","impLabels","impRepeat","impAcross","pcCount","pcRepeat","pcAcross","frRoll","frAcross","frRepeat","ecciRepeat","ecciAcross","coreCarrierWidth","coreAcross","docketNumber","jobQuantity","salesQuantity","crossPerfTPI","labelColor","rollDirection"].forEach(clearInputValue);
 
   showError("docketScanError","");
   showSuccess("docketScanSuccess","Docket scan cleared.");
@@ -1781,6 +1892,19 @@ document.addEventListener("DOMContentLoaded",()=>{
         }catch(err){
           setStatus("Decimal button error: " + (err.message || err), true);
         }
+      });
+    });
+
+    document.querySelectorAll(".unit-toggle").forEach(group=>{
+      const section = group.dataset.section;
+      group.querySelectorAll("button").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          group.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+          btn.classList.add("active");
+          sectionUnits[section] = btn.dataset.unit;
+          if(section === "core") calculateCoreSize();
+          else if(section === "ecci") calculateAndRenderECCI();
+        });
       });
     });
 
