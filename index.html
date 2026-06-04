@@ -294,6 +294,24 @@ input[type=file]{
   font-size:16px;
   border-radius:10px;
 }
+.compact-grid textarea{
+  width:100%;
+  border:1px solid var(--field-border);
+  border-radius:10px;
+  background:var(--field);
+  color:var(--text);
+  padding:9px 10px;
+  font-size:16px;
+  font-family:inherit;
+  resize:vertical;
+  outline:none;
+  box-sizing:border-box;
+}
+.compact-grid textarea:focus{
+  border-color:#1a1a1d;
+  background:var(--card);
+  box-shadow:0 0 0 3px rgba(0,0,0,.06);
+}
 .compact-grid .full{grid-column:1 / -1;}
 /* Per-section decimal/fraction toggle */
 .unit-toggle{
@@ -315,6 +333,127 @@ input[type=file]{
 .unit-toggle button.active{
   background:var(--black);
   color:var(--bg);
+}
+/* Tab bar */
+.tab-bar{
+  display:flex;
+  gap:6px;
+  margin:0 0 14px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:6px;
+  position:sticky;
+  top:6px;
+  z-index:5;
+}
+.tab-bar button{
+  flex:1 1 0;
+  padding:13px 6px;
+  border:none;
+  border-radius:10px;
+  background:transparent;
+  color:#3e4048;
+  font-size:15px;
+  font-weight:800;
+}
+.tab-bar button.active{ background:var(--black); color:var(--bg); }
+.tab-panel{ display:none; }
+.tab-panel.active{ display:block; }
+.reset-btn{
+  width:100%;
+  margin:0 0 14px;
+  padding:14px;
+  border:1px solid #ffbfc0;
+  border-radius:12px;
+  background:var(--card);
+  color:var(--danger);
+  font-size:15px;
+  font-weight:800;
+}
+/* Tally */
+.tally-add{ display:flex; gap:10px; align-items:stretch; margin:6px 0 10px; }
+.tally-add input{ flex:1 1 auto; }
+.tally-add button{
+  flex:0 0 auto;
+  padding:0 22px;
+  border:none;
+  border-radius:12px;
+  background:var(--black);
+  color:var(--bg);
+  font-size:16px;
+  font-weight:800;
+}
+.tally-list{ margin:6px 0; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+.tally-row{ display:flex; align-items:center; gap:10px; padding:11px 14px; border-bottom:1px solid var(--line); }
+.tally-row:last-child{ border-bottom:none; }
+.tally-row span:first-child{ flex:0 0 auto; font-weight:700; color:#3e4048; }
+.tally-amt{ flex:1 1 auto; text-align:right; font-weight:800; font-size:17px; }
+.tally-del{
+  flex:0 0 auto; width:30px; height:30px; border-radius:8px;
+  border:1px solid #ffbfc0; background:var(--card); color:var(--danger); font-weight:800;
+}
+.tally-empty{ padding:16px 14px; color:#7a7d85; text-align:center; }
+.running-total{
+  display:flex; justify-content:space-between; align-items:center;
+  background:var(--black); color:var(--bg);
+  border-radius:14px; padding:14px 18px; margin:10px 0;
+}
+.running-total .rt-label{ font-size:13px; letter-spacing:.05em; text-transform:uppercase; opacity:.8; }
+.running-total .rt-value{ font-size:26px; font-weight:800; }
+/* Shift summary grid */
+.shift-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+.shift-cell{ background:var(--field); border:1px solid var(--line); border-radius:12px; padding:12px; }
+.shift-cell.full{ grid-column:1 / -1; }
+.shift-cell .sc-label{ font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:#7a7d85; }
+.shift-cell .sc-value{ font-size:22px; font-weight:800; margin-top:2px; }
+.shift-cell.waste .sc-value{ color:var(--danger); }
+/* Confidence badge on the ECCI result */
+.conf-badge{
+  display:none;
+  align-self:center;
+  margin:0 0 8px;
+  padding:4px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+.conf-badge.show{display:inline-block;}
+.conf-exact{background:#1f8f4e;color:#fff;}
+.conf-estimated{background:#e8a13a;color:#1a1a1d;}
+.conf-fallback{background:#d24b4b;color:#fff;}
+.conf-manual{background:#3a3f4a;color:#fff;}
+/* Nudge steppers */
+.nudge-row{
+  display:none;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:10px 0 4px;
+}
+.nudge-row.show{display:flex;}
+.nudge-row.always{display:flex;}
+.nudge-btn{
+  flex:0 0 auto;
+  min-width:64px;
+  padding:14px 0;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--card);
+  color:var(--text);
+  font-size:20px;
+  font-weight:800;
+  line-height:1;
+}
+.nudge-btn:active{background:var(--black);color:var(--bg);}
+.nudge-val{
+  flex:1 1 auto;
+  text-align:center;
+  font-size:15px;
+  font-weight:800;
+  color:var(--text);
 }
 .table-wrap{
   margin-top:14px;
@@ -491,6 +630,16 @@ body.dark .ecci-display{
     <p class="card-sub">Photo scan is optional. Manual calculator works without the key.</p>
   </section>
 
+  <div class="tab-bar" id="tabBar">
+    <button data-tab="roll" class="active" type="button">Roll</button>
+    <button data-tab="sheeter" type="button">Sheeter</button>
+    <button data-tab="folder" type="button">Folder</button>
+  </div>
+
+  <button class="reset-btn" id="resetShiftBtn" type="button">Reset / New Shift</button>
+
+  <div class="tab-panel active" id="panel-roll">
+
   <section class="card scan-card">
     <h2 class="scan-title">Docket Scan</h2>
     <p class="card-sub">One scan fills Repeat, Across, Quantity, Finished Roll, Core Size, plus material spec and thickness.</p>
@@ -500,10 +649,24 @@ body.dark .ecci-display{
       <input id="docketCameraInput" type="file" accept="image/*" capture="environment">
       <input id="docketUploadInput" type="file" accept="image/*">
     </div>
-    <button id="docketScanBtn" class="primary" type="button">Scan Printing Docket</button>
     <button id="clearDocketScanBtn" class="clear-mini" type="button">Clear Docket Scan</button>
     <div id="docketScanError" class="error"></div>
     <div id="docketScanSuccess" class="success">No docket photo selected.</div>
+    <p class="card-sub" style="margin-top:8px;">Takes a photo and scans automatically: reads on your phone first (low cost), then uses the full image only if needed.</p>
+  </section>
+
+  <section class="card scan-card">
+    <h2 class="scan-title">Handwritten Note</h2>
+    <p class="card-sub">Photograph an operator's handwritten note. Fills repeat, across, quantity, target diameter, etc. and calculates.</p>
+    <div class="top-actions">
+      <label class="action-btn" for="handCameraInput">Take Note Photo</label>
+      <label class="action-btn" for="handUploadInput">Upload Note</label>
+      <input id="handCameraInput" type="file" accept="image/*" capture="environment">
+      <input id="handUploadInput" type="file" accept="image/*">
+    </div>
+    <button id="handScanBtn" class="primary" type="button" style="display:none;">Scan Handwritten Note</button>
+    <div id="handScanError" class="error"></div>
+    <div id="handScanSuccess" class="success">No note photo selected.</div>
   </section>
 
   <section class="card">
@@ -530,8 +693,8 @@ body.dark .ecci-display{
         <input id="rollDirection" placeholder="1" inputmode="text">
       </div>
       <div class="full">
-        <label for="labelColor">Color</label>
-        <input id="labelColor" placeholder="Plain" inputmode="text">
+        <label for="labelColor">Colors</label>
+        <textarea id="labelColor" placeholder="Plain (or list colors, one per line)" rows="2"></textarea>
       </div>
     </div>
   </section>
@@ -557,6 +720,11 @@ body.dark .ecci-display{
 
     <label for="ecciThickness">Material Thickness / Caliper</label>
     <input id="ecciThickness" placeholder="0.00566" inputmode="decimal">
+    <div class="nudge-row" id="thicknessNudge">
+      <button class="nudge-btn" id="thickDown" type="button">−</button>
+      <div class="nudge-val" id="thickNudgeVal">—</div>
+      <button class="nudge-btn" id="thickUp" type="button">+</button>
+    </div>
 
     <label for="ecciRepeat">Repeat Length</label>
     <input id="ecciRepeat" placeholder="1.375" inputmode="decimal">
@@ -569,6 +737,11 @@ body.dark .ecci-display{
       <input id="ecciRadiusSlider" type="range" min="3" max="16" step="0.25" value="11.5">
       <input id="ecciRadius" placeholder="11.5" value="11.5" inputmode="decimal">
     </div>
+    <div class="nudge-row always" id="radiusNudge">
+      <button class="nudge-btn" id="radiusDown" type="button">−</button>
+      <div class="nudge-val" id="radiusNudgeVal">Radius 11.5 in</div>
+      <button class="nudge-btn" id="radiusUp" type="button">+</button>
+    </div>
 
     <button id="ecciCalculateBtn" class="primary" type="button">Calculate ECCI Counter</button>
     <button id="clearEcciBtn" class="section-clear" type="button">Clear ECCI Values</button>
@@ -576,6 +749,7 @@ body.dark .ecci-display{
 
     <div class="ecci-display">
       <div class="ecci-label">Estimated ECCI Counter Preset</div>
+      <div class="conf-badge" id="confBadge"></div>
       <div id="ecciCounterOut" class="ecci-number">—</div>
     </div>
 
@@ -626,6 +800,25 @@ body.dark .ecci-display{
   </section>
 
   <section class="card">
+    <h2>Core Size</h2>
+    <label>Carrier Width</label>
+    <input id="coreCarrierWidth" placeholder="3.3125" inputmode="decimal">
+    <label>Across</label>
+    <input id="coreAcross" placeholder="2" inputmode="decimal">
+    <button id="coreBtn" class="primary" type="button">Calculate Core Size</button>
+    <button id="clearCoreBtn" class="section-clear" type="button">Clear Core Size</button>
+    <div id="coreError" class="error"></div>
+    <div class="unit-toggle" data-section="core">
+      <button data-unit="decimal" class="active" type="button">Decimal</button>
+      <button data-unit="fraction" type="button">Fraction</button>
+    </div>
+    <div class="answer-card">
+      <div class="answer-label">Core Size Needed</div>
+      <div id="coreAnswer" class="answer">—</div>
+    </div>
+  </section>
+
+  <section class="card">
     <h2>Finished Roll</h2>
     <label>Finished Roll</label>
     <input id="frRoll" placeholder="1000" inputmode="decimal">
@@ -657,23 +850,114 @@ body.dark .ecci-display{
   </section>
 
   <section class="card">
-    <h2>Core Size</h2>
-    <label>Carrier Width</label>
-    <input id="coreCarrierWidth" placeholder="3.3125" inputmode="decimal">
-    <label>Across</label>
-    <input id="coreAcross" placeholder="2" inputmode="decimal">
-    <button id="coreBtn" class="primary" type="button">Calculate Core Size</button>
-    <button id="clearCoreBtn" class="section-clear" type="button">Clear Core Size</button>
-    <div id="coreError" class="error"></div>
-    <div class="unit-toggle" data-section="core">
-      <button data-unit="decimal" class="active" type="button">Decimal</button>
-      <button data-unit="fraction" type="button">Fraction</button>
+    <h2>Roll Tally &amp; Shift</h2>
+    <label for="rollMasterStart">Master Start Counter</label>
+    <input id="rollMasterStart" placeholder="0" inputmode="decimal">
+    <label for="rollMasterEnd">Master End Counter</label>
+    <input id="rollMasterEnd" placeholder="0" inputmode="decimal">
+
+    <label for="rollTallyInput">Add Finished Roll (impressions)</label>
+    <div class="tally-add">
+      <input id="rollTallyInput" placeholder="e.g. 12000" inputmode="decimal">
+      <button id="rollAddBtn" type="button">Add</button>
     </div>
-    <div class="answer-card">
-      <div class="answer-label">Core Size Needed</div>
-      <div id="coreAnswer" class="answer">—</div>
+    <div class="tally-list" id="rollTallyList"></div>
+    <div class="running-total">
+      <span class="rt-label">Running Total (Good)</span>
+      <span class="rt-value" id="rollRunningTotal">0</span>
+    </div>
+
+    <button id="rollShiftBtn" class="primary" type="button">Calculate Shift Summary</button>
+    <div id="rollShiftError" class="error"></div>
+    <div class="shift-grid">
+      <div class="shift-cell"><div class="sc-label">Gross Impressions</div><div class="sc-value" id="rollGross">—</div></div>
+      <div class="shift-cell"><div class="sc-label">Good Impressions</div><div class="sc-value" id="rollGood">—</div></div>
+      <div class="shift-cell waste"><div class="sc-label">Wastage</div><div class="sc-value" id="rollWaste">—</div></div>
+      <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="rollWastePct">—</div></div>
     </div>
   </section>
+
+  </div><!-- /panel-roll -->
+
+  <div class="tab-panel" id="panel-sheeter">
+    <section class="card">
+      <h2>Sheeter Job</h2>
+      <label for="sheeterSpec">Material Spec / Stock</label>
+      <input id="sheeterSpec" placeholder="e.g. 53710 or 100# gloss text" inputmode="text" autocomplete="off">
+      <label for="sheeterCaliper">Material Thickness / Caliper (optional)</label>
+      <input id="sheeterCaliper" placeholder="0.0056" inputmode="decimal">
+      <label for="sheeterSheetSize">Sheet Size (optional)</label>
+      <input id="sheeterSheetSize" placeholder="e.g. 12 x 18" inputmode="text" autocomplete="off">
+    </section>
+
+    <section class="card">
+      <h2>Sheet Tally &amp; Shift</h2>
+      <label for="sheeterMasterStart">Master Start Counter</label>
+      <input id="sheeterMasterStart" placeholder="0" inputmode="decimal">
+      <label for="sheeterMasterEnd">Master End Counter</label>
+      <input id="sheeterMasterEnd" placeholder="0" inputmode="decimal">
+
+      <label for="sheeterTallyInput">Add Sheet Count (per skid/lift)</label>
+      <div class="tally-add">
+        <input id="sheeterTallyInput" placeholder="e.g. 5000" inputmode="decimal">
+        <button id="sheeterAddBtn" type="button">Add</button>
+      </div>
+      <div class="tally-list" id="sheeterTallyList"></div>
+      <div class="running-total">
+        <span class="rt-label">Running Total (Good)</span>
+        <span class="rt-value" id="sheeterRunningTotal">0</span>
+      </div>
+
+      <button id="sheeterShiftBtn" class="primary" type="button">Calculate Shift Summary</button>
+      <div id="sheeterShiftError" class="error"></div>
+      <div class="shift-grid">
+        <div class="shift-cell"><div class="sc-label">Gross Sheets</div><div class="sc-value" id="sheeterGross">—</div></div>
+        <div class="shift-cell"><div class="sc-label">Good Sheets</div><div class="sc-value" id="sheeterGood">—</div></div>
+        <div class="shift-cell waste"><div class="sc-label">Wastage</div><div class="sc-value" id="sheeterWaste">—</div></div>
+        <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="sheeterWastePct">—</div></div>
+      </div>
+    </section>
+  </div><!-- /panel-sheeter -->
+
+  <div class="tab-panel" id="panel-folder">
+    <section class="card">
+      <h2>Folder Job</h2>
+      <label for="folderSpec">Material Spec / Stock</label>
+      <input id="folderSpec" placeholder="e.g. 53710 or 60# offset" inputmode="text" autocomplete="off">
+      <label for="folderCaliper">Material Thickness / Caliper (optional)</label>
+      <input id="folderCaliper" placeholder="0.0040" inputmode="decimal">
+      <label for="folderFold">Fold Type (optional)</label>
+      <input id="folderFold" placeholder="e.g. tri-fold, Z-fold" inputmode="text" autocomplete="off">
+    </section>
+
+    <section class="card">
+      <h2>Pack Tally &amp; Shift</h2>
+      <label for="folderMasterStart">Master Start Counter</label>
+      <input id="folderMasterStart" placeholder="0" inputmode="decimal">
+      <label for="folderMasterEnd">Master End Counter</label>
+      <input id="folderMasterEnd" placeholder="0" inputmode="decimal">
+
+      <label for="folderTallyInput">Add Folded Pack Count</label>
+      <div class="tally-add">
+        <input id="folderTallyInput" placeholder="e.g. 2500" inputmode="decimal">
+        <button id="folderAddBtn" type="button">Add</button>
+      </div>
+      <div class="tally-list" id="folderTallyList"></div>
+      <div class="running-total">
+        <span class="rt-label">Running Total (Good)</span>
+        <span class="rt-value" id="folderRunningTotal">0</span>
+      </div>
+
+      <button id="folderShiftBtn" class="primary" type="button">Calculate Shift Summary</button>
+      <div id="folderShiftError" class="error"></div>
+      <div class="shift-grid">
+        <div class="shift-cell"><div class="sc-label">Gross Pieces</div><div class="sc-value" id="folderGross">—</div></div>
+        <div class="shift-cell"><div class="sc-label">Good Pieces</div><div class="sc-value" id="folderGood">—</div></div>
+        <div class="shift-cell waste"><div class="sc-label">Wastage</div><div class="sc-value" id="folderWaste">—</div></div>
+        <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="folderWastePct">—</div></div>
+      </div>
+    </section>
+  </div><!-- /panel-folder -->
 </main>
 
 <script>
@@ -685,12 +969,14 @@ function getGeminiEndpoint(model){
 const GEMINI_ENDPOINT = getGeminiEndpoint(GEMINI_MODEL);
 let labelPhotoFile = null;
 let docketPhotoFile = null;
+let handPhotoFile = null;
 let currentDecimalMode = "exact";
 
 const DOCKET_SCAN_MODEL = "gemini-2.5-flash-lite";
 const SPEC_LOOKUP_MODEL = "gemini-2.5-flash";
 let lastDocketMaterialScanData = null;
 let lastAISpecLookupData = null;
+let lastMaterialDescription = "";
 
 const docketFieldMap = {
   labels: ["impLabels"],
@@ -928,6 +1214,128 @@ async function handleSpecLookupClick(){
   }
 }
 
+/* ---- Graceful-degradation thickness waterfall (no API needed) ---- */
+const MILS_TO_IN = 0.001;
+const THICKNESS_MIN_IN = 0.0025; // 2.5 mil
+const THICKNESS_MAX_IN = 0.012;  // 12 mil
+const UNIVERSAL_FALLBACK_MILS = 5.4;
+const BRAND_BASELINES = [
+  { keys:["AVERY","FASSON","DENNISON"], mils:5.4, label:"Avery Dennison / Fasson" },
+  { keys:["UPM","RAFLATAC"], mils:5.3, label:"UPM Raflatac" },
+  { keys:["MACTAC"], mils:5.5, label:"Mactac" },
+  { keys:["FLEXCON"], mils:5.6, label:"FLEXcon" },
+  { keys:["RITRAMA"], mils:5.3, label:"Ritrama" },
+  { keys:["TECHNICOTE"], mils:5.4, label:"Technicote" },
+  { keys:["CCL","INNOVIA"], mils:5.4, label:"CCL / Innovia" }
+];
+
+// Returns { mils, level, label, requireManual } using description + spec text.
+function estimateThicknessFallback(description, spec){
+  const text = ((description || "") + " " + (spec || "")).toUpperCase();
+
+  // 1. Extended-content / booklet / multi-ply -> never guess, require manual.
+  if(/(EXTENDED CONTENT|BOOKLET|MULTI[- ]?PLY|MULTIPLY|\bEC\b)/.test(text)){
+    return { mils:null, level:"manual", label:"Extended-content / booklet detected — enter caliper manually", requireManual:true };
+  }
+  // 2. Material TYPE is the dominant signal (varies far more than brand).
+  if(/(TAGBOARD|TAG BOARD|TAG STOCK|TAGSTOCK|\bTAG\b|\bBOARD\b)/.test(text))
+    return { mils:9.0, level:"estimated", label:"Tag / board average (~9.0 mil) — tag varies widely, verify" };
+  if(/(BOPP|OPP|POLYPROP|\bPP\b|\bFILM\b)/.test(text))
+    return { mils:4.0, level:"estimated", label:"Film (BOPP/PP) average (~4.0 mil)" };
+  if(/(\bPET\b|POLYESTER)/.test(text))
+    return { mils:5.0, level:"estimated", label:"Polyester (PET) average (~5.0 mil)" };
+  if(/\bVINYL\b/.test(text))
+    return { mils:5.0, level:"estimated", label:"Vinyl average (~5.0 mil)" };
+  // 3. Paper / unknown type -> brand baseline.
+  for(const b of BRAND_BASELINES){
+    if(b.keys.some(k => text.includes(k)))
+      return { mils:b.mils, level:"estimated", label:b.label + " paper average (~" + b.mils + " mil)" };
+  }
+  // 4. Universal last resort.
+  return { mils:UNIVERSAL_FALLBACK_MILS, level:"fallback", label:"Universal fallback (5.4 mil) — no brand or type detected" };
+}
+
+const CONF_TEXT = { exact:"Exact", estimated:"Estimated", fallback:"Fallback", manual:"Manual" };
+let thicknessConfidence = "none";
+
+function updateThicknessBadge(level, sourceLabel){
+  thicknessConfidence = level;
+  const badge = document.getElementById("confBadge");
+  if(badge){
+    badge.className = "conf-badge";
+    if(level && level !== "none"){
+      badge.classList.add("show","conf-" + level);
+      badge.textContent = CONF_TEXT[level] || level;
+    }
+  }
+  const sourceOut = document.getElementById("thicknessSourceOut");
+  if(sourceOut && sourceLabel){
+    sourceOut.textContent = "Thickness source: " + sourceLabel;
+  }
+  // Nudge stepper only shows when the value is an estimate or fallback.
+  const nudge = document.getElementById("thicknessNudge");
+  if(nudge) nudge.classList.toggle("show", level === "estimated" || level === "fallback");
+  refreshThicknessNudgeLabel();
+}
+
+function refreshThicknessNudgeLabel(){
+  const val = document.getElementById("thickNudgeVal");
+  const t = cleanNumber("ecciThickness");
+  if(val) val.textContent = Number.isFinite(t) ? (t * 1000).toFixed(1) + " mil" : "—";
+}
+
+// Central setter: writes thickness, records confidence, updates badge + UI.
+function applyThickness(valueInInches, level, sourceLabel){
+  const el = document.getElementById("ecciThickness");
+  if(el) el.value = Number(valueInInches.toFixed(5));
+  safeSet("ROLL_CALC_MATERIAL_THICKNESS", String(Number(valueInInches.toFixed(5))));
+  updateThicknessBadge(level, sourceLabel);
+  calculateAndRenderECCI();
+}
+
+// Apply the waterfall and surface it. Returns true if a value was set.
+function applyFallbackThickness(description, spec){
+  const est = estimateThicknessFallback(description, spec);
+  if(est.requireManual || est.mils === null){
+    updateThicknessBadge("manual", est.label);
+    return false;
+  }
+  applyThickness(est.mils * MILS_TO_IN, est.level, est.label);
+  return true;
+}
+
+function nudgeThickness(deltaMils){
+  let t = cleanNumber("ecciThickness");
+  if(!Number.isFinite(t)) t = UNIVERSAL_FALLBACK_MILS * MILS_TO_IN;
+  t += deltaMils * MILS_TO_IN;
+  t = Math.min(THICKNESS_MAX_IN, Math.max(THICKNESS_MIN_IN, t));
+  const el = document.getElementById("ecciThickness");
+  if(el) el.value = Number(t.toFixed(5));
+  safeSet("ROLL_CALC_MATERIAL_THICKNESS", String(Number(t.toFixed(5))));
+  refreshThicknessNudgeLabel();
+  calculateAndRenderECCI();
+}
+
+function nudgeRadius(delta){
+  const slider = document.getElementById("ecciRadiusSlider");
+  const input = document.getElementById("ecciRadius");
+  const min = Number(slider.min), max = Number(slider.max);
+  let r = cleanNumber("ecciRadius");
+  if(!Number.isFinite(r)) r = Number(slider.value) || 11.5;
+  r = Math.min(max, Math.max(min, r + delta));
+  r = Math.round(r * 100) / 100;
+  if(input) input.value = r;
+  if(slider) slider.value = r;
+  refreshRadiusNudgeLabel();
+  calculateAndRenderECCI();
+}
+
+function refreshRadiusNudgeLabel(){
+  const val = document.getElementById("radiusNudgeVal");
+  const r = cleanNumber("ecciRadius");
+  if(val) val.textContent = "Radius " + (Number.isFinite(r) ? r : "—") + " in";
+}
+
 async function lookupMaterialSpecWithAI(){
   const apiKey = document.getElementById("apiKey").value.trim();
   const specText = document.getElementById("manualSpecSearch").value.replace(/[^0-9A-Za-z .#/-]/g,"").trim();
@@ -1000,23 +1408,22 @@ materialThickness must be the total construction caliper expressed in inches as 
 
   lastAISpecLookupData = parsed;
 
-  if(thickness === null || thickness <= 0){
-    if(sourceOut) sourceOut.textContent = "Thickness source: Web lookup found no published thickness for " + specText;
-    throw new Error("Couldn't find a published thickness for \u201c" + specText + "\u201d. Try the full code (manufacturer + spec), or enter the caliper manually.");
+  if(thickness === null || thickness <= 0 || thickness < THICKNESS_MIN_IN || thickness > THICKNESS_MAX_IN){
+    // Web lookup failed or returned something implausible -> graceful degradation.
+    const applied = applyFallbackThickness(lastMaterialDescription, specText);
+    if(applied){
+      return lastAISpecLookupData;
+    }
+    updateThicknessBadge("manual", "No published thickness found for " + specText + " — enter caliper manually");
+    throw new Error("Couldn't find a thickness for \u201c" + specText + "\u201d and couldn't estimate a baseline. Enter the caliper manually.");
   }
-
-  document.getElementById("ecciThickness").value = thickness;
-  safeSet("ROLL_CALC_MATERIAL_THICKNESS", String(thickness));
 
   const lowConfidence = (confidence !== null && confidence < 0.80);
   const specLabel = parsed.materialSpecCode || parsed.productName || specText;
-  if(sourceOut){
-    sourceOut.textContent = lowConfidence
-      ? "Thickness source: Web estimate for " + specLabel + " (low confidence \u2014 verify before running)"
-      : "Thickness source: Web lookup: " + specLabel + (parsed.manufacturer ? " (" + parsed.manufacturer + ")" : "");
-  }
-
-  calculateAndRenderECCI();
+  const sourceLabel = lowConfidence
+    ? "Web estimate for " + specLabel + " (low confidence — verify before running)"
+    : "Web lookup: " + specLabel + (parsed.manufacturer ? " (" + parsed.manufacturer + ")" : "");
+  applyThickness(thickness, lowConfidence ? "estimated" : "exact", sourceLabel);
   return parsed;
 }
 
@@ -1414,26 +1821,62 @@ async function callGeminiWithFallback(apiKey, requestBody){
   throw new Error("No supported Gemini 2.5 Flash model worked with this API key. Tried: " + errors.join(" | "));
 }
 
-async function runGeminiScan(file, scanType){
+// ---- On-device OCR (Tesseract.js, no API key) ----
+let tesseractLoadingPromise = null;
+function loadTesseract(){
+  if(window.Tesseract) return Promise.resolve(window.Tesseract);
+  if(tesseractLoadingPromise) return tesseractLoadingPromise;
+  tesseractLoadingPromise = new Promise((resolve,reject)=>{
+    const s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+    s.onload=()=>resolve(window.Tesseract);
+    s.onerror=()=>reject(new Error("Couldn't load the offline OCR engine (no internet?). Use the standard Scan instead."));
+    document.head.appendChild(s);
+  });
+  return tesseractLoadingPromise;
+}
+async function ocrImageToText(file, onProgress){
+  const T = await loadTesseract();
+  const worker = await T.createWorker("eng", 1, {
+    logger: m => {
+      if(m.status === "recognizing text" && onProgress) onProgress(Math.round((m.progress||0)*100));
+    }
+  });
+  try{
+    const { data } = await worker.recognize(file);
+    return (data && data.text) ? data.text : "";
+  }finally{
+    await worker.terminate();
+  }
+}
+
+async function runGeminiScan(file, scanType, opts){
+  opts = opts || {};
+  const handwritten = !!opts.handwritten;
   const apiKey=document.getElementById("apiKey").value.trim();
 
-  const errorId = scanType === "label" ? "labelScanError" : "docketScanError";
-  const successId = scanType === "label" ? "labelScanSuccess" : "docketScanSuccess";
-  const btnId = scanType === "label" ? "labelScanBtn" : "docketScanBtn";
-  const btn=document.getElementById(btnId);
+  const ui = handwritten
+    ? { err:"handScanError", ok:"handScanSuccess", btn:"handScanBtn", idle:"Scan Handwritten Note" }
+    : scanType === "label"
+      ? { err:"labelScanError", ok:"labelScanSuccess", btn:"labelScanBtn", idle:"Scan Label / Paper Spec" }
+      : { err:"docketScanError", ok:"docketScanSuccess", btn:"docketScanBtn", idle:"Scan Printing Docket" };
+  const errorId = ui.err;
+  const successId = ui.ok;
+  const btn=document.getElementById(ui.btn);
+
+  // Progress works whether or not a button exists (scans auto-start, so a button isn't required).
+  const busy = (msg)=>{ if(btn){ btn.disabled=true; btn.textContent=msg; } showSuccess(successId,msg); };
+  const unbusy = ()=>{ if(btn){ btn.disabled=false; btn.textContent=ui.idle; } };
 
   showError(errorId,"");
   showSuccess(successId,"");
 
   if(!apiKey){showError(errorId,"Missing API key. Tap ⚙️ and paste your Google AI Studio API key first.");return;}
-  if(!file){showError(errorId, scanType === "label" ? "Choose or take a label photo first." : "Choose or take a docket photo first.");return;}
+  if(!file){showError(errorId,"Choose or take a photo first.");return;}
   if(!file.type.startsWith("image/")){showError(errorId,"Unsupported upload. Please choose an image file.");return;}
 
   try{
-    btn.disabled=true;
-    btn.textContent=scanType === "label" ? "Scanning Label..." : "Scanning Docket...";
-
-    const {mimeType,base64Data}=await fileToBase64Parts(file);
+    busy(handwritten ? "Reading note..." : (scanType === "label" ? "Scanning label..." : "Scanning docket..."));
 
     const labelPrompt=`You are a strict OCR + industrial label-material engineering extraction engine.
 
@@ -1498,7 +1941,7 @@ Reference Example B (Stock line + Carrier Size line):
 "Stock: 2.5MIL GLS.WH BOPP TC LP50 40 FM6TC 13\" (25BPL9BA013.000B)"
 "Label Size: 3.0000\" wide x 1.5000\" depth   Carrier Size: 3.1250\" wide x 1.6250\" depth"
 "Run 4 across"   "Quantity: 525000"   "5000/ roll"
-- materialSpecCode: "25BPL9BA013.000B" (the code in parentheses on the Stock line).
+- materialSpecCode: null (there is no short spec number after the 13" size here; the parenthetical "25BPL9BA013.000B" is an internal stock code, not the spec number). Estimate materialThickness from the "2.5MIL BOPP" description instead.
 - carrierWidth: 3.1250 (the "wide" value on the CARRIER Size line, NOT the Label Size 3.0000).
 - repeatLength: 1.6250 (the carrier/depth value).
 - labelsAcross: 4. totalQuantity: 525000. finishedRollQuantity: 5000.
@@ -1518,7 +1961,9 @@ Required JSON schema:
   "crossPerfTPI": string | null,
   "labelColor": string | null,
   "rollDirection": string | null,
+  "jobType": string | null,
   "materialSpecCode": string | null,
+  "materialDescription": string | null,
   "materialThickness": number | null
 }
 
@@ -1544,18 +1989,25 @@ Strict rules:
    - If there is ONE TPI value, return just the number as a string, e.g. "10".
    - If there are TWO different TPI values where one is the "on" perf and one is the "off" perf, return them labeled, e.g. "12 on / 8 off".
    - If no cross perf TPI is present, return null.
-7c. labelColor is the print color.
+7c. labelColor is the print color(s).
    - If the docket says "Plain" (no print), return "Plain".
-   - Otherwise return the color text exactly as written on the docket (e.g. "Black", "PMS 185 Red").
+   - If there are MULTIPLE print colors (there can be up to 8), list them ALL separated by commas, e.g. "Black, PMS 185 Red, PMS 286 Blue".
+   - Otherwise return the single color text exactly as written.
 7d. rollDirection is the roll/rewind direction.
    - Look for "Roll Direction", e.g. "Roll Direction # 1" -> "1". Return just the number/letter if clear, otherwise the full text.
+7e. jobType is "roll" if this is a roll/rewind job, otherwise "sheet" (or "fanfold").
+   - Signals of a ROLL job: "/ roll", "RL####", "Roll Direction", "Rewind", a "Core code" line, "M/Roll", or a Group ending in "-R".
+   - Signals of a SHEET/fanfold job: "sheets", "fanfold", "cut", sheet counts.
+   - If unclear, return "roll".
 8. carrierWidth must come ONLY from the "Carrier Size" or "Carrier" line, and is the value labeled "wide" (the WIDTH, not the depth).
    - The width is the number that comes right after the word "Carrier" and before "wide".
    - NEVER use the "Label Size" width for carrierWidth. In Example B, Label Size width is 3.0000 but carrierWidth is 3.1250.
    - Return a decimal inch value, such as 3.1250.
-9. materialSpecCode must come from the Material, Material Description, OR Stock line.
-   - Prefer the code in parentheses (e.g. "25BPL9BA013.000B" or "54320").
-   - If there is no parenthetical code, return the full stock/material description text (e.g. "2.5MIL GLS.WH BOPP TC LP50 40 FM6TC").
+9. materialSpecCode is the material SPEC NUMBER. It is the short numeric or alphanumeric code that appears immediately AFTER the material SIZE dimension (the value ending in inches, e.g. 13" or 7.875") on the Material/Stock line.
+   - Examples: "...AT2550 40 7.875\" 54320..." -> "54320"; other examples are "53710", "DT01J". Usually 4-6 characters.
+   - Do NOT return the long parenthetical internal stock code (e.g. "25BPL9BA013.000B") as the spec number.
+   - If there is no short spec code after the size, return null (the thickness can still be estimated from the description).
+9b. materialDescription is the FULL material/stock line text (face + adhesive + liner words), e.g. "2.5MIL GLS.WH BOPP TC LP50 40 FM6TC" or "DT 300HD FSC AT2550 40". Exclude the parenthetical internal code. This is used to estimate thickness if the exact spec can't be found.
 10. materialThickness must be the total construction caliper in inches.
    - Total construction = facestock + adhesive + liner.
    - Use your engineering/material knowledge of the stock description when identifiable (e.g. a 2.5MIL BOPP face with a 40# liner).
@@ -1566,18 +2018,78 @@ Strict rules:
    - Do not use 40, 50, or 215 as caliper.
 12. If a value is uncertain, return null for that specific field, but still return all other detected fields.`; 
 
-    const requestBody={
-      contents:[{role:"user",parts:[{text: scanType === "label" ? labelPrompt : docketPrompt},{inline_data:{mime_type:mimeType,data:base64Data}}]}],
-      generationConfig:{responseMimeType:"application/json",temperature:0}
+    const handwrittenPrompt=`You are reading a printing press operator's HANDWRITTEN job note. The handwriting may be messy, abbreviated, or shorthand. Extract any job numbers you can and return JSON only (no markdown).
+
+Required JSON schema:
+{
+  "repeatLength": number | null,
+  "labelsAcross": number | null,
+  "totalQuantity": number | null,
+  "finishedRollQuantity": number | null,
+  "carrierWidth": number | null,
+  "targetDiameter": number | null,
+  "materialSpecCode": string | null,
+  "materialDescription": string | null,
+  "materialThickness": number | null
+}
+
+Rules:
+- repeatLength: the repeat / depth in inches (e.g. "rpt 2.375" or "2 3/8" -> 2.375). Convert fractions to decimals.
+- labelsAcross: the number across (e.g. "2 up", "x2", "across 2" -> 2).
+- totalQuantity: the total label/order quantity (strip commas).
+- finishedRollQuantity: labels per roll if written (e.g. "5M/roll" -> 5000, "5000/rl" -> 5000).
+- carrierWidth: lane/carrier width in inches if written.
+- targetDiameter: a target finished ROLL diameter in inches if written (e.g. "run to 23\"", "OD 20" -> the number). This is a diameter, not a radius.
+- materialSpecCode: any material spec number written (numeric or alphanumeric, e.g. 54320, DT01J).
+- materialDescription: any material/stock words written (e.g. "BOPP", "tag", "Fasson").
+- materialThickness: caliper in inches only if explicitly written as a decimal like 0.0056.
+- Convert common fractions: 1/8=0.125, 1/4=0.25, 3/8=0.375, 1/2=0.5, 5/8=0.625, 3/4=0.75, 7/8=0.875.
+- If a value is not present, return null for it. Never guess.`;
+
+    const promptText = scanType === "label" ? labelPrompt : (handwritten ? handwrittenPrompt : docketPrompt);
+
+    // Helper: send parts to Gemini and parse the JSON result.
+    const callModel = async (parts)=>{
+      const requestBody={ contents:[{role:"user",parts}], generationConfig:{responseMimeType:"application/json",temperature:0} };
+      const gr = await callGeminiWithFallback(apiKey, requestBody);
+      const p = parseGeminiJson(extractText(gr.body));
+      return { parsed:p, fields:normalizeFields(p.fields||p) };
+    };
+    const imageAttempt = async ()=>{
+      const {mimeType,base64Data}=await fileToBase64Parts(file);
+      return callModel([{text:promptText},{inline_data:{mime_type:mimeType,data:base64Data}}]);
+    };
+    const ocrAttempt = async ()=>{
+      const ocrText = await ocrImageToText(file,(pct)=>busy("Reading on device " + pct + "%..."));
+      busy("Parsing...");
+      if(!ocrText || ocrText.replace(/\s/g,"").length < 12) throw new Error("OCR text too short");
+      return callModel([{text: promptText + "\n\nThe following text was OCR-scanned on-device from a printing docket and may contain minor OCR errors. Parse it:\n\n" + ocrText}]);
+    };
+    // Did the OCR pass actually find anything we can use? If not, we fall back to the image.
+    const hasUsableDocket = (p)=>{
+      if(!p) return false;
+      return ["repeatLength","repeat_length","labelsAcross","labels_across","totalQuantity","total_quantity",
+        "finishedRollQuantity","finished_roll_quantity","carrierWidth","carrier_width","materialSpecCode",
+        "material_spec_code","materialThickness","material_thickness","productionOrder","docketNumber","salesQuantity"]
+        .some(k => p[k] !== undefined && p[k] !== null && p[k] !== "");
     };
 
-    // Both label and docket scans now try gemini-2.5-flash, then fall back to gemini-2.5-flash-lite.
-    const geminiResult = await callGeminiWithFallback(apiKey, requestBody);
-    const body = geminiResult.body;
-
-    const text=extractText(body);
-    const parsed=parseGeminiJson(text);
-    const fields=normalizeFields(parsed.fields||parsed);
+    let parsed, fields;
+    if(scanType === "label" || handwritten){
+      ({parsed, fields} = await imageAttempt());
+    }else{
+      // WATERFALL: cheap on-device OCR first, then the full image scan behind the scenes if OCR can't do it.
+      let got = null;
+      try{
+        const r = await ocrAttempt();
+        if(hasUsableDocket(r.parsed)) got = r;
+      }catch(e){ got = null; }
+      if(!got){
+        busy("Reading full image...");
+        got = await imageAttempt();
+      }
+      ({parsed, fields} = got);
+    }
 
     if(scanType === "label"){
       const detectedThickness = getDetectedThickness(parsed, fields);
@@ -1594,14 +2106,25 @@ Strict rules:
         finishedRollQuantity: normalizeNumber(parsed.finishedRollQuantity ?? parsed.finished_roll_quantity ?? parsed.finishedRoll ?? parsed.finished_roll ?? parsed.perRoll ?? parsed.labelsPerRoll ?? fields.finishedRoll),
         extractedPaperSpec: parsed.materialSpecCode ?? parsed.material_spec_code ?? parsed.extractedPaperSpec ?? parsed.extracted_paper_spec ?? parsed.extracted_spec ?? fields.extractedSpec ?? fields.productCode ?? null,
         aiEstimatedThickness: normalizeNumber(parsed.materialThickness ?? parsed.material_thickness ?? parsed.aiEstimatedThickness ?? parsed.ai_estimated_thickness ?? fields.thickness),
+        materialDescription: parsed.materialDescription ?? parsed.material_description ?? parsed.materialDesc ?? null,
+        targetDiameter: normalizeNumber(parsed.targetDiameter ?? parsed.target_diameter ?? (normalizeNumber(parsed.targetRadius ?? parsed.target_radius) ? normalizeNumber(parsed.targetRadius ?? parsed.target_radius) * 2 : null)),
         carrierWidth: normalizeNumber(parsed.carrierWidth ?? parsed.carrier_width ?? parsed.laneWidth ?? parsed.lane_width ?? parsed.labelWidth ?? parsed.label_width),
         salesQuantity: normalizeNumber(parsed.salesQuantity ?? parsed.sales_quantity ?? parsed.rolls ?? parsed.rollCount),
         productionOrder: parsed.productionOrder ?? parsed.production_order ?? parsed.prodOrder ?? null,
         docketNumber: deriveDocketNumber(parsed.docketNumber ?? parsed.docket_number ?? parsed.docket, parsed.productionOrder ?? parsed.production_order ?? parsed.prodOrder),
         crossPerfTPI: parsed.crossPerfTPI ?? parsed.cross_perf_tpi ?? parsed.tpi ?? null,
-        labelColor: parsed.labelColor ?? parsed.label_color ?? parsed.color ?? parsed.colour ?? null,
-        rollDirection: parsed.rollDirection ?? parsed.roll_direction ?? parsed.rewindDirection ?? null
+        labelColor: Array.isArray(parsed.labelColor ?? parsed.colors)
+          ? (parsed.labelColor ?? parsed.colors).join("\n")
+          : (parsed.labelColor ?? parsed.label_color ?? parsed.color ?? parsed.colour ?? parsed.colors ?? null),
+        rollDirection: parsed.rollDirection ?? parsed.roll_direction ?? parsed.rewindDirection ?? null,
+        jobType: String(parsed.jobType ?? parsed.job_type ?? "").toLowerCase()
       };
+
+      // A job is treated as a ROLL job if the AI says so, or if roll-only signals are present.
+      const isRollJob = docketData.jobType.includes("roll")
+        || (!!docketData.rollDirection)
+        || (!!docketData.finishedRollQuantity)
+        || (docketData.jobType === "");
 
       // Always populate all visible job values first, even if no paper spec/thickness was found.
       if(docketData.repeatLength){
@@ -1648,22 +2171,35 @@ Strict rules:
         if(el) el.value=docketData.rollDirection;
       }
 
+      // Handwritten/docket target diameter -> set the ECCI target radius (diameter / 2).
+      if(docketData.targetDiameter && docketData.targetDiameter > 3 && docketData.targetDiameter <= 40){
+        const r = Math.min(16, Math.max(3, docketData.targetDiameter / 2));
+        const rr = Math.round(r * 100) / 100;
+        const rEl=document.getElementById("ecciRadius");
+        const sEl=document.getElementById("ecciRadiusSlider");
+        if(rEl) rEl.value = rr;
+        if(sEl) sEl.value = rr;
+        refreshRadiusNudgeLabel();
+      }
+
       if(docketData.finishedRollQuantity){
         const el=document.getElementById("frRoll");
         if(el) el.value=docketData.finishedRollQuantity;
       }
 
-      // Core Size: share the detected across, and fill carrier width if the docket had it.
-      if(docketData.labelsAcross){
-        const el=document.getElementById("coreAcross");
-        if(el) el.value=docketData.labelsAcross;
-      }
-      if(docketData.carrierWidth){
-        const el=document.getElementById("coreCarrierWidth");
-        if(el) el.value=docketData.carrierWidth;
-      }
-      if(document.getElementById("coreCarrierWidth").value && document.getElementById("coreAcross").value){
-        calculateCoreSize();
+      // Core Size: roll jobs only. Share the detected across, and fill carrier width if the docket had it.
+      if(isRollJob){
+        if(docketData.labelsAcross){
+          const el=document.getElementById("coreAcross");
+          if(el) el.value=docketData.labelsAcross;
+        }
+        if(docketData.carrierWidth){
+          const el=document.getElementById("coreCarrierWidth");
+          if(el) el.value=docketData.carrierWidth;
+        }
+        if(document.getElementById("coreCarrierWidth").value && document.getElementById("coreAcross").value){
+          calculateCoreSize();
+        }
       }
 
       fillFieldsFromMap(fields, docketFieldMap, true);
@@ -1671,49 +2207,53 @@ Strict rules:
       // Material spec/thickness is optional and must never block the rest of the scan.
       lastDocketMaterialScanData = docketData;
 
+      lastMaterialDescription = docketData.materialDescription || docketData.extractedPaperSpec || "";
+
+      // Seed the spec box so a manual lookup/fallback has the spec to work with.
       if(docketData.extractedPaperSpec){
         const specInput=document.getElementById("manualSpecSearch");
-        if(specInput){
-          specInput.value=docketData.extractedPaperSpec;
-        }
-      }else{
-        const sourceOut=document.getElementById("thicknessSourceOut");
-        if(sourceOut){
-          sourceOut.textContent="Thickness source: No material spec found on docket";
-        }
+        if(specInput) specInput.value=docketData.extractedPaperSpec;
       }
 
-      // If the docket scan itself returned a thickness and the field is blank, use it as a starting value.
-      if(!document.getElementById("ecciThickness").value && docketData.aiEstimatedThickness){
-        document.getElementById("ecciThickness").value=docketData.aiEstimatedThickness;
-        safeSet("ROLL_CALC_MATERIAL_THICKNESS", String(docketData.aiEstimatedThickness));
+      // 1. If the docket scan returned a usable thickness, use it as a (estimated) starting value.
+      if(!document.getElementById("ecciThickness").value && docketData.aiEstimatedThickness
+         && docketData.aiEstimatedThickness >= THICKNESS_MIN_IN && docketData.aiEstimatedThickness <= THICKNESS_MAX_IN){
+        applyThickness(docketData.aiEstimatedThickness, "estimated",
+          "From docket material" + (docketData.extractedPaperSpec ? " (" + docketData.extractedPaperSpec + ")" : ""));
       }
 
       recalculateAll();
+      showSuccess(successId,"Docket scan complete. Job values populated. Resolving material thickness...");
 
-      if(docketData.extractedPaperSpec){
-        showSuccess(successId,"Docket scan complete. Job values populated. Material spec detected: " + docketData.extractedPaperSpec + ". Looking up thickness...");
-      }else{
-        showSuccess(successId,"Docket scan complete. Job values populated. No material spec found; enter/search spec manually if needed. Model used: " + geminiResult.model + ".");
-      }
-
-      // True one-scan flow: if a spec was detected but we still have no thickness, search for it automatically.
-      if(docketData.extractedPaperSpec && !document.getElementById("ecciThickness").value){
+      // 2. Still no thickness + we have a spec -> try the grounded web lookup.
+      let thicknessNote = "";
+      if(!document.getElementById("ecciThickness").value && docketData.extractedPaperSpec){
         try{
           await lookupMaterialSpecWithAI();
-          showSuccess(successId,"Docket scan complete. Job values populated. Material spec detected: " + docketData.extractedPaperSpec + ". Thickness found and applied.");
+          thicknessNote = "Thickness found and applied.";
         }catch(lookupErr){
-          showSuccess(successId,"Docket scan complete. Job values populated. Material spec detected: " + docketData.extractedPaperSpec + ". Thickness not found automatically \u2014 tap \u201cLookup Thickness by Spec\u201d or enter it manually.");
+          thicknessNote = "";
         }
-      }else if(docketData.extractedPaperSpec){
-        showSuccess(successId,"Docket scan complete. Job values populated. Material spec detected: " + docketData.extractedPaperSpec + ". Model used: " + geminiResult.model + ".");
       }
+
+      // 3. Still nothing -> graceful-degradation waterfall (brand/type baseline).
+      if(!document.getElementById("ecciThickness").value){
+        const applied = applyFallbackThickness(lastMaterialDescription, docketData.extractedPaperSpec);
+        thicknessNote = applied
+          ? "Used an estimated baseline thickness (verify the badge above the counter)."
+          : "Couldn't estimate thickness \u2014 enter the caliper manually.";
+      }
+
+      const specMsg = docketData.extractedPaperSpec
+        ? "Material spec detected: " + docketData.extractedPaperSpec + ". "
+        : "No material spec found. ";
+      showSuccess(successId,"Docket scan complete. Job values populated. " + specMsg + thicknessNote);
     }
   }catch(err){
-    showError(errorId,err.message||"Unexpected image OCR failure.");
+    showSuccess(successId,"");
+    showError(errorId,err.message||"Unexpected scan failure.");
   }finally{
-    btn.disabled=false;
-    btn.textContent=scanType === "label" ? "Scan Label / Paper Spec" : "Scan Printing Docket";
+    unbusy();
   }
 }
 
@@ -1726,7 +2266,22 @@ function handleLabelPhoto(file){
 function handleDocketPhoto(file){
   docketPhotoFile=file;
   showError("docketScanError","");
-  showSuccess("docketScanSuccess", file ? "Docket photo selected. Tap Scan Printing Docket." : "No docket photo selected.");
+  if(file){
+    // Auto-start as soon as a photo is taken or uploaded.
+    runGeminiScan(file,"docket");
+  }else{
+    showSuccess("docketScanSuccess","No docket photo selected.");
+  }
+}
+
+function handleHandPhoto(file){
+  handPhotoFile=file;
+  showError("handScanError","");
+  if(file){
+    runGeminiScan(file,"docket",{handwritten:true});
+  }else{
+    showSuccess("handScanSuccess","No note photo selected.");
+  }
 }
 
 
@@ -1760,6 +2315,10 @@ function clearDocketScan(){
 
   showError("docketScanError","");
   showSuccess("docketScanSuccess","Docket scan cleared.");
+  lastMaterialDescription = "";
+  lastDocketMaterialScanData = null;
+  updateThicknessBadge("none","—");
+  document.getElementById("thicknessSourceOut").textContent = "Thickness source: —";
   calculateImpressions();
   calculatePressCounts();
   calculateFinishedRoll();
@@ -1774,6 +2333,9 @@ function clearECCIValues(){
   document.getElementById("ecciRadiusSlider").value = "11.5";
   safeRemove("ROLL_CALC_MATERIAL_THICKNESS");
   showError("ecciError","");
+  updateThicknessBadge("none","—");
+  document.getElementById("thicknessSourceOut").textContent = "Thickness source: —";
+  refreshRadiusNudgeLabel();
   calculateAndRenderECCI();
 }
 
@@ -1801,6 +2363,185 @@ function clearCoreValues(){
   ["coreCarrierWidth","coreAcross"].forEach(clearInputValue);
   document.getElementById("coreAnswer").textContent = "—";
   showError("coreError","");
+}
+
+/* ===================== Tabs, Tally, Shift, Persistence ===================== */
+const TABS = ["roll","sheeter","folder"];
+const TALLY_UNIT = { roll:"Roll", sheeter:"Sheet", folder:"Pack" };
+const TAB_KEY = "RC_ACTIVE_TAB_V1";
+const TALLY_KEY = "RC_TALLY_V1";
+const INPUT_KEY = "RC_INPUTS_V1";
+const tallyState = { roll:[], sheeter:[], folder:[] };
+
+function setText(id, value){
+  const el = document.getElementById(id);
+  if(el) el.textContent = value;
+}
+
+/* ---- Tab switching (persisted) ---- */
+function switchTab(name){
+  if(!TABS.includes(name)) name = "roll";
+  TABS.forEach(t=>{
+    const panel = document.getElementById("panel-" + t);
+    if(panel) panel.classList.toggle("active", t === name);
+  });
+  document.querySelectorAll("#tabBar button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.tab === name);
+  });
+  safeSet(TAB_KEY, name);
+  window.scrollTo(0, 0);
+}
+
+/* ---- Tally state ---- */
+function loadTallyState(){
+  try{
+    const raw = safeGet(TALLY_KEY);
+    if(raw){
+      const o = JSON.parse(raw);
+      TABS.forEach(t=>{ if(Array.isArray(o[t])) tallyState[t] = o[t].map(Number).filter(n=>Number.isFinite(n)); });
+    }
+  }catch(err){}
+}
+function saveTallyState(){ safeSet(TALLY_KEY, JSON.stringify(tallyState)); }
+function tallyTotal(prefix){ return tallyState[prefix].reduce((a,b)=>a + (Number(b)||0), 0); }
+
+function renderTally(prefix){
+  const list = document.getElementById(prefix + "TallyList");
+  const arr = tallyState[prefix];
+  if(list){
+    if(!arr.length){
+      list.innerHTML = '<div class="tally-empty">No ' + TALLY_UNIT[prefix].toLowerCase() + 's added yet.</div>';
+    }else{
+      list.innerHTML = arr.map((n,i)=>
+        '<div class="tally-row"><span>' + TALLY_UNIT[prefix] + ' ' + (i+1) + '</span>' +
+        '<span class="tally-amt">' + formatNumber(n) + '</span>' +
+        '<button class="tally-del" data-prefix="' + prefix + '" data-idx="' + i + '" type="button" aria-label="Remove">\u2715</button></div>'
+      ).join("");
+    }
+  }
+  setText(prefix + "RunningTotal", formatNumber(tallyTotal(prefix)));
+}
+
+function addTally(prefix){
+  const v = cleanNumber(prefix + "TallyInput");
+  const errEl = document.getElementById(prefix + "ShiftError");
+  if(errEl) errEl.textContent = "";
+  if(!Number.isFinite(v) || v <= 0){
+    if(errEl) errEl.textContent = "Enter a number greater than 0 to add a " + TALLY_UNIT[prefix].toLowerCase() + ".";
+    return;
+  }
+  tallyState[prefix].push(v);
+  const inp = document.getElementById(prefix + "TallyInput");
+  if(inp) inp.value = "";
+  saveTallyState();
+  renderTally(prefix);
+  recomputeShift(prefix, true); // keep summary live if already calculated
+  saveAllInputs();
+}
+
+function deleteTally(prefix, idx){
+  tallyState[prefix].splice(idx, 1);
+  saveTallyState();
+  renderTally(prefix);
+  recomputeShift(prefix, true);
+}
+
+/* ---- Shift summary: Gross = End - Start; Good = tally total; Wastage = Gross - Good ---- */
+function calcShift(prefix){
+  const start = cleanNumber(prefix + "MasterStart");
+  const end = cleanNumber(prefix + "MasterEnd");
+  const errEl = document.getElementById(prefix + "ShiftError");
+  if(errEl) errEl.textContent = "";
+
+  if(!Number.isFinite(start) || !Number.isFinite(end)){
+    if(errEl) errEl.textContent = "Enter both the Master Start and Master End counters.";
+    return false;
+  }
+  if(end < start){
+    if(errEl) errEl.textContent = "Master End counter must be greater than or equal to Master Start.";
+    return false;
+  }
+  const gross = end - start;
+  const good = tallyTotal(prefix);
+  const waste = Math.max(0, gross - good);
+  setText(prefix + "Gross", formatNumber(gross));
+  setText(prefix + "Good", formatNumber(good));
+  setText(prefix + "Waste", formatNumber(waste));
+  setText(prefix + "WastePct", gross > 0 ? (waste / gross * 100).toFixed(2) + "%" : "—");
+  if(good > gross && errEl){
+    errEl.textContent = "Note: Good total exceeds Gross impressions — check the counters or tally.";
+  }
+  return true;
+}
+
+// Re-run the summary only if it was already showing values (so live edits stay in sync).
+function recomputeShift(prefix, onlyIfShown){
+  if(onlyIfShown){
+    const g = document.getElementById(prefix + "Gross");
+    if(!g || g.textContent === "—") { return; }
+  }
+  calcShift(prefix);
+}
+
+/* ---- Bulletproof persistence: every input saved on change, restored on load ---- */
+function saveAllInputs(){
+  const data = {};
+  document.querySelectorAll("input, textarea").forEach(el=>{
+    if(!el.id) return;
+    if(el.type === "file" || el.type === "range") return; // files can't persist; range mirrors its number input
+    if(el.id === "apiKey") return; // API key kept under its own key
+    data[el.id] = el.value;
+  });
+  safeSet(INPUT_KEY, JSON.stringify(data));
+}
+function restoreAllInputs(){
+  try{
+    const raw = safeGet(INPUT_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    Object.keys(data).forEach(id=>{
+      const el = document.getElementById(id);
+      if(el && el.type !== "file" && el.type !== "range") el.value = data[id];
+    });
+  }catch(err){}
+}
+
+/* ---- Reset / New Shift ---- */
+function resetShift(){
+  const ok = window.confirm("Start a NEW SHIFT?\n\nThis clears every entered value, all roll/sheet/pack tallies, and shift totals on this device. Your saved API key is kept.\n\nThis cannot be undone.");
+  if(!ok) return;
+
+  safeRemove(INPUT_KEY);
+  safeRemove(TALLY_KEY);
+  safeRemove("ROLL_CALC_MATERIAL_THICKNESS");
+  TABS.forEach(t=>{ tallyState[t] = []; });
+  saveTallyState();
+
+  document.querySelectorAll("input, textarea").forEach(el=>{
+    if(!el.id || el.id === "apiKey" || el.type === "file") return;
+    if(el.type === "range") return;
+    el.value = "";
+  });
+  // restore defaults
+  const lv = document.getElementById("frLevels"); if(lv) lv.value = "50";
+  const rad = document.getElementById("ecciRadius"); if(rad) rad.value = "11.5";
+  const radS = document.getElementById("ecciRadiusSlider"); if(radS) radS.value = "11.5";
+
+  TABS.forEach(renderTally);
+  TABS.forEach(p=>{ setText(p+"Gross","—"); setText(p+"Good","—"); setText(p+"Waste","—"); setText(p+"WastePct","—"); const e=document.getElementById(p+"ShiftError"); if(e) e.textContent=""; });
+
+  document.getElementById("coreAnswer").textContent = "—";
+  document.getElementById("frBase").textContent = "—";
+  document.getElementById("frTable").innerHTML = '<tr><td colspan="3" class="empty">Enter values and tap Generate Table.</td></tr>';
+  updateThicknessBadge("none","—");
+  document.getElementById("thicknessSourceOut").textContent = "Thickness source: —";
+  lastMaterialDescription = "";
+  lastDocketMaterialScanData = null;
+
+  refreshRadiusNudgeLabel();
+  refreshThicknessNudgeLabel();
+  recalculateAll();
+  saveAllInputs();
 }
 
 
@@ -1836,6 +2577,9 @@ document.addEventListener("DOMContentLoaded",()=>{
     const thicknessInput = document.getElementById("ecciThickness");
     if(savedThickness && thicknessInput) thicknessInput.value = savedThickness;
 
+    refreshRadiusNudgeLabel();
+    refreshThicknessNudgeLabel();
+
     ensureDefaultLevels();
 
     bind("themeToggleBtn","click",toggleTheme);
@@ -1851,17 +2595,22 @@ document.addEventListener("DOMContentLoaded",()=>{
     bind("coreBtn","click",calculateCoreSize);
     bind("clearCoreBtn","click",clearCoreValues);
 
-    bind("docketScanBtn","click",()=>runGeminiScan(docketPhotoFile,"docket"));
-
     bind("docketCameraInput","change",e=>handleDocketPhoto(e.target.files[0]));
     bind("docketUploadInput","change",e=>handleDocketPhoto(e.target.files[0]));
+    bind("handCameraInput","change",e=>handleHandPhoto(e.target.files[0]));
+    bind("handUploadInput","change",e=>handleHandPhoto(e.target.files[0]));
 
     bind("impBtn","click",calculateImpressions);
     bind("pcBtn","click",calculatePressCounts);
     bind("frBtn","click",calculateFinishedRoll);
     bind("ecciCalculateBtn","click",calculateAndRenderECCI);
-    bind("ecciRadiusSlider","input",syncECCIRadiusFromSlider);
-    bind("ecciRadius","input",syncECCIRadiusFromInput);
+    bind("ecciRadiusSlider","input",()=>{ syncECCIRadiusFromSlider(); refreshRadiusNudgeLabel(); });
+    bind("ecciRadius","input",()=>{ syncECCIRadiusFromInput(); refreshRadiusNudgeLabel(); });
+
+    bind("thickDown","click",()=>nudgeThickness(-0.5));
+    bind("thickUp","click",()=>nudgeThickness(0.5));
+    bind("radiusDown","click",()=>nudgeRadius(-0.25));
+    bind("radiusUp","click",()=>nudgeRadius(0.25));
 
     bind("manualSpecSearch","input",()=>{
       lastAISpecLookupData = null;
@@ -1880,6 +2629,8 @@ document.addEventListener("DOMContentLoaded",()=>{
       bind(id,"input",()=>{
         if(id==="ecciThickness"){
           safeSet("ROLL_CALC_MATERIAL_THICKNESS", document.getElementById("ecciThickness").value || "");
+          // Operator typed their own value -> it's authoritative; flag it Manual.
+          updateThicknessBadge("manual","Manual entry");
         }
         calculateAndRenderECCI();
       });
@@ -1912,6 +2663,52 @@ document.addEventListener("DOMContentLoaded",()=>{
     ["pcCount","pcRepeat","pcAcross"].forEach(id=>bind(id,"input",calculatePressCounts));
     ["frRoll","frAcross","frRepeat","frLevels"].forEach(id=>bind(id,"input",calculateFinishedRoll));
     ["coreCarrierWidth","coreAcross"].forEach(id=>bind(id,"input",calculateCoreSize));
+
+    /* ---- Tabs ---- */
+    document.querySelectorAll("#tabBar button").forEach(b=>{
+      b.addEventListener("click",()=>switchTab(b.dataset.tab));
+    });
+
+    /* ---- Tally + shift per tab ---- */
+    TABS.forEach(p=>{
+      bind(p + "AddBtn","click",()=>addTally(p));
+      bind(p + "TallyInput","keydown",(e)=>{ if(e.key === "Enter"){ e.preventDefault(); addTally(p); } });
+      bind(p + "ShiftBtn","click",()=>calcShift(p));
+      // live-update Good/Wastage if counters change after a summary is shown
+      bind(p + "MasterStart","input",()=>recomputeShift(p,true));
+      bind(p + "MasterEnd","input",()=>recomputeShift(p,true));
+    });
+    // Delegated delete for tally rows
+    document.addEventListener("click",(e)=>{
+      const del = e.target.closest && e.target.closest(".tally-del");
+      if(del){ deleteTally(del.dataset.prefix, Number(del.dataset.idx)); }
+    });
+
+    /* ---- Reset / New Shift ---- */
+    bind("resetShiftBtn","click",resetShift);
+
+    /* ---- Bulletproof persistence ---- */
+    loadTallyState();
+    restoreAllInputs();
+    TABS.forEach(renderTally);
+    // Re-sync the radius slider + nudges from any restored value, then recalc everything.
+    syncECCIRadiusFromInput();
+    refreshRadiusNudgeLabel();
+    refreshThicknessNudgeLabel();
+    recalculateAll();
+    if(document.getElementById("coreCarrierWidth").value && document.getElementById("coreAcross").value){
+      calculateCoreSize();
+    }
+    // Restore any shift summaries whose counters were saved.
+    TABS.forEach(p=>{
+      const s = document.getElementById(p + "MasterStart").value;
+      const en = document.getElementById(p + "MasterEnd").value;
+      if(String(s).trim() !== "" && String(en).trim() !== "") calcShift(p);
+    });
+    // Save on every input/textarea change anywhere in the app.
+    document.addEventListener("input", saveAllInputs);
+    // Restore the active tab last.
+    switchTab(safeGet(TAB_KEY) || "roll");
 
     setStatus("App ready.");
     setTimeout(()=>{ if(status && status.textContent === "App ready.") status.style.display = "none"; }, 1800);
