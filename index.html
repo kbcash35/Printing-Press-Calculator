@@ -37,6 +37,8 @@ body.dark{
   --shadow:0 14px 34px rgba(0,0,0,.24);
 }
 *{box-sizing:border-box}
+html,body{overflow-x:hidden;max-width:100%}
+input,textarea,select,img,svg,canvas,table{max-width:100%}
 body{
   margin:0;
   padding:18px 10px 32px;
@@ -372,41 +374,68 @@ input[type=file]{
   font-weight:800;
 }
 /* Tally */
-.tally-add{ display:flex; gap:10px; align-items:stretch; margin:6px 0 10px; }
-.tally-add input{ flex:1 1 auto; }
+.tally-add{ display:flex; gap:8px; align-items:stretch; margin:6px 0 10px; max-width:100%; }
+.tally-add input{ flex:1 1 auto; min-width:0; }
 .tally-add button{
   flex:0 0 auto;
-  padding:0 22px;
+  padding:0 16px;
   border:none;
-  border-radius:12px;
+  border-radius:10px;
   background:var(--black);
   color:var(--bg);
-  font-size:16px;
+  font-size:15px;
   font-weight:800;
 }
+.tally-cam{
+  flex:0 0 auto;
+  width:46px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--card);
+  font-size:18px;
+}
+.field-cam{ display:flex; gap:8px; align-items:stretch; max-width:100%; }
+.field-cam input[type="text"],.field-cam input[inputmode]{ flex:1 1 auto; min-width:0; }
+.field-cam .tally-cam{ height:auto; }
+/* Tally entry: input on its own line, actions below — never overflows */
+.tally-input{ width:100%; display:block; margin:6px 0 0; }
+.tally-actions{ display:flex; gap:8px; margin:8px 0 10px; max-width:100%; }
+.tally-actions > *{ flex:1 1 0; min-width:0; }
+.btn-scan{
+  display:flex; align-items:center; justify-content:center;
+  padding:13px 8px; border:1px solid var(--line); border-radius:10px;
+  background:var(--card); color:var(--text); font-size:15px; font-weight:800;
+}
+.btn-add{
+  padding:13px 8px; border:none; border-radius:10px;
+  background:var(--black); color:var(--bg); font-size:15px; font-weight:800;
+}
+.two-col{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.two-col label{ display:block; margin:8px 0 4px; }
+.two-col input{ width:100%; }
 .tally-list{ margin:6px 0; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
-.tally-row{ display:flex; align-items:center; gap:10px; padding:11px 14px; border-bottom:1px solid var(--line); }
+.tally-row{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid var(--line); }
 .tally-row:last-child{ border-bottom:none; }
-.tally-row span:first-child{ flex:0 0 auto; font-weight:700; color:#3e4048; }
-.tally-amt{ flex:1 1 auto; text-align:right; font-weight:800; font-size:17px; }
+.tally-row span:first-child{ flex:0 0 auto; font-weight:700; color:#3e4048; font-size:14px; }
+.tally-amt{ flex:1 1 auto; min-width:0; text-align:right; font-weight:800; font-size:16px; }
 .tally-del{
-  flex:0 0 auto; width:30px; height:30px; border-radius:8px;
+  flex:0 0 auto; width:28px; height:28px; border-radius:8px;
   border:1px solid #ffbfc0; background:var(--card); color:var(--danger); font-weight:800;
 }
-.tally-empty{ padding:16px 14px; color:#7a7d85; text-align:center; }
+.tally-empty{ padding:14px; color:#7a7d85; text-align:center; font-size:14px; }
 .running-total{
-  display:flex; justify-content:space-between; align-items:center;
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
   background:var(--black); color:var(--bg);
-  border-radius:14px; padding:14px 18px; margin:10px 0;
+  border-radius:12px; padding:12px 16px; margin:10px 0;
 }
-.running-total .rt-label{ font-size:13px; letter-spacing:.05em; text-transform:uppercase; opacity:.8; }
-.running-total .rt-value{ font-size:26px; font-weight:800; }
+.running-total .rt-label{ font-size:12px; letter-spacing:.04em; text-transform:uppercase; opacity:.8; }
+.running-total .rt-value{ font-size:22px; font-weight:800; }
 /* Shift summary grid */
-.shift-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
-.shift-cell{ background:var(--field); border:1px solid var(--line); border-radius:12px; padding:12px; }
+.shift-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+.shift-cell{ background:var(--field); border:1px solid var(--line); border-radius:10px; padding:10px; min-width:0; }
 .shift-cell.full{ grid-column:1 / -1; }
-.shift-cell .sc-label{ font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:#7a7d85; }
-.shift-cell .sc-value{ font-size:22px; font-weight:800; margin-top:2px; }
+.shift-cell .sc-label{ font-size:11px; letter-spacing:.03em; text-transform:uppercase; color:#7a7d85; }
+.shift-cell .sc-value{ font-size:19px; font-weight:800; margin-top:2px; word-break:break-word; }
 .shift-cell.waste .sc-value{ color:var(--danger); }
 /* Confidence badge on the ECCI result */
 .conf-badge{
@@ -430,28 +459,43 @@ input[type=file]{
   display:none;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
-  margin:10px 0 4px;
+  gap:8px;
+  margin:8px 0 4px;
+  max-width:100%;
 }
 .nudge-row.show{display:flex;}
 .nudge-row.always{display:flex;}
 .nudge-btn{
   flex:0 0 auto;
-  min-width:64px;
-  padding:14px 0;
+  width:54px;
+  padding:11px 0;
   border:1px solid var(--line);
-  border-radius:12px;
+  border-radius:10px;
   background:var(--card);
   color:var(--text);
-  font-size:20px;
+  font-size:18px;
   font-weight:800;
   line-height:1;
 }
 .nudge-btn:active{background:var(--black);color:var(--bg);}
+.nudge-input{
+  flex:1 1 auto;
+  min-width:0;
+  text-align:center;
+  font-size:18px;
+  font-weight:800;
+}
+.nudge-caption{
+  font-size:12px;
+  color:var(--muted);
+  margin:2px 0 6px;
+}
+.nudge-caption span{ font-weight:800; color:var(--text); }
 .nudge-val{
   flex:1 1 auto;
+  min-width:0;
   text-align:center;
-  font-size:15px;
+  font-size:14px;
   font-weight:800;
   color:var(--text);
 }
@@ -514,19 +558,6 @@ body.dark input::placeholder{color:#69717e}
 body.dark .danger-outline{background:var(--card)}
 body.dark .action-btn{background:var(--soft)}
 
-.ecci-radius-row{
-  display:grid;
-  grid-template-columns:1fr 100px;
-  gap:10px;
-  align-items:center;
-}
-.ecci-radius-row input[type="range"]{
-  padding:0;
-  accent-color:var(--black);
-}
-body.dark .ecci-radius-row input[type="range"]{
-  accent-color:#63d471;
-}
 .ecci-display{
   margin-top:16px;
   padding:18px;
@@ -638,6 +669,13 @@ body.dark .ecci-display{
 
   <button class="reset-btn" id="resetShiftBtn" type="button">Reset / New Shift</button>
 
+  <div class="card" style="padding:12px 14px;margin-bottom:14px;">
+    <div class="field-cam" style="align-items:center;gap:10px;">
+      <label for="operatorInitials" style="margin:0;flex:0 0 auto;font-weight:800;">Operator Initials</label>
+      <input id="operatorInitials" placeholder="e.g. JS" inputmode="text" autocapitalize="characters" autocomplete="off" maxlength="6" style="flex:1 1 auto;min-width:0;text-align:center;">
+    </div>
+  </div>
+
   <div class="tab-panel active" id="panel-roll">
 
   <section class="card scan-card">
@@ -733,15 +771,12 @@ body.dark .ecci-display{
     <input id="ecciAcross" placeholder="2" inputmode="numeric">
 
     <label for="ecciRadius">Target Radius From Core Center</label>
-    <div class="ecci-radius-row">
-      <input id="ecciRadiusSlider" type="range" min="3" max="16" step="0.25" value="11.5">
-      <input id="ecciRadius" placeholder="11.5" value="11.5" inputmode="decimal">
-    </div>
     <div class="nudge-row always" id="radiusNudge">
       <button class="nudge-btn" id="radiusDown" type="button">−</button>
-      <div class="nudge-val" id="radiusNudgeVal">Radius 11.5 in</div>
+      <input id="ecciRadius" class="nudge-input" placeholder="11.5" value="11.5" inputmode="decimal">
       <button class="nudge-btn" id="radiusUp" type="button">+</button>
     </div>
+    <div class="nudge-caption">Tap − / + for 0.1″ steps, or type a value. <span id="radiusNudgeVal">11.5 in</span></div>
 
     <button id="ecciCalculateBtn" class="primary" type="button">Calculate ECCI Counter</button>
     <button id="clearEcciBtn" class="section-clear" type="button">Clear ECCI Values</button>
@@ -851,28 +886,46 @@ body.dark .ecci-display{
 
   <section class="card">
     <h2>Roll Tally &amp; Shift</h2>
-    <label for="rollMasterStart">Master Start Counter</label>
-    <input id="rollMasterStart" placeholder="0" inputmode="decimal">
-    <label for="rollMasterEnd">Master End Counter</label>
-    <input id="rollMasterEnd" placeholder="0" inputmode="decimal">
 
-    <label for="rollTallyInput">Add Finished Roll (impressions)</label>
-    <div class="tally-add">
-      <input id="rollTallyInput" placeholder="e.g. 12000" inputmode="decimal">
-      <button id="rollAddBtn" type="button">Add</button>
+    <label for="rollMasterStart">Master Start Counter</label>
+    <div class="field-cam">
+      <input id="rollMasterStart" placeholder="0" inputmode="decimal">
+      <label class="tally-cam" for="rollStartCam" title="Photograph the press counter">📷</label>
+      <input id="rollStartCam" type="file" accept="image/*" capture="environment" data-numtarget="rollMasterStart" data-status="roll" style="display:none">
     </div>
+    <label for="rollMasterEnd">Master End Counter</label>
+    <div class="field-cam">
+      <input id="rollMasterEnd" placeholder="0" inputmode="decimal">
+      <label class="tally-cam" for="rollEndCam" title="Photograph the press counter">📷</label>
+      <input id="rollEndCam" type="file" accept="image/*" capture="environment" data-numtarget="rollMasterEnd" data-status="roll" style="display:none">
+    </div>
+
+    <div class="two-col">
+      <div><label for="rollRepeat">Repeat</label><input id="rollRepeat" placeholder="2.375" inputmode="decimal"></div>
+      <div><label for="rollAcross">Across</label><input id="rollAcross" placeholder="2" inputmode="decimal"></div>
+    </div>
+
+    <label for="rollTallyInput">Add Roll — total labels on the roll</label>
+    <input id="rollTallyInput" class="tally-input" placeholder="e.g. 12000" inputmode="decimal">
+    <div class="tally-actions">
+      <label class="btn-scan" for="rollTallyCam">📷 Scan</label>
+      <input id="rollTallyCam" type="file" accept="image/*" capture="environment" data-numtarget="rollTallyInput" data-status="roll" style="display:none">
+      <button id="rollAddBtn" class="btn-add" type="button">Add</button>
+    </div>
+
     <div class="tally-list" id="rollTallyList"></div>
     <div class="running-total">
-      <span class="rt-label">Running Total (Good)</span>
+      <span class="rt-label">Total Labels (Good)</span>
       <span class="rt-value" id="rollRunningTotal">0</span>
     </div>
 
     <button id="rollShiftBtn" class="primary" type="button">Calculate Shift Summary</button>
     <div id="rollShiftError" class="error"></div>
     <div class="shift-grid">
-      <div class="shift-cell"><div class="sc-label">Gross Impressions</div><div class="sc-value" id="rollGross">—</div></div>
+      <div class="shift-cell full"><div class="sc-label">Total Labels (Good)</div><div class="sc-value" id="rollLabels">—</div></div>
       <div class="shift-cell"><div class="sc-label">Good Impressions</div><div class="sc-value" id="rollGood">—</div></div>
-      <div class="shift-cell waste"><div class="sc-label">Wastage</div><div class="sc-value" id="rollWaste">—</div></div>
+      <div class="shift-cell"><div class="sc-label">Gross Impressions</div><div class="sc-value" id="rollGross">—</div></div>
+      <div class="shift-cell waste"><div class="sc-label">Wasted Impressions</div><div class="sc-value" id="rollWaste">—</div></div>
       <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="rollWastePct">—</div></div>
     </div>
   </section>
@@ -891,29 +944,61 @@ body.dark .ecci-display{
     </section>
 
     <section class="card">
+      <h2>Impressions</h2>
+      <label for="sheeterImpLabels">Total Labels</label>
+      <input id="sheeterImpLabels" placeholder="50000" inputmode="decimal">
+      <div class="two-col">
+        <div><label for="sheeterImpRepeat">Repeat</label><input id="sheeterImpRepeat" placeholder="2.375" inputmode="decimal"></div>
+        <div><label for="sheeterImpAcross">Across</label><input id="sheeterImpAcross" placeholder="2" inputmode="decimal"></div>
+      </div>
+      <div class="answer-card">
+        <div class="answer-label">Impressions (Labels × Repeat ÷ Across ÷ 10)</div>
+        <div id="sheeterImpAnswer" class="answer">—</div>
+      </div>
+    </section>
+
+    <section class="card">
       <h2>Sheet Tally &amp; Shift</h2>
       <label for="sheeterMasterStart">Master Start Counter</label>
-      <input id="sheeterMasterStart" placeholder="0" inputmode="decimal">
+      <div class="field-cam">
+        <input id="sheeterMasterStart" placeholder="0" inputmode="decimal">
+        <label class="tally-cam" for="sheeterStartCam">📷</label>
+        <input id="sheeterStartCam" type="file" accept="image/*" capture="environment" data-numtarget="sheeterMasterStart" data-status="sheeter" style="display:none">
+      </div>
       <label for="sheeterMasterEnd">Master End Counter</label>
-      <input id="sheeterMasterEnd" placeholder="0" inputmode="decimal">
+      <div class="field-cam">
+        <input id="sheeterMasterEnd" placeholder="0" inputmode="decimal">
+        <label class="tally-cam" for="sheeterEndCam">📷</label>
+        <input id="sheeterEndCam" type="file" accept="image/*" capture="environment" data-numtarget="sheeterMasterEnd" data-status="sheeter" style="display:none">
+      </div>
 
-      <label for="sheeterTallyInput">Add Sheet Count (per skid/lift)</label>
-      <div class="tally-add">
-        <input id="sheeterTallyInput" placeholder="e.g. 5000" inputmode="decimal">
-        <button id="sheeterAddBtn" type="button">Add</button>
+      <div class="two-col">
+        <div><label for="sheeterRepeat">Repeat</label><input id="sheeterRepeat" placeholder="2.375" inputmode="decimal"></div>
+        <div><label for="sheeterAcross">Across</label><input id="sheeterAcross" placeholder="2" inputmode="decimal"></div>
+      </div>
+      <label for="sheeterLabelsPerCarton">Labels per Carton</label>
+      <input id="sheeterLabelsPerCarton" placeholder="e.g. 5000" inputmode="decimal">
+
+      <label for="sheeterTallyInput">Add Cartons</label>
+      <input id="sheeterTallyInput" class="tally-input" placeholder="e.g. 12" inputmode="decimal">
+      <div class="tally-actions">
+        <label class="btn-scan" for="sheeterTallyCam">📷 Scan</label>
+        <input id="sheeterTallyCam" type="file" accept="image/*" capture="environment" data-numtarget="sheeterTallyInput" data-status="sheeter" style="display:none">
+        <button id="sheeterAddBtn" class="btn-add" type="button">Add</button>
       </div>
       <div class="tally-list" id="sheeterTallyList"></div>
       <div class="running-total">
-        <span class="rt-label">Running Total (Good)</span>
+        <span class="rt-label">Total Cartons</span>
         <span class="rt-value" id="sheeterRunningTotal">0</span>
       </div>
 
       <button id="sheeterShiftBtn" class="primary" type="button">Calculate Shift Summary</button>
       <div id="sheeterShiftError" class="error"></div>
       <div class="shift-grid">
-        <div class="shift-cell"><div class="sc-label">Gross Sheets</div><div class="sc-value" id="sheeterGross">—</div></div>
-        <div class="shift-cell"><div class="sc-label">Good Sheets</div><div class="sc-value" id="sheeterGood">—</div></div>
-        <div class="shift-cell waste"><div class="sc-label">Wastage</div><div class="sc-value" id="sheeterWaste">—</div></div>
+        <div class="shift-cell full"><div class="sc-label">Total Labels (Cartons × Labels/Carton)</div><div class="sc-value" id="sheeterLabels">—</div></div>
+        <div class="shift-cell"><div class="sc-label">Good Impressions</div><div class="sc-value" id="sheeterGood">—</div></div>
+        <div class="shift-cell"><div class="sc-label">Gross Impressions</div><div class="sc-value" id="sheeterGross">—</div></div>
+        <div class="shift-cell waste"><div class="sc-label">Wasted Impressions</div><div class="sc-value" id="sheeterWaste">—</div></div>
         <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="sheeterWastePct">—</div></div>
       </div>
     </section>
@@ -931,29 +1016,61 @@ body.dark .ecci-display{
     </section>
 
     <section class="card">
+      <h2>Impressions</h2>
+      <label for="folderImpLabels">Total Labels</label>
+      <input id="folderImpLabels" placeholder="50000" inputmode="decimal">
+      <div class="two-col">
+        <div><label for="folderImpRepeat">Repeat</label><input id="folderImpRepeat" placeholder="2.375" inputmode="decimal"></div>
+        <div><label for="folderImpAcross">Across</label><input id="folderImpAcross" placeholder="2" inputmode="decimal"></div>
+      </div>
+      <div class="answer-card">
+        <div class="answer-label">Impressions (Labels × Repeat ÷ Across ÷ 10)</div>
+        <div id="folderImpAnswer" class="answer">—</div>
+      </div>
+    </section>
+
+    <section class="card">
       <h2>Pack Tally &amp; Shift</h2>
       <label for="folderMasterStart">Master Start Counter</label>
-      <input id="folderMasterStart" placeholder="0" inputmode="decimal">
+      <div class="field-cam">
+        <input id="folderMasterStart" placeholder="0" inputmode="decimal">
+        <label class="tally-cam" for="folderStartCam">📷</label>
+        <input id="folderStartCam" type="file" accept="image/*" capture="environment" data-numtarget="folderMasterStart" data-status="folder" style="display:none">
+      </div>
       <label for="folderMasterEnd">Master End Counter</label>
-      <input id="folderMasterEnd" placeholder="0" inputmode="decimal">
+      <div class="field-cam">
+        <input id="folderMasterEnd" placeholder="0" inputmode="decimal">
+        <label class="tally-cam" for="folderEndCam">📷</label>
+        <input id="folderEndCam" type="file" accept="image/*" capture="environment" data-numtarget="folderMasterEnd" data-status="folder" style="display:none">
+      </div>
 
-      <label for="folderTallyInput">Add Folded Pack Count</label>
-      <div class="tally-add">
-        <input id="folderTallyInput" placeholder="e.g. 2500" inputmode="decimal">
-        <button id="folderAddBtn" type="button">Add</button>
+      <div class="two-col">
+        <div><label for="folderRepeat">Repeat</label><input id="folderRepeat" placeholder="2.375" inputmode="decimal"></div>
+        <div><label for="folderAcross">Across</label><input id="folderAcross" placeholder="2" inputmode="decimal"></div>
+      </div>
+      <label for="folderLabelsPerCarton">Labels per Carton</label>
+      <input id="folderLabelsPerCarton" placeholder="e.g. 2500" inputmode="decimal">
+
+      <label for="folderTallyInput">Add Cartons</label>
+      <input id="folderTallyInput" class="tally-input" placeholder="e.g. 12" inputmode="decimal">
+      <div class="tally-actions">
+        <label class="btn-scan" for="folderTallyCam">📷 Scan</label>
+        <input id="folderTallyCam" type="file" accept="image/*" capture="environment" data-numtarget="folderTallyInput" data-status="folder" style="display:none">
+        <button id="folderAddBtn" class="btn-add" type="button">Add</button>
       </div>
       <div class="tally-list" id="folderTallyList"></div>
       <div class="running-total">
-        <span class="rt-label">Running Total (Good)</span>
+        <span class="rt-label">Total Cartons</span>
         <span class="rt-value" id="folderRunningTotal">0</span>
       </div>
 
       <button id="folderShiftBtn" class="primary" type="button">Calculate Shift Summary</button>
       <div id="folderShiftError" class="error"></div>
       <div class="shift-grid">
-        <div class="shift-cell"><div class="sc-label">Gross Pieces</div><div class="sc-value" id="folderGross">—</div></div>
-        <div class="shift-cell"><div class="sc-label">Good Pieces</div><div class="sc-value" id="folderGood">—</div></div>
-        <div class="shift-cell waste"><div class="sc-label">Wastage</div><div class="sc-value" id="folderWaste">—</div></div>
+        <div class="shift-cell full"><div class="sc-label">Total Labels (Cartons × Labels/Carton)</div><div class="sc-value" id="folderLabels">—</div></div>
+        <div class="shift-cell"><div class="sc-label">Good Impressions</div><div class="sc-value" id="folderGood">—</div></div>
+        <div class="shift-cell"><div class="sc-label">Gross Impressions</div><div class="sc-value" id="folderGross">—</div></div>
+        <div class="shift-cell waste"><div class="sc-label">Wasted Impressions</div><div class="sc-value" id="folderWaste">—</div></div>
         <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="folderWastePct">—</div></div>
       </div>
     </section>
@@ -981,8 +1098,8 @@ let lastMaterialDescription = "";
 const docketFieldMap = {
   labels: ["impLabels"],
   count: ["pcCount"],
-  repeat: ["impRepeat", "pcRepeat", "frRepeat", "ecciRepeat"],
-  across: ["impAcross", "pcAcross", "frAcross", "ecciAcross"],
+  repeat: ["impRepeat", "pcRepeat", "frRepeat", "ecciRepeat", "rollRepeat"],
+  across: ["impAcross", "pcAcross", "frAcross", "ecciAcross", "rollAcross"],
   finishedRoll: ["frRoll"]
 };
 
@@ -1316,15 +1433,16 @@ function nudgeThickness(deltaMils){
   calculateAndRenderECCI();
 }
 
+const ECCI_RADIUS_MIN = 1.6;
+const ECCI_RADIUS_MAX = 60;
 function nudgeRadius(delta){
-  const slider = document.getElementById("ecciRadiusSlider");
   const input = document.getElementById("ecciRadius");
-  const min = Number(slider.min), max = Number(slider.max);
   let r = cleanNumber("ecciRadius");
-  if(!Number.isFinite(r)) r = Number(slider.value) || 11.5;
-  r = Math.min(max, Math.max(min, r + delta));
-  r = Math.round(r * 100) / 100;
+  if(!Number.isFinite(r)) r = 11.5;
+  r = Math.min(ECCI_RADIUS_MAX, Math.max(ECCI_RADIUS_MIN, r + delta));
+  r = Math.round(r * 10) / 10;
   if(input) input.value = r;
+  const slider = document.getElementById("ecciRadiusSlider");
   if(slider) slider.value = r;
   refreshRadiusNudgeLabel();
   calculateAndRenderECCI();
@@ -1333,7 +1451,7 @@ function nudgeRadius(delta){
 function refreshRadiusNudgeLabel(){
   const val = document.getElementById("radiusNudgeVal");
   const r = cleanNumber("ecciRadius");
-  if(val) val.textContent = "Radius " + (Number.isFinite(r) ? r : "—") + " in";
+  if(val) val.textContent = Number.isFinite(r) ? (r + " in") : "—";
 }
 
 async function lookupMaterialSpecWithAI(){
@@ -1520,14 +1638,14 @@ function calculateAndRenderECCI(){
 function syncECCIRadiusFromSlider(){
   const slider = document.getElementById("ecciRadiusSlider");
   const input = document.getElementById("ecciRadius");
-  input.value = slider.value;
+  if(slider && input) input.value = slider.value;
   calculateAndRenderECCI();
 }
 
 function syncECCIRadiusFromInput(){
   const slider = document.getElementById("ecciRadiusSlider");
   const input = document.getElementById("ecciRadius");
-  slider.value = input.value || "11.5";
+  if(slider && input) slider.value = input.value || "11.5";
   calculateAndRenderECCI();
 }
 
@@ -2128,14 +2246,14 @@ Rules:
 
       // Always populate all visible job values first, even if no paper spec/thickness was found.
       if(docketData.repeatLength){
-        ["ecciRepeat","impRepeat","pcRepeat","frRepeat"].forEach(id=>{
+        ["ecciRepeat","impRepeat","pcRepeat","frRepeat","rollRepeat"].forEach(id=>{
           const el=document.getElementById(id);
           if(el) el.value=docketData.repeatLength;
         });
       }
 
       if(docketData.labelsAcross){
-        ["ecciAcross","impAcross","pcAcross","frAcross"].forEach(id=>{
+        ["ecciAcross","impAcross","pcAcross","frAcross","rollAcross"].forEach(id=>{
           const el=document.getElementById(id);
           if(el) el.value=docketData.labelsAcross;
         });
@@ -2330,7 +2448,7 @@ function clearDocketScan(){
 function clearECCIValues(){
   ["manualSpecSearch","ecciThickness","ecciRepeat","ecciAcross"].forEach(clearInputValue);
   document.getElementById("ecciRadius").value = "11.5";
-  document.getElementById("ecciRadiusSlider").value = "11.5";
+  const _rs = document.getElementById("ecciRadiusSlider"); if(_rs) _rs.value = "11.5";
   safeRemove("ROLL_CALC_MATERIAL_THICKNESS");
   showError("ecciError","");
   updateThicknessBadge("none","—");
@@ -2367,7 +2485,7 @@ function clearCoreValues(){
 
 /* ===================== Tabs, Tally, Shift, Persistence ===================== */
 const TABS = ["roll","sheeter","folder"];
-const TALLY_UNIT = { roll:"Roll", sheeter:"Sheet", folder:"Pack" };
+const TALLY_UNIT = { roll:"Roll", sheeter:"Carton", folder:"Carton" };
 const TAB_KEY = "RC_ACTIVE_TAB_V1";
 const TALLY_KEY = "RC_TALLY_V1";
 const INPUT_KEY = "RC_INPUTS_V1";
@@ -2446,38 +2564,111 @@ function deleteTally(prefix, idx){
   recomputeShift(prefix, true);
 }
 
-/* ---- Shift summary: Gross = End - Start; Good = tally total; Wastage = Gross - Good ---- */
+/* ---- Photograph a press-counter / roll number -> fill a field (on-device OCR, no key) ---- */
+async function scanNumberInto(targetId, file, statusPrefix){
+  if(!file) return;
+  const errEl = document.getElementById(statusPrefix + "ShiftError");
+  if(errEl) errEl.textContent = "Reading number from photo...";
+  try{
+    const text = await ocrImageToText(file);
+    // Pull digit groups (allow thousands separators), drop separators, keep whole numbers.
+    const groups = (text.match(/\d[\d.,]*\d|\d/g) || [])
+      .map(s => s.replace(/[.,](?=\d{3}\b)/g, "")) // strip thousands separators
+      .map(s => s.replace(/[.,]/g, ""))            // strip any leftover separators
+      .map(Number)
+      .filter(n => Number.isFinite(n) && n > 0);
+    if(!groups.length){
+      if(errEl) errEl.textContent = "Couldn't read a number from that photo — type it instead.";
+      return;
+    }
+    // A press counter is the largest number on the readout.
+    const best = Math.max(...groups);
+    const inp = document.getElementById(targetId);
+    if(inp){
+      inp.value = best;
+      inp.dispatchEvent(new Event("input", { bubbles:true }));
+    }
+    if(errEl) errEl.textContent = "Read " + formatNumber(best) + " — check it's right.";
+  }catch(e){
+    if(errEl) errEl.textContent = "Couldn't read the photo — type the number instead.";
+  }
+}
+
+/* ---- Shift summary ----
+   Total Labels: roll = tally sum; sheeter/folder = cartons tallied x labels/carton.
+   Good Impressions = Total Labels x Repeat / 10 / Across.
+   Gross Impressions = End - Start. Wasted = Gross - Good. */
 function calcShift(prefix){
   const start = cleanNumber(prefix + "MasterStart");
   const end = cleanNumber(prefix + "MasterEnd");
+  const repeat = cleanNumber(prefix + "Repeat");
+  const across = cleanNumber(prefix + "Across");
   const errEl = document.getElementById(prefix + "ShiftError");
   if(errEl) errEl.textContent = "";
 
+  // Total Labels
+  const rawTally = tallyTotal(prefix);
+  let totalLabels;
+  if(prefix === "roll"){
+    totalLabels = rawTally; // tally entries are labels
+  }else{
+    const perCarton = cleanNumber(prefix + "LabelsPerCarton");
+    if(!Number.isFinite(perCarton) || perCarton <= 0){
+      if(errEl) errEl.textContent = "Enter Labels per Carton to convert cartons into labels.";
+      return false;
+    }
+    totalLabels = rawTally * perCarton; // tally entries are cartons
+  }
+  setText(prefix + "Labels", formatNumber(totalLabels));
+
+  if(!Number.isFinite(repeat) || repeat <= 0 || !Number.isFinite(across) || across <= 0){
+    if(errEl) errEl.textContent = "Enter Repeat and Across to calculate impressions.";
+    return false;
+  }
+
+  // Good impressions from labels
+  const good = (totalLabels * repeat) / 10 / across;
+
   if(!Number.isFinite(start) || !Number.isFinite(end)){
     if(errEl) errEl.textContent = "Enter both the Master Start and Master End counters.";
+    setText(prefix + "Good", formatNumber(Math.round(good)));
     return false;
   }
   if(end < start){
     if(errEl) errEl.textContent = "Master End counter must be greater than or equal to Master Start.";
     return false;
   }
+
   const gross = end - start;
-  const good = tallyTotal(prefix);
-  const waste = Math.max(0, gross - good);
+  const waste = gross - good;
+  setText(prefix + "Good", formatNumber(Math.round(good)));
   setText(prefix + "Gross", formatNumber(gross));
-  setText(prefix + "Good", formatNumber(good));
-  setText(prefix + "Waste", formatNumber(waste));
-  setText(prefix + "WastePct", gross > 0 ? (waste / gross * 100).toFixed(2) + "%" : "—");
-  if(good > gross && errEl){
-    errEl.textContent = "Note: Good total exceeds Gross impressions — check the counters or tally.";
+  setText(prefix + "Waste", formatNumber(Math.round(waste)));
+  setText(prefix + "WastePct", gross > 0 ? (Math.max(0,waste) / gross * 100).toFixed(2) + "%" : "—");
+  if(waste < 0 && errEl){
+    errEl.textContent = "Note: Good impressions exceed Gross — check the counters, repeat/across, or tally.";
   }
   return true;
+}
+
+// Standalone Impressions calculator (sheeter/folder): Labels x Repeat / Across / 10.
+function calcImprFor(prefix){
+  const labels = cleanNumber(prefix + "ImpLabels");
+  const repeat = cleanNumber(prefix + "ImpRepeat");
+  const across = cleanNumber(prefix + "ImpAcross");
+  const out = document.getElementById(prefix + "ImpAnswer");
+  if(!out) return;
+  if(![labels,repeat,across].every(Number.isFinite) || across <= 0){
+    out.textContent = "—";
+    return;
+  }
+  out.textContent = formatNumber(Math.round((labels * repeat) / across / 10));
 }
 
 // Re-run the summary only if it was already showing values (so live edits stay in sync).
 function recomputeShift(prefix, onlyIfShown){
   if(onlyIfShown){
-    const g = document.getElementById(prefix + "Gross");
+    const g = document.getElementById(prefix + "Good");
     if(!g || g.textContent === "—") { return; }
   }
   calcShift(prefix);
@@ -2528,7 +2719,8 @@ function resetShift(){
   const radS = document.getElementById("ecciRadiusSlider"); if(radS) radS.value = "11.5";
 
   TABS.forEach(renderTally);
-  TABS.forEach(p=>{ setText(p+"Gross","—"); setText(p+"Good","—"); setText(p+"Waste","—"); setText(p+"WastePct","—"); const e=document.getElementById(p+"ShiftError"); if(e) e.textContent=""; });
+  TABS.forEach(p=>{ setText(p+"Gross","—"); setText(p+"Good","—"); setText(p+"Waste","—"); setText(p+"WastePct","—"); setText(p+"Labels","—"); const e=document.getElementById(p+"ShiftError"); if(e) e.textContent=""; });
+  ["sheeter","folder"].forEach(p=>setText(p+"ImpAnswer","—"));
 
   document.getElementById("coreAnswer").textContent = "—";
   document.getElementById("frBase").textContent = "—";
@@ -2604,13 +2796,12 @@ document.addEventListener("DOMContentLoaded",()=>{
     bind("pcBtn","click",calculatePressCounts);
     bind("frBtn","click",calculateFinishedRoll);
     bind("ecciCalculateBtn","click",calculateAndRenderECCI);
-    bind("ecciRadiusSlider","input",()=>{ syncECCIRadiusFromSlider(); refreshRadiusNudgeLabel(); });
     bind("ecciRadius","input",()=>{ syncECCIRadiusFromInput(); refreshRadiusNudgeLabel(); });
 
     bind("thickDown","click",()=>nudgeThickness(-0.5));
     bind("thickUp","click",()=>nudgeThickness(0.5));
-    bind("radiusDown","click",()=>nudgeRadius(-0.25));
-    bind("radiusUp","click",()=>nudgeRadius(0.25));
+    bind("radiusDown","click",()=>nudgeRadius(-0.1));
+    bind("radiusUp","click",()=>nudgeRadius(0.1));
 
     bind("manualSpecSearch","input",()=>{
       lastAISpecLookupData = null;
@@ -2674,14 +2865,30 @@ document.addEventListener("DOMContentLoaded",()=>{
       bind(p + "AddBtn","click",()=>addTally(p));
       bind(p + "TallyInput","keydown",(e)=>{ if(e.key === "Enter"){ e.preventDefault(); addTally(p); } });
       bind(p + "ShiftBtn","click",()=>calcShift(p));
-      // live-update Good/Wastage if counters change after a summary is shown
-      bind(p + "MasterStart","input",()=>recomputeShift(p,true));
-      bind(p + "MasterEnd","input",()=>recomputeShift(p,true));
+      // live-update the summary if inputs change after it's been shown
+      ["MasterStart","MasterEnd","Repeat","Across","LabelsPerCarton"].forEach(suffix=>{
+        bind(p + suffix,"input",()=>recomputeShift(p,true));
+      });
+    });
+    // Standalone Impressions calculators on Sheeter & Folder
+    ["sheeter","folder"].forEach(p=>{
+      ["ImpLabels","ImpRepeat","ImpAcross"].forEach(suffix=>{
+        bind(p + suffix,"input",()=>calcImprFor(p));
+      });
     });
     // Delegated delete for tally rows
     document.addEventListener("click",(e)=>{
       const del = e.target.closest && e.target.closest(".tally-del");
       if(del){ deleteTally(del.dataset.prefix, Number(del.dataset.idx)); }
+    });
+
+    // Camera buttons that read a number (press counter / roll number) into a field.
+    document.querySelectorAll('input[type="file"][data-numtarget]').forEach(inp=>{
+      inp.addEventListener("change",(e)=>{
+        const f = e.target.files && e.target.files[0];
+        scanNumberInto(inp.dataset.numtarget, f, inp.dataset.status || "roll");
+        e.target.value = "";
+      });
     });
 
     /* ---- Reset / New Shift ---- */
@@ -2705,6 +2912,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       const en = document.getElementById(p + "MasterEnd").value;
       if(String(s).trim() !== "" && String(en).trim() !== "") calcShift(p);
     });
+    ["sheeter","folder"].forEach(calcImprFor);
     // Save on every input/textarea change anywhere in the app.
     document.addEventListener("input", saveAllInputs);
     // Restore the active tab last.
