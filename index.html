@@ -693,20 +693,6 @@ body.dark .ecci-display{
     <p class="card-sub" style="margin-top:8px;">Takes a photo and scans automatically: reads on your phone first (low cost), then uses the full image only if needed.</p>
   </section>
 
-  <section class="card scan-card">
-    <h2 class="scan-title">Handwritten Note</h2>
-    <p class="card-sub">Photograph an operator's handwritten note. Fills repeat, across, quantity, target diameter, etc. and calculates.</p>
-    <div class="top-actions">
-      <label class="action-btn" for="handCameraInput">Take Note Photo</label>
-      <label class="action-btn" for="handUploadInput">Upload Note</label>
-      <input id="handCameraInput" type="file" accept="image/*" capture="environment">
-      <input id="handUploadInput" type="file" accept="image/*">
-    </div>
-    <button id="handScanBtn" class="primary" type="button" style="display:none;">Scan Handwritten Note</button>
-    <div id="handScanError" class="error"></div>
-    <div id="handScanSuccess" class="success">No note photo selected.</div>
-  </section>
-
   <section class="card">
     <h2>Job Info</h2>
     <div class="compact-grid">
@@ -933,6 +919,19 @@ body.dark .ecci-display{
   </div><!-- /panel-roll -->
 
   <div class="tab-panel" id="panel-sheeter">
+    <section class="card scan-card">
+      <h2 class="scan-title">Docket Scan</h2>
+      <p class="card-sub">Scans automatically. Fills material spec, repeat, across, quantity and thickness on this tab.</p>
+      <div class="top-actions">
+        <label class="action-btn" for="sheeterDocketCam">Take Docket Photo</label>
+        <label class="action-btn" for="sheeterDocketUpload">Upload Docket</label>
+        <input id="sheeterDocketCam" type="file" accept="image/*" capture="environment" style="display:none">
+        <input id="sheeterDocketUpload" type="file" accept="image/*" style="display:none">
+      </div>
+      <div id="sheeterDocketError" class="error"></div>
+      <div id="sheeterDocketSuccess" class="success">No docket photo selected.</div>
+    </section>
+
     <section class="card">
       <h2>Sheeter Job</h2>
       <label for="sheeterSpec">Material Spec / Stock</label>
@@ -1005,14 +1004,38 @@ body.dark .ecci-display{
   </div><!-- /panel-sheeter -->
 
   <div class="tab-panel" id="panel-folder">
+    <section class="card scan-card">
+      <h2 class="scan-title">Docket Scan</h2>
+      <p class="card-sub">Scans automatically. Fills material spec, repeat, across, quantity, thickness, fold size and gear size on this tab.</p>
+      <div class="top-actions">
+        <label class="action-btn" for="folderDocketCam">Take Docket Photo</label>
+        <label class="action-btn" for="folderDocketUpload">Upload Docket</label>
+        <input id="folderDocketCam" type="file" accept="image/*" capture="environment" style="display:none">
+        <input id="folderDocketUpload" type="file" accept="image/*" style="display:none">
+      </div>
+      <div id="folderDocketError" class="error"></div>
+      <div id="folderDocketSuccess" class="success">No docket photo selected.</div>
+    </section>
+
     <section class="card">
       <h2>Folder Job</h2>
       <label for="folderSpec">Material Spec / Stock</label>
       <input id="folderSpec" placeholder="e.g. 53710 or 60# offset" inputmode="text" autocomplete="off">
       <label for="folderCaliper">Material Thickness / Caliper (optional)</label>
       <input id="folderCaliper" placeholder="0.0040" inputmode="decimal">
-      <label for="folderFold">Fold Type (optional)</label>
-      <input id="folderFold" placeholder="e.g. tri-fold, Z-fold" inputmode="text" autocomplete="off">
+      <label for="folderFoldSize">Fold Size (inches)</label>
+      <input id="folderFoldSize" placeholder="e.g. 3.5" inputmode="decimal">
+    </section>
+
+    <section class="card">
+      <h2>Gear Size</h2>
+      <p class="card-sub">Auto-fills from the docket. If the docket has no gear size, it's calculated as Fold Size × 8.</p>
+      <label for="folderGearSize">Gear Size</label>
+      <input id="folderGearSize" placeholder="—" inputmode="decimal">
+      <div class="answer-card">
+        <div class="answer-label">Gear Size (Fold Size × 8)</div>
+        <div id="folderGearAnswer" class="answer">—</div>
+      </div>
     </section>
 
     <section class="card">
@@ -1086,7 +1109,6 @@ function getGeminiEndpoint(model){
 const GEMINI_ENDPOINT = getGeminiEndpoint(GEMINI_MODEL);
 let labelPhotoFile = null;
 let docketPhotoFile = null;
-let handPhotoFile = null;
 let currentDecimalMode = "exact";
 
 const DOCKET_SCAN_MODEL = "gemini-2.5-flash-lite";
@@ -1970,13 +1992,13 @@ async function ocrImageToText(file, onProgress){
 
 async function runGeminiScan(file, scanType, opts){
   opts = opts || {};
-  const handwritten = !!opts.handwritten;
+  const tab = opts.tab || "roll";
   const apiKey=document.getElementById("apiKey").value.trim();
 
-  const ui = handwritten
-    ? { err:"handScanError", ok:"handScanSuccess", btn:"handScanBtn", idle:"Scan Handwritten Note" }
-    : scanType === "label"
-      ? { err:"labelScanError", ok:"labelScanSuccess", btn:"labelScanBtn", idle:"Scan Label / Paper Spec" }
+  const ui = scanType === "label"
+    ? { err:"labelScanError", ok:"labelScanSuccess", btn:"labelScanBtn", idle:"Scan Label / Paper Spec" }
+    : (tab === "sheeter" || tab === "folder")
+      ? { err:tab+"DocketError", ok:tab+"DocketSuccess", btn:"", idle:"" }
       : { err:"docketScanError", ok:"docketScanSuccess", btn:"docketScanBtn", idle:"Scan Printing Docket" };
   const errorId = ui.err;
   const successId = ui.ok;
@@ -1994,7 +2016,7 @@ async function runGeminiScan(file, scanType, opts){
   if(!file.type.startsWith("image/")){showError(errorId,"Unsupported upload. Please choose an image file.");return;}
 
   try{
-    busy(handwritten ? "Reading note..." : (scanType === "label" ? "Scanning label..." : "Scanning docket..."));
+    busy(scanType === "label" ? "Scanning label..." : "Scanning docket...");
 
     const labelPrompt=`You are a strict OCR + industrial label-material engineering extraction engine.
 
@@ -2164,7 +2186,7 @@ Rules:
 - Convert common fractions: 1/8=0.125, 1/4=0.25, 3/8=0.375, 1/2=0.5, 5/8=0.625, 3/4=0.75, 7/8=0.875.
 - If a value is not present, return null for it. Never guess.`;
 
-    const promptText = scanType === "label" ? labelPrompt : (handwritten ? handwrittenPrompt : docketPrompt);
+    const promptText = scanType === "label" ? labelPrompt : docketPrompt;
 
     // Helper: send parts to Gemini and parse the JSON result.
     const callModel = async (parts)=>{
@@ -2193,7 +2215,7 @@ Rules:
     };
 
     let parsed, fields;
-    if(scanType === "label" || handwritten){
+    if(scanType === "label"){
       ({parsed, fields} = await imageAttempt());
     }else{
       // WATERFALL: cheap on-device OCR first, then the full image scan behind the scenes if OCR can't do it.
@@ -2216,6 +2238,40 @@ Rules:
       }
       calculateAndRenderECCI();
       showSuccess(successId,"Label scan complete. Material thickness is saved and ready.");
+    }else if(tab === "sheeter" || tab === "folder"){
+      const repeat = normalizeNumber(parsed.repeatLength ?? parsed.repeat_length ?? fields.repeat);
+      const across = normalizeNumber(parsed.labelsAcross ?? parsed.labels_across ?? fields.across);
+      const qty = normalizeNumber(parsed.totalQuantity ?? parsed.total_quantity ?? parsed.totalLabels ?? parsed.quantity ?? fields.labels);
+      const spec = parsed.materialSpecCode ?? parsed.material_spec_code ?? parsed.extractedPaperSpec ?? null;
+      const desc = parsed.materialDescription ?? parsed.material_description ?? null;
+      const thick = getDetectedThickness(parsed, fields);
+      const setVal=(id,v)=>{ const el=document.getElementById(id); if(el && v!==null && v!==undefined && v!=="") el.value=v; };
+
+      setVal(tab+"Spec", spec || desc || "");
+      if(thick) setVal(tab+"Caliper", thick);
+      if(repeat){ setVal(tab+"Repeat", repeat); setVal(tab+"ImpRepeat", repeat); }
+      if(across){ setVal(tab+"Across", across); setVal(tab+"ImpAcross", across); }
+      if(qty) setVal(tab+"ImpLabels", qty);
+
+      let foldNote = "";
+      if(tab === "folder"){
+        // Best available docket dimension for fold size is the repeat / cutoff.
+        const foldSize = normalizeNumber(parsed.foldSize ?? parsed.fold_size ?? parsed.cutoff ?? repeat);
+        const gearFromDocket = normalizeNumber(parsed.gearSize ?? parsed.gear_size ?? parsed.gear);
+        if(foldSize) setVal("folderFoldSize", foldSize);
+        if(gearFromDocket) setVal("folderGearSize", gearFromDocket);
+        updateFolderGear(!gearFromDocket); // if docket gave no gear, compute from fold size x 8
+        foldNote = foldSize ? (" Fold size " + foldSize + " in.") : "";
+      }
+
+      calcImprFor(tab);
+      recomputeShift(tab, true);
+      saveAllInputs();
+      const bits = [];
+      if(repeat) bits.push("repeat " + repeat);
+      if(across) bits.push("across " + across);
+      if(spec) bits.push("spec " + spec);
+      showSuccess(successId, "Docket scan complete." + (bits.length ? " Found " + bits.join(", ") + "." : "") + foldNote);
     }else{
       const docketData = {
         repeatLength: normalizeNumber(parsed.repeatLength ?? parsed.repeat_length ?? fields.repeat),
@@ -2392,13 +2448,12 @@ function handleDocketPhoto(file){
   }
 }
 
-function handleHandPhoto(file){
-  handPhotoFile=file;
-  showError("handScanError","");
+function handleTabDocketPhoto(tab, file){
+  showError(tab + "DocketError","");
   if(file){
-    runGeminiScan(file,"docket",{handwritten:true});
+    runGeminiScan(file,"docket",{tab:tab});
   }else{
-    showSuccess("handScanSuccess","No note photo selected.");
+    showSuccess(tab + "DocketSuccess","No docket photo selected.");
   }
 }
 
@@ -2564,33 +2619,58 @@ function deleteTally(prefix, idx){
   recomputeShift(prefix, true);
 }
 
-/* ---- Photograph a press-counter / roll number -> fill a field (on-device OCR, no key) ---- */
+/* ---- Photograph a press-counter / roll number -> fill a field.
+   Uses AI vision (accurate on counters) when an API key is set; falls back to on-device OCR. ---- */
 async function scanNumberInto(targetId, file, statusPrefix){
   if(!file) return;
   const errEl = document.getElementById(statusPrefix + "ShiftError");
+  const apiKey = document.getElementById("apiKey").value.trim();
   if(errEl) errEl.textContent = "Reading number from photo...";
   try{
-    const text = await ocrImageToText(file);
-    // Pull digit groups (allow thousands separators), drop separators, keep whole numbers.
-    const groups = (text.match(/\d[\d.,]*\d|\d/g) || [])
-      .map(s => s.replace(/[.,](?=\d{3}\b)/g, "")) // strip thousands separators
-      .map(s => s.replace(/[.,]/g, ""))            // strip any leftover separators
-      .map(Number)
-      .filter(n => Number.isFinite(n) && n > 0);
-    if(!groups.length){
+    let num = null;
+    if(apiKey){
+      // AI vision: read the single prominent number (best for LED/odometer counters).
+      const {mimeType, base64Data} = await fileToBase64Parts(file);
+      const prompt = 'Read the single most prominent counter/number shown in this photo (a press counter, roll/label count, or carton count). Ignore dates, times, model numbers, and small print. Return strict JSON only: {"number": <integer with no commas, or null if unreadable>}.';
+      const requestBody = { contents:[{role:"user",parts:[{text:prompt},{inline_data:{mime_type:mimeType,data:base64Data}}]}], generationConfig:{responseMimeType:"application/json",temperature:0} };
+      const gr = await callGeminiWithFallback(apiKey, requestBody);
+      const parsed = parseGeminiJson(extractText(gr.body));
+      num = normalizeNumber(parsed.number ?? parsed.value ?? parsed.count ?? parsed.reading);
+    }else{
+      // No key: on-device OCR fallback (less reliable on LED displays).
+      const text = await ocrImageToText(file);
+      const groups = (text.match(/\d[\d.,]*\d|\d/g) || [])
+        .map(s => s.replace(/[.,]/g, ""))
+        .map(Number)
+        .filter(n => Number.isFinite(n) && n > 0);
+      num = groups.length ? Math.max(...groups) : null;
+    }
+    if(!Number.isFinite(num) || num <= 0){
       if(errEl) errEl.textContent = "Couldn't read a number from that photo — type it instead.";
       return;
     }
-    // A press counter is the largest number on the readout.
-    const best = Math.max(...groups);
     const inp = document.getElementById(targetId);
     if(inp){
-      inp.value = best;
+      inp.value = Math.round(num);
       inp.dispatchEvent(new Event("input", { bubbles:true }));
     }
-    if(errEl) errEl.textContent = "Read " + formatNumber(best) + " — check it's right.";
+    if(errEl) errEl.textContent = "Read " + formatNumber(Math.round(num)) + " — check it's right.";
   }catch(e){
     if(errEl) errEl.textContent = "Couldn't read the photo — type the number instead.";
+  }
+}
+
+/* ---- Folder gear size: Fold Size x 8 ---- */
+function updateFolderGear(fillInput){
+  const fold = cleanNumber("folderFoldSize");
+  const ans = document.getElementById("folderGearAnswer");
+  if(Number.isFinite(fold) && fold > 0){
+    const gear = Math.round(fold * 8 * 1000) / 1000;
+    if(ans) ans.textContent = formatNumber(gear);
+    const gi = document.getElementById("folderGearSize");
+    if(gi && (fillInput || !gi.value)) gi.value = gear;
+  }else if(ans){
+    ans.textContent = "—";
   }
 }
 
@@ -2721,6 +2801,7 @@ function resetShift(){
   TABS.forEach(renderTally);
   TABS.forEach(p=>{ setText(p+"Gross","—"); setText(p+"Good","—"); setText(p+"Waste","—"); setText(p+"WastePct","—"); setText(p+"Labels","—"); const e=document.getElementById(p+"ShiftError"); if(e) e.textContent=""; });
   ["sheeter","folder"].forEach(p=>setText(p+"ImpAnswer","—"));
+  setText("folderGearAnswer","—");
 
   document.getElementById("coreAnswer").textContent = "—";
   document.getElementById("frBase").textContent = "—";
@@ -2789,8 +2870,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     bind("docketCameraInput","change",e=>handleDocketPhoto(e.target.files[0]));
     bind("docketUploadInput","change",e=>handleDocketPhoto(e.target.files[0]));
-    bind("handCameraInput","change",e=>handleHandPhoto(e.target.files[0]));
-    bind("handUploadInput","change",e=>handleHandPhoto(e.target.files[0]));
+
+    bind("sheeterDocketCam","change",e=>handleTabDocketPhoto("sheeter",e.target.files[0]));
+    bind("sheeterDocketUpload","change",e=>handleTabDocketPhoto("sheeter",e.target.files[0]));
+    bind("folderDocketCam","change",e=>handleTabDocketPhoto("folder",e.target.files[0]));
+    bind("folderDocketUpload","change",e=>handleTabDocketPhoto("folder",e.target.files[0]));
+
+    // Folder gear size = fold size x 8 (recompute + fill on fold-size edits)
+    bind("folderFoldSize","input",()=>updateFolderGear(true));
 
     bind("impBtn","click",calculateImpressions);
     bind("pcBtn","click",calculatePressCounts);
@@ -2913,6 +3000,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       if(String(s).trim() !== "" && String(en).trim() !== "") calcShift(p);
     });
     ["sheeter","folder"].forEach(calcImprFor);
+    updateFolderGear(false);
     // Save on every input/textarea change anywhere in the app.
     document.addEventListener("input", saveAllInputs);
     // Restore the active tab last.
