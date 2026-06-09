@@ -645,6 +645,39 @@ body.dark .ecci-display{
   .segmented button{font-size:14px;padding:13px 5px}
   .answer{font-size:34px}
 }
+/* Dies / Colors / Notes dynamic lists */
+.joblist-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.joblist-add{
+  border:1px solid var(--line); border-radius:8px;
+  background:var(--card); color:var(--text);
+  font-size:13px; font-weight:800; padding:6px 12px;
+}
+.joblist{ display:flex; flex-direction:column; gap:8px; }
+.joblist-empty{ color:#9a9da6; font-size:13px; padding:4px 2px; }
+.joblist-box{
+  display:flex; align-items:center; gap:8px;
+  background:var(--field); border:1px solid var(--line);
+  border-radius:10px; padding:8px 10px;
+}
+.joblist-num{ flex:0 0 auto; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#7a7d85; min-width:48px; }
+.joblist-input{ flex:1 1 auto; min-width:0; border:none; background:transparent; font-size:16px; font-weight:700; padding:2px 0; }
+.joblist-input:focus{ outline:none; }
+.joblist-del{
+  flex:0 0 auto; width:26px; height:26px; border-radius:7px;
+  border:1px solid #ffbfc0; background:var(--card); color:var(--danger); font-weight:800;
+}
+/* Notes: bulleted, expandable, clearly separated */
+.notes-list .note-item{
+  display:flex; align-items:flex-start; gap:8px;
+  background:var(--field); border:1px solid var(--line);
+  border-radius:10px; padding:10px;
+}
+.note-bullet{ flex:0 0 auto; color:var(--text); font-weight:800; font-size:18px; line-height:1.4; }
+.note-input{
+  flex:1 1 auto; min-width:0; border:none; background:transparent;
+  font-size:15px; line-height:1.4; resize:vertical; padding:2px 0; font-family:inherit;
+}
+.note-input:focus{ outline:none; }
 /* Sub-navigation */
 .subnav-bar{
   display:flex; gap:5px;
@@ -775,8 +808,25 @@ body.dark .ecci-display{
         <input id="rollDirection" placeholder="1" inputmode="text">
       </div>
       <div class="full">
-        <label for="labelColor">Colors</label>
-        <textarea id="labelColor" placeholder="Plain (or list colors, one per line)" rows="2"></textarea>
+        <div class="joblist-head">
+          <label>Dies</label>
+          <button class="joblist-add" data-joblist="dies" type="button">+ Add die</button>
+        </div>
+        <div class="joblist" id="diesList"></div>
+      </div>
+      <div class="full">
+        <div class="joblist-head">
+          <label>Colors</label>
+          <button class="joblist-add" data-joblist="colors" type="button">+ Add color</button>
+        </div>
+        <div class="joblist" id="colorsList"></div>
+      </div>
+      <div class="full">
+        <div class="joblist-head">
+          <label>Notes</label>
+          <button class="joblist-add" data-joblist="notes" type="button">+ Add note</button>
+        </div>
+        <div class="joblist notes-list" id="notesList"></div>
       </div>
     </div>
   </section>
@@ -2196,6 +2246,9 @@ Required JSON schema:
   "docketNumber": string | null,
   "crossPerfTPI": string | null,
   "labelColor": string | null,
+  "colors": string[] | null,
+  "dies": string[] | null,
+  "notes": string[] | null,
   "rollDirection": string | null,
   "jobType": string | null,
   "materialSpecCode": string | null,
@@ -2229,6 +2282,18 @@ Strict rules:
    - If the docket says "Plain" (no print), return "Plain".
    - If there are MULTIPLE print colors (there can be up to 8), list them ALL separated by commas, e.g. "Black, PMS 185 Red, PMS 286 Blue".
    - Otherwise return the single color text exactly as written.
+7c-ii. colors is an ARRAY of the print colors, each entry keeping the color NAME together with any code before or after it.
+   - e.g. "Yellow 485C", "PMS 286 Blue", "Green 355". Keep the human color word AND the code in the same string.
+   - A leading count like "2/0", "4/1", "1/0" means colors-front/colors-back — IGNORE that count, do not treat it as a color.
+   - Split combined color lines on "&", "+", and commas. e.g. "Colour: 2/0 - PMS 362 Green & black + Hawk imaging" -> ["PMS 362 Green","Black","Hawk imaging"].
+   - If the docket is "Plain", return ["Plain"].
+   - One array entry per distinct color.
+7c-iii. dies is an ARRAY of the die / tool codes from the "Die:" line. There may be 1 to 4 dies.
+   - e.g. "Die: F1565 and MA187PR perf" -> ["F1565","MA187PR"]. Die codes are alphanumeric (letters+numbers like F1565, MA187PR, RD2204).
+   - Do not include words like "perf", "and", or instructions — only the die codes themselves.
+7c-iv. notes is an ARRAY of distinct special run/finishing instructions, each as its own string, copied closely from the docket.
+   - Examples: "Cross perf between each label at 1.6250\" - 10TPI", "Run 4 across and finish 1 wide", "Matrix is removed", "Full rotary perf break away", "Break packs to 1 wide", "Inner core label required". 
+   - Capture each separate instruction as its own array entry. Omit pure material/size lines already captured elsewhere. If none, return [].
 7d. rollDirection is the roll/rewind direction.
    - Look for "Roll Direction", e.g. "Roll Direction # 1" -> "1". Return just the number/letter if clear, otherwise the full text.
 7e. jobType is "roll" if this is a roll/rewind job, otherwise "sheet" (or "fanfold").
@@ -2432,14 +2497,15 @@ Rules:
         const el=document.getElementById("crossPerfTPI");
         if(el) el.value=docketData.crossPerfTPI;
       }
-      if(docketData.labelColor){
-        const el=document.getElementById("labelColor");
-        if(el) el.value=docketData.labelColor;
-      }
       if(docketData.rollDirection){
         const el=document.getElementById("rollDirection");
         if(el) el.value=docketData.rollDirection;
       }
+
+      // Dies, Colors, Notes -> dynamic boxes (one per item).
+      setJobListFromScan("dies", parsed.dies ?? parsed.die ?? parsed.dieCodes);
+      setJobListFromScan("colors", parsed.colors ?? parsed.colours ?? docketData.labelColor);
+      setJobListFromScan("notes", parsed.notes ?? parsed.instructions ?? parsed.specialInstructions);
 
       // Handwritten/docket target diameter -> set the ECCI target radius (diameter / 2).
       if(docketData.targetDiameter && docketData.targetDiameter > 3 && docketData.targetDiameter <= 40){
@@ -2580,7 +2646,7 @@ function clearDocketScan(){
   clearFileInput("docketCameraInput");
   clearFileInput("docketUploadInput");
 
-  ["manualSpecSearch","impLabels","impRepeat","impAcross","pcCount","pcRepeat","pcAcross","frRoll","frAcross","frRepeat","ecciRepeat","ecciAcross","coreCarrierWidth","coreAcross","docketNumber","jobQuantity","salesQuantity","crossPerfTPI","labelColor","rollDirection"].forEach(clearInputValue);
+  ["manualSpecSearch","impLabels","impRepeat","impAcross","pcCount","pcRepeat","pcAcross","frRoll","frAcross","frRepeat","ecciRepeat","ecciAcross","coreCarrierWidth","coreAcross","docketNumber","jobQuantity","salesQuantity","crossPerfTPI","rollDirection"].forEach(clearInputValue);
 
   showError("docketScanError","");
   showSuccess("docketScanSuccess","Docket scan cleared.");
@@ -2813,6 +2879,76 @@ function restoreSubNav(){
 }
 
 
+/* ---- Dies / Colors / Notes dynamic lists ---- */
+const JOBLISTS_KEY = "RC_JOBLISTS_V1";
+const jobListsState = { dies: [], colors: [], notes: [] };
+const JOBLIST_WORD = { dies:"Die", colors:"Color", notes:"Note" };
+
+function escAttr(s){ return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function loadJobLists(){
+  try{
+    const o = JSON.parse(safeGet(JOBLISTS_KEY) || "{}");
+    ["dies","colors","notes"].forEach(k=>{ if(Array.isArray(o[k])) jobListsState[k] = o[k].map(x=>String(x)); });
+  }catch(e){}
+}
+function saveJobLists(){ safeSet(JOBLISTS_KEY, JSON.stringify(jobListsState)); }
+
+function renderJobList(kind){
+  const list = document.getElementById(kind + "List");
+  if(!list) return;
+  const arr = jobListsState[kind];
+  if(!arr.length){
+    list.innerHTML = '<div class="joblist-empty">None yet — scan a docket or tap \u201cAdd\u201d.</div>';
+    return;
+  }
+  const word = JOBLIST_WORD[kind];
+  list.innerHTML = arr.map((val,i)=>{
+    if(kind === "notes"){
+      return '<div class="note-item">'
+        + '<span class="note-bullet">\u2022</span>'
+        + '<textarea class="note-input" data-kind="notes" data-idx="'+i+'" rows="2" placeholder="Note">'+escHtml(val)+'</textarea>'
+        + '<button class="joblist-del" data-kind="notes" data-idx="'+i+'" type="button" aria-label="Remove">\u2715</button>'
+        + '</div>';
+    }
+    return '<div class="joblist-box">'
+      + '<span class="joblist-num">'+word+' '+(i+1)+'</span>'
+      + '<input class="joblist-input" data-kind="'+kind+'" data-idx="'+i+'" value="'+escAttr(val)+'" placeholder="'+word+'">'
+      + '<button class="joblist-del" data-kind="'+kind+'" data-idx="'+i+'" type="button" aria-label="Remove">\u2715</button>'
+      + '</div>';
+  }).join("");
+}
+function renderAllJobLists(){ ["dies","colors","notes"].forEach(renderJobList); }
+
+function addJobListItem(kind){
+  if(!jobListsState[kind]) return;
+  jobListsState[kind].push("");
+  saveJobLists(); renderJobList(kind);
+  const list = document.getElementById(kind + "List");
+  const fields = list ? list.querySelectorAll(".joblist-input,.note-input") : [];
+  if(fields.length) fields[fields.length - 1].focus();
+}
+function delJobListItem(kind, idx){
+  if(!jobListsState[kind]) return;
+  jobListsState[kind].splice(idx, 1);
+  saveJobLists(); renderJobList(kind);
+}
+function updateJobListItem(kind, idx, val){
+  if(jobListsState[kind] && idx < jobListsState[kind].length){
+    jobListsState[kind][idx] = val;
+    saveJobLists();
+  }
+}
+function setJobListFromScan(kind, value){
+  let arr = null;
+  if(Array.isArray(value)) arr = value;
+  else if(typeof value === "string" && value.trim()) arr = value.split(/[,\n]/);
+  if(!arr) return;
+  const cleaned = arr.map(x=>String(x).trim()).filter(Boolean);
+  if(cleaned.length){ jobListsState[kind] = cleaned; saveJobLists(); renderJobList(kind); }
+}
+
 function firstNum(ids){
   for(const id of ids){ const v = cleanNumber(id); if(Number.isFinite(v) && v > 0) return v; }
   return NaN;
@@ -2998,6 +3134,9 @@ function resetShift(){
 
   safeRemove(INPUT_KEY);
   safeRemove(TALLY_KEY);
+  safeRemove(JOBLISTS_KEY);
+  jobListsState.dies = []; jobListsState.colors = []; jobListsState.notes = [];
+  renderAllJobLists();
   safeRemove("ROLL_CALC_MATERIAL_THICKNESS");
   TABS.forEach(t=>{ tallyState[t] = []; });
   saveTallyState();
@@ -3206,6 +3345,21 @@ document.addEventListener("DOMContentLoaded",()=>{
       btn.addEventListener("click",()=>switchSubNav(btn.dataset.pane));
     });
 
+    /* ---- Dies / Colors / Notes lists ---- */
+    document.querySelectorAll(".joblist-add[data-joblist]").forEach(btn=>{
+      btn.addEventListener("click",()=>addJobListItem(btn.dataset.joblist));
+    });
+    document.addEventListener("click",(e)=>{
+      const del = e.target.closest && e.target.closest(".joblist-del");
+      if(del){ delJobListItem(del.dataset.kind, Number(del.dataset.idx)); }
+    });
+    document.addEventListener("input",(e)=>{
+      const f = e.target;
+      if(f && f.dataset && f.dataset.kind && (f.classList.contains("joblist-input") || f.classList.contains("note-input"))){
+        updateJobListItem(f.dataset.kind, Number(f.dataset.idx), f.value);
+      }
+    });
+
     /* ---- Sheeter / Folder total-box cameras + live recompute ---- */
     ["sheeter","folder"].forEach(p=>{
       const boxCam = document.getElementById(p + "BoxCam");
@@ -3250,6 +3404,8 @@ document.addEventListener("DOMContentLoaded",()=>{
     ["sheeter","folder"].forEach(calcImprFor);
     updateFolderGear(false);
     syncExtraUI();
+    loadJobLists();
+    renderAllJobLists();
     restoreSubNav();
     // Save on every input/textarea change anywhere in the app.
     document.addEventListener("input", saveAllInputs);
