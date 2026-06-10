@@ -678,6 +678,12 @@ body.dark .ecci-display{
   font-size:15px; line-height:1.4; resize:vertical; padding:2px 0; font-family:inherit;
 }
 .note-input:focus{ outline:none; }
+.notes-box{
+  width:100%; resize:vertical; min-height:96px;
+  line-height:1.6; font-size:15px; font-family:inherit;
+  padding:12px; border:1px solid var(--line); border-radius:10px;
+  background:var(--field);
+}
 /* Sub-navigation */
 .subnav-bar{
   display:flex; gap:5px;
@@ -732,7 +738,7 @@ body.dark .ecci-display{
 
   <div id="appStatus" class="success" style="display:none;"></div>
 
-  <section class="card settings-card" id="settingsPanel">
+  <section class="card settings-card hidden" id="settingsPanel">
     <h2>API Key</h2>
     <label for="apiKey">Gemini API Key</label>
     <input id="apiKey" type="password" placeholder="Paste Gemini API key" autocomplete="off">
@@ -745,33 +751,10 @@ body.dark .ecci-display{
     <p class="card-sub">Photo scan is optional. Manual calculator works without the key.</p>
   </section>
 
-  <div class="tab-bar" id="tabBar">
-    <button data-tab="roll" class="active" type="button">Roll</button>
-    <button data-tab="sheeter" type="button">Sheeter</button>
-    <button data-tab="folder" type="button">Folder</button>
-  </div>
-
-  <button class="reset-btn" id="resetShiftBtn" type="button">Reset / New Shift</button>
-
-  <div class="card" style="padding:12px 14px;margin-bottom:14px;">
-    <div class="field-cam" style="align-items:center;gap:10px;">
-      <label for="operatorInitials" style="margin:0;flex:0 0 auto;font-weight:800;">Operator Initials</label>
-      <input id="operatorInitials" placeholder="e.g. JS" inputmode="text" autocapitalize="characters" autocomplete="off" maxlength="6" style="flex:1 1 auto;min-width:0;text-align:center;">
-    </div>
-  </div>
-
-  <div class="tab-panel active" id="panel-roll">
-
-  <div class="subnav-bar" data-tabnav="roll">
-    <button data-pane="roll-job" type="button">Job</button>
-    <button data-pane="roll-tools" type="button">Tools</button>
-    <button data-pane="roll-shift" type="button">Shift</button>
-  </div>
-
-  <div class="subnav-pane active" id="roll-job">
+  <!-- Universal Docket Scan + Job Info (landing) -->
   <section class="card scan-card">
     <h2 class="scan-title">Docket Scan</h2>
-    <p class="card-sub">One scan fills Repeat, Across, Quantity, Finished Roll, Core Size, plus material spec and thickness.</p>
+    <p class="card-sub">Scan once. It detects the job type, opens the right tab, and fills the job info below.</p>
     <div class="top-actions">
       <label class="action-btn" for="docketCameraInput">Take Docket Photo</label>
       <label class="action-btn" for="docketUploadInput">Upload Docket</label>
@@ -781,7 +764,6 @@ body.dark .ecci-display{
     <button id="clearDocketScanBtn" class="clear-mini" type="button">Clear Docket Scan</button>
     <div id="docketScanError" class="error"></div>
     <div id="docketScanSuccess" class="success">No docket photo selected.</div>
-    <p class="card-sub" style="margin-top:8px;">Takes a photo and scans automatically: reads on your phone first (low cost), then uses the full image only if needed.</p>
   </section>
 
   <section class="card">
@@ -824,13 +806,33 @@ body.dark .ecci-display{
       <div class="full">
         <div class="joblist-head">
           <label>Notes</label>
-          <button class="joblist-add" data-joblist="notes" type="button">+ Add note</button>
         </div>
-        <div class="joblist notes-list" id="notesList"></div>
+        <textarea id="notesBox" class="notes-box" rows="5" placeholder="Notes appear here, one per line."></textarea>
       </div>
     </div>
   </section>
-  </div><!-- /roll-job -->
+
+  <div class="tab-bar" id="tabBar">
+    <button data-tab="roll" class="active" type="button">Roll</button>
+    <button data-tab="sheeter" type="button">Sheeter</button>
+    <button data-tab="folder" type="button">Folder</button>
+  </div>
+
+  <button class="reset-btn" id="resetShiftBtn" type="button">Reset / New Shift</button>
+
+  <div class="card" style="padding:12px 14px;margin-bottom:14px;">
+    <div class="field-cam" style="align-items:center;gap:10px;">
+      <label for="operatorInitials" style="margin:0;flex:0 0 auto;font-weight:800;">Operator Initials</label>
+      <input id="operatorInitials" placeholder="e.g. JS" inputmode="text" autocapitalize="characters" autocomplete="off" maxlength="6" style="flex:1 1 auto;min-width:0;text-align:center;">
+    </div>
+  </div>
+
+  <div class="tab-panel active" id="panel-roll">
+
+  <div class="subnav-bar" data-tabnav="roll">
+    <button data-pane="roll-tools" type="button">Tools</button>
+    <button data-pane="roll-shift" type="button">Shift</button>
+  </div>
 
   <div class="subnav-pane" id="roll-tools">
   <section class="card">
@@ -981,7 +983,7 @@ body.dark .ecci-display{
   </section>
   </div><!-- /roll-tools -->
 
-  <div class="subnav-pane" id="roll-shift">
+  <div class="subnav-pane active" id="roll-shift">
   <section class="card">
     <h2>Roll Tally &amp; Shift</h2>
 
@@ -1070,18 +1072,6 @@ body.dark .ecci-display{
     </div>
 
     <div class="subnav-pane active" id="sheeter-job">
-      <section class="card scan-card">
-        <h2 class="scan-title">Docket Scan</h2>
-        <p class="card-sub">Scans automatically. Fills material spec, repeat, across, quantity and thickness on this tab.</p>
-        <div class="top-actions">
-          <label class="action-btn" for="sheeterDocketCam">Take Docket Photo</label>
-          <label class="action-btn" for="sheeterDocketUpload">Upload Docket</label>
-          <input id="sheeterDocketCam" type="file" accept="image/*" capture="environment" style="display:none">
-          <input id="sheeterDocketUpload" type="file" accept="image/*" style="display:none">
-        </div>
-        <div id="sheeterDocketError" class="error"></div>
-        <div id="sheeterDocketSuccess" class="success">No docket photo selected.</div>
-      </section>
       <section class="card">
         <h2>Sheeter Job</h2>
         <label for="sheeterSpec">Material Spec / Stock</label>
@@ -1157,18 +1147,6 @@ body.dark .ecci-display{
     </div>
 
     <div class="subnav-pane active" id="folder-job">
-      <section class="card scan-card">
-        <h2 class="scan-title">Docket Scan</h2>
-        <p class="card-sub">Scans automatically. Fills material spec, repeat, across, quantity, thickness, fold size and gear size on this tab.</p>
-        <div class="top-actions">
-          <label class="action-btn" for="folderDocketCam">Take Docket Photo</label>
-          <label class="action-btn" for="folderDocketUpload">Upload Docket</label>
-          <input id="folderDocketCam" type="file" accept="image/*" capture="environment" style="display:none">
-          <input id="folderDocketUpload" type="file" accept="image/*" style="display:none">
-        </div>
-        <div id="folderDocketError" class="error"></div>
-        <div id="folderDocketSuccess" class="success">No docket photo selected.</div>
-      </section>
       <section class="card">
         <h2>Folder Job</h2>
         <label for="folderSpec">Material Spec / Stock</label>
@@ -1180,11 +1158,9 @@ body.dark .ecci-display{
       </section>
       <section class="card">
         <h2>Gear Size</h2>
-        <p class="card-sub">Auto-fills from the docket. If the docket has no gear size, it calculates as Fold Size × 8.</p>
         <label for="folderGearSize">Gear Size</label>
         <input id="folderGearSize" placeholder="—" inputmode="decimal">
         <div class="answer-card">
-          <div class="answer-label">Gear Size (Fold Size × 8)</div>
           <div id="folderGearAnswer" class="answer">—</div>
         </div>
       </section>
@@ -2138,14 +2114,12 @@ async function ocrImageToText(file, onProgress){
 
 async function runGeminiScan(file, scanType, opts){
   opts = opts || {};
-  const tab = opts.tab || "roll";
+  let tab = opts.tab || "roll";
   const apiKey=document.getElementById("apiKey").value.trim();
 
   const ui = scanType === "label"
     ? { err:"labelScanError", ok:"labelScanSuccess", btn:"labelScanBtn", idle:"Scan Label / Paper Spec" }
-    : (tab === "sheeter" || tab === "folder")
-      ? { err:tab+"DocketError", ok:tab+"DocketSuccess", btn:"", idle:"" }
-      : { err:"docketScanError", ok:"docketScanSuccess", btn:"docketScanBtn", idle:"Scan Printing Docket" };
+    : { err:"docketScanError", ok:"docketScanSuccess", btn:"docketScanBtn", idle:"Scan Printing Docket" };
   const errorId = ui.err;
   const successId = ui.ok;
   const btn=document.getElementById(ui.btn);
@@ -2399,7 +2373,12 @@ Rules:
       }
       calculateAndRenderECCI();
       showSuccess(successId,"Label scan complete. Material thickness is saved and ready.");
-    }else if(tab === "sheeter" || tab === "folder"){
+    }else{
+    // Universal scan: detect job type and open that tab unless a tab was forced.
+    if(!opts.tab){ tab = detectJobType(parsed); switchTab(tab); }
+    // Shared job info (docket #, quantities, dies, colors, notes) for every job type.
+    fillJobInfo(parsed, fields);
+    if(tab === "sheeter" || tab === "folder"){
       const repeat = normalizeNumber(parsed.repeatLength ?? parsed.repeat_length ?? fields.repeat);
       const across = normalizeNumber(parsed.labelsAcross ?? parsed.labels_across ?? fields.across);
       const qty = normalizeNumber(parsed.totalQuantity ?? parsed.total_quantity ?? parsed.totalLabels ?? parsed.quantity ?? fields.labels);
@@ -2584,6 +2563,7 @@ Rules:
         ? "Material spec detected: " + docketData.extractedPaperSpec + ". "
         : "No material spec found. ";
       showSuccess(successId,"Docket scan complete. Job values populated. " + specMsg + thicknessNote);
+    }
     }
   }catch(err){
     showSuccess(successId,"");
@@ -2848,6 +2828,8 @@ function updateFolderGear(fillInput){
 const SUBNAV_KEY = "RC_SUBNAV_V1";
 function switchSubNav(pane){
   const tab = pane.split("-")[0];
+  // If the requested pane doesn't exist (e.g. roll has no Job pane), fall back to Shift.
+  if(!document.getElementById(pane)) pane = tab + "-shift";
   // toggle pane visibility
   document.querySelectorAll(".subnav-pane[id^='" + tab + "-']").forEach(p=>{
     p.classList.toggle("active", p.id === pane);
@@ -2870,11 +2852,11 @@ function restoreSubNav(){
   try{
     const saved = JSON.parse(safeGet(SUBNAV_KEY) || "{}");
     ["roll","sheeter","folder"].forEach(tab=>{
-      const pane = saved[tab] || (tab + "-job");
+      const pane = saved[tab] || (tab + "-shift");
       switchSubNav(pane);
     });
   }catch(e){
-    ["roll","sheeter","folder"].forEach(t=>switchSubNav(t+"-job"));
+    ["roll","sheeter","folder"].forEach(t=>switchSubNav(t+"-shift"));
   }
 }
 
@@ -2919,7 +2901,51 @@ function renderJobList(kind){
       + '</div>';
   }).join("");
 }
-function renderAllJobLists(){ ["dies","colors","notes"].forEach(renderJobList); }
+function renderAllJobLists(){ ["dies","colors"].forEach(renderJobList); }
+
+// Notes live in a single textarea, one per line.
+function setNotesFromScan(value){
+  let arr = null;
+  if(Array.isArray(value)) arr = value;
+  else if(typeof value === "string" && value.trim()) arr = value.split(/\n|;|\u2022/);
+  if(!arr) return;
+  const cleaned = arr.map(x=>String(x).trim()).filter(Boolean);
+  const box = document.getElementById("notesBox");
+  if(box && cleaned.length){
+    box.value = cleaned.join("\n");
+    box.dispatchEvent(new Event("input",{bubbles:true}));
+  }
+}
+
+// Decide which tab a scanned docket belongs to.
+function detectJobType(parsed){
+  const explicit = String(parsed.jobType ?? parsed.job_type ?? "").toLowerCase();
+  if(/fold/.test(explicit)) return "folder";
+  if(/sheet/.test(explicit)) return "sheeter";
+  if(/roll|rewind/.test(explicit)) return "roll";
+  const blob = [parsed.materialDescription, parsed.jobType,
+    Array.isArray(parsed.notes) ? parsed.notes.join(" ") : parsed.notes]
+    .map(x=>String(x||"")).join(" ").toLowerCase();
+  if(/fan ?fold|z-?fold|tri-?fold|folded/.test(blob)) return "folder";
+  if(/\bsheet(ed|s)?\b|flat sheet|cut sheet/.test(blob) && !/\/\s*roll|rewind|core code/.test(blob)) return "sheeter";
+  return "roll";
+}
+
+// Fill the shared Job Info (used for every job type).
+function fillJobInfo(parsed, fields){
+  const setIf=(id,v)=>{ const el=document.getElementById(id); if(el && v!==null && v!==undefined && v!=="") { el.value=v; el.dispatchEvent(new Event("input",{bubbles:true})); } };
+  const po = parsed.productionOrder ?? parsed.production_order ?? null;
+  let docket = parsed.docketNumber ?? parsed.docket_number ?? null;
+  if(!docket && po && typeof deriveDocketNumber === "function") docket = deriveDocketNumber(po);
+  setIf("docketNumber", docket || po);
+  setIf("jobQuantity", normalizeNumber(parsed.totalQuantity ?? parsed.total_quantity ?? parsed.quantity));
+  setIf("salesQuantity", normalizeNumber(parsed.salesQuantity ?? parsed.sales_quantity));
+  setIf("crossPerfTPI", parsed.crossPerfTPI ?? parsed.cross_perf_tpi ?? null);
+  setIf("rollDirection", parsed.rollDirection ?? parsed.roll_direction ?? null);
+  setJobListFromScan("dies", parsed.dies ?? parsed.die ?? parsed.dieCodes);
+  setJobListFromScan("colors", parsed.colors ?? parsed.colours ?? parsed.labelColor ?? parsed.label_color);
+  setNotesFromScan(parsed.notes ?? parsed.instructions ?? parsed.specialInstructions);
+}
 
 function addJobListItem(kind){
   if(!jobListsState[kind]) return;
@@ -3129,7 +3155,7 @@ function restoreAllInputs(){
 
 /* ---- Reset / New Shift ---- */
 function resetShift(){
-  const ok = window.confirm("Start a NEW SHIFT?\n\nThis clears every entered value, all roll/sheet/pack tallies, and shift totals on this device. Your saved API key is kept.\n\nThis cannot be undone.");
+  const ok = window.confirm("Start a NEW SHIFT?\n\nThis clears every entered value, all tallies, job info, and shift totals on this device.\n\nThis cannot be undone.");
   if(!ok) return;
 
   safeRemove(INPUT_KEY);
@@ -3229,11 +3255,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     bind("docketCameraInput","change",e=>handleDocketPhoto(e.target.files[0]));
     bind("docketUploadInput","change",e=>handleDocketPhoto(e.target.files[0]));
-
-    bind("sheeterDocketCam","change",e=>handleTabDocketPhoto("sheeter",e.target.files[0]));
-    bind("sheeterDocketUpload","change",e=>handleTabDocketPhoto("sheeter",e.target.files[0]));
-    bind("folderDocketCam","change",e=>handleTabDocketPhoto("folder",e.target.files[0]));
-    bind("folderDocketUpload","change",e=>handleTabDocketPhoto("folder",e.target.files[0]));
 
     // Folder gear size = fold size x 8 (recompute + fill on fold-size edits)
     bind("folderFoldSize","input",()=>updateFolderGear(true));
