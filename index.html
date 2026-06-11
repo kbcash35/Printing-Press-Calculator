@@ -714,8 +714,13 @@ body.dark .ecci-display{
 .anilox-lpi{ font-weight:800; font-size:15px; }
 .anilox-bcm{ font-size:12px; color:var(--muted); }
 .anilox-loading{ font-size:13px; font-weight:700; color:var(--accent, #2563eb); }
-.anilox-spec{ display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+.anilox-spec{ display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
 .anilox-class{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); }
+.anilox-class-sel{
+  font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.02em;
+  color:var(--muted); background:var(--card); border:1px solid var(--line);
+  border-radius:7px; padding:3px 6px; max-width:150px;
+}
 /* Sub-navigation */
 .subnav-bar{
   display:flex; gap:5px;
@@ -2271,6 +2276,7 @@ Strict rules:
      * "VIBRANT_TRANSPARENT" — high-saturation/transparent inks: bright orange, reflex blue, rhodamine, fluorescents, rich reds. (Needs open cells to build saturation.)
      * "PROCESS_SCREEN" — true CMYK process screens, fine text, vignettes, tints under ~30% — ONLY when the docket clearly indicates process/screened work.
      Default rule: a named PMS / Pantone SPOT color is a SOLID spot ink — classify by its hue density (most light/pastel spots = "MEDIUM_PASTEL", dark spots = "HEAVY_DARK", vivid spots = "VIBRANT_TRANSPARENT"). NEVER classify a spot color as "PROCESS_SCREEN" just because its name contains "Light".
+     If only a bare PMS number is given (no hue word), use your knowledge of the Pantone system to infer the hue and density — e.g. dark navies/blacks/dark greens -> HEAVY_DARK; pale yellows, light blues, pinks, pastels -> MEDIUM_PASTEL; Reflex Blue, bright orange, warm/rubine reds, fluorescents -> VIBRANT_TRANSPARENT. If you genuinely cannot tell, use "MEDIUM_PASTEL".
      e.g. color "PMS 365 (Light Green)" -> { "color":"PMS 365 (Light Green)", "weightClass":"MEDIUM_PASTEL" }.
      "color" must match the matching entry in the colors array exactly. One object per color. If Plain or no print, return null.
 7c-iii. dies is an ARRAY of the die / tool codes from the "Die:" line, extracted as the EXACT raw alphanumeric strings exactly as printed.
@@ -2971,9 +2977,12 @@ function renderAnilox(){
       const lpi = String(a.lpi || "").trim();
       const bcm = String(a.bcm || "").trim();
       const spec = (lpi ? lpi + " LPI" : "") + (lpi && bcm ? " · " : "") + (bcm ? bcm + " BCM" : "");
-      const tag = a.weightClass && WEIGHT_LABEL[a.weightClass]
-        ? '<div class="anilox-class">'+escHtml(WEIGHT_LABEL[a.weightClass])+'</div>' : "";
-      right = '<span class="anilox-lpi">' + escHtml(spec || "—") + '</span>' + tag;
+      const cur = normWeightClass(a.weightClass);
+      const opts = WEIGHT_CLASSES.map(wc =>
+        '<option value="'+wc+'"' + (wc===cur ? ' selected' : '') + '>' + WEIGHT_LABEL[wc] + '</option>'
+      ).join("");
+      const sel = '<select class="anilox-class-sel" data-color="'+escAttr(color)+'">'+opts+'</select>';
+      right = '<span class="anilox-lpi">' + escHtml(spec || "—") + '</span>' + sel;
     }
     return '<div class="anilox-row">'
       + '<div class="anilox-color"><span class="anilox-swatch" style="background:'+swatchFor(color)+'"></span>'
@@ -3655,7 +3664,19 @@ document.addEventListener("DOMContentLoaded",()=>{
         f.blur();
       }
     });
-    // Editing Stock Info re-derives the substrate class and re-resolves all anilox rows (instant, no API call).
+    // Manual override: operator picks the ink weight class -> re-resolve that row instantly (no API).
+    document.addEventListener("change",(e)=>{
+      const sel = e.target;
+      if(sel && sel.classList && sel.classList.contains("anilox-class-sel")){
+        const color = sel.dataset.color;
+        const idx = aniloxIndexForColor(color);
+        if(idx < 0) return;
+        const r = resolveAnilox(sel.value, aniloxSubstrateClass);
+        jobListsState.anilox[idx] = Object.assign({}, jobListsState.anilox[idx],
+          { weightClass:r.weightClass, substrateClass:r.substrateClass, lpi:r.lpi, bcm:r.bcm, loading:false, note:"" });
+        saveJobLists(); renderAnilox();
+      }
+    });
     (function(){
       const stock = document.getElementById("stockInfo");
       if(!stock) return;
