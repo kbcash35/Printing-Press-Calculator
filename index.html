@@ -713,6 +713,7 @@ body.dark .ecci-display{
 .anilox-spec{ flex:0 0 auto; text-align:right; }
 .anilox-lpi{ font-weight:800; font-size:15px; }
 .anilox-bcm{ font-size:12px; color:var(--muted); }
+.anilox-loading{ font-size:13px; font-weight:700; color:var(--accent, #2563eb); }
 /* Sub-navigation */
 .subnav-bar{
   display:flex; gap:5px;
@@ -831,6 +832,7 @@ body.dark .ecci-display{
           <button class="joblist-add" data-joblist="colors" type="button">+ Add color</button>
         </div>
         <div class="joblist" id="colorsList"></div>
+        <p class="card-sub" style="margin-top:6px;">Wrong color? Delete it to clear its anilox, or type the full corrected color (e.g. “PMS 365 (Light Green)”) to regenerate the recommended anilox.</p>
       </div>
       <div class="full">
         <div class="joblist-head">
@@ -2237,19 +2239,29 @@ Strict rules:
    - If the docket says "Plain" (no print), return "Plain".
    - If there are MULTIPLE print colors (there can be up to 8), list them ALL separated by commas, e.g. "Black, PMS 185 Red, PMS 286 Blue".
    - Otherwise return the single color text exactly as written.
-7c-ii. colors is an ARRAY of the print colors, each entry keeping the color NAME together with any code before or after it.
-   - e.g. "Yellow 485C", "PMS 286 Blue", "Green 355". Keep the human color word AND the code in the same string.
-   - A leading count like "2/0", "4/1", "1/0" means colors-front/colors-back — IGNORE that count, do not treat it as a color.
-   - Split combined color lines on "&", "+", and commas. e.g. "Colour: 2/0 - PMS 362 Green & black + Hawk imaging" -> ["PMS 362 Green","Black","Hawk imaging"].
-   - If the docket is "Plain", return ["Plain"].
-   - One array entry per distinct color.
+7c-ii. colors is an ARRAY of the print colors. Each entry must keep the COMPLETE color string EXACTLY as printed — any "PMS"/"Pantone" code AND the descriptive color word(s) together.
+   - The print color line may be labelled "Print", "Print:", "Printing", "Colour", "Color", or "Ink". Read whichever is present.
+   - CRITICAL: when a color has a "PMS" (or "Pantone") code, you MUST include that prefix and its 3- or 4-digit number, AND the descriptive text that follows (often in parentheses). Pass the full string through.
+     e.g. "Print : 1/0 , PMS 365 (Light Green)" -> ["PMS 365 (Light Green)"]  (NOT just "Light Green").
+     e.g. "PMS 286 Blue" -> ["PMS 286 Blue"]. e.g. "Yellow 485C" -> ["Yellow 485C"].
+   - Do NOT grab only the text inside parentheses. The PMS code is a required anchor — never drop it.
+   - A leading count like "1/0", "2/0", "4/1" means colors-front/colors-back — IGNORE that count, it is not a color.
+   - Split lines with multiple colors on "&", "+", and commas, but keep each color's own PMS code with it.
+     e.g. "2/0 - PMS 362 (Green) & Black + Hawk imaging" -> ["PMS 362 (Green)","Black","Hawk imaging"].
+   - If the docket is "Plain" (no print), return ["Plain"]. One array entry per distinct color.
 7c-ii-b. aniloxRecommendations: for EACH print color in "colors" (skip "Plain"), recommend the best anilox roll to run it.
    - Give "lpi" (line screen, lines per inch, e.g. "800", "1200") and "bcm" (cell volume in BCM, e.g. "3.5", "2.0").
-   - Base the recommendation on the color/ink type AND the stock/material (e.g. coated vs uncoated, film vs paper), heavier solids/whites need lower LPI + higher BCM; fine text/process needs higher LPI + lower BCM; this is a best-practice starting recommendation.
+   - A named PMS / Pantone SPOT color is a SOLID spot ink — recommend a heavier roll (lower LPI, higher BCM), even if the name contains the word "Light" or a light hue. Do NOT treat a spot color as a fine process tint just because of its name.
+   - Only recommend a fine high-LPI/low-BCM roll for genuine process (CMYK) screens, fine text, or vignettes.
+   - Base it on the ink AND the stock/material (coated vs uncoated, film vs paper). This is a best-practice starting recommendation.
    - "color" must match the matching entry in the colors array. One object per color. If Plain or no print, return null.
-7c-iii. dies is an ARRAY of the die / tool codes from the "Die:" line. There may be 1 to 4 dies.
-   - e.g. "Die: F1565 and MA187PR perf" -> ["F1565","MA187PR"]. Die codes are alphanumeric (letters+numbers like F1565, MA187PR, RD2204).
-   - Do not include words like "perf", "and", or instructions — only the die codes themselves.
+7c-iii. dies is an ARRAY of the die / tool codes from the "Die:" line, extracted as the EXACT raw alphanumeric strings exactly as printed.
+   - Capture EVERY die code on the line, including ones introduced by "and", "and perf die", "&", etc. There may be 1 to 4.
+   - DO NOT truncate, clean, or normalise. Keep any leading letters (e.g. "MA", "F", "RD") AND any trailing letters/suffixes (e.g. "SP", "PR", "S"). Copy the characters verbatim.
+     e.g. "Die: MA2529SP and perf die MA286PR- (16\" dies)" -> ["MA2529SP","MA286PR"]  (NOT "A252" or "MA286").
+     e.g. "Die: F1565 and MA187PR perf" -> ["F1565","MA187PR"].
+   - A die code is a contiguous run of letters and digits (e.g. MA2529SP). Stop each code at spaces, hyphens, parentheses, or the words "and"/"perf"/"die"/"dies".
+   - Exclude the words "perf", "and", "die", "dies", sizes like "16\"", and any run instructions — only the codes themselves.
 7c-iv. notes is an ARRAY of distinct special run/finishing instructions, each as its own string, copied closely from the docket.
    - Examples: "Cross perf between each label at 1.6250\" - 10TPI", "Run 4 across and finish 1 wide", "Matrix is removed", "Full rotary perf break away", "Break packs to 1 wide", "Inner core label required". 
    - Capture each separate instruction as its own array entry. Omit pure material/size lines already captured elsewhere. If none, return [].
@@ -2932,13 +2944,21 @@ function renderAnilox(){
   wrap.style.display = "block";
   list.innerHTML = arr.map(a=>{
     const color = String(a.color || "").trim() || "Color";
-    const lpi = String(a.lpi || "").trim();
-    const bcm = String(a.bcm || "").trim();
-    const spec = (lpi ? lpi + " LPI" : "") + (lpi && bcm ? " · " : "") + (bcm ? bcm + " BCM" : "");
+    let right;
+    if(a.loading){
+      right = '<span class="anilox-loading">Recommending… ' + (a.pct || 0) + '%</span>';
+    }else if(a.note){
+      right = '<span class="anilox-bcm">' + escHtml(a.note) + '</span>';
+    }else{
+      const lpi = String(a.lpi || "").trim();
+      const bcm = String(a.bcm || "").trim();
+      const spec = (lpi ? lpi + " LPI" : "") + (lpi && bcm ? " · " : "") + (bcm ? bcm + " BCM" : "");
+      right = '<span class="anilox-lpi">' + escHtml(spec || "—") + '</span>';
+    }
     return '<div class="anilox-row">'
       + '<div class="anilox-color"><span class="anilox-swatch" style="background:'+swatchFor(color)+'"></span>'
       + '<span class="anilox-name">'+escHtml(color)+'</span></div>'
-      + '<div class="anilox-spec"><span class="anilox-lpi">'+escHtml(spec || "—")+'</span></div>'
+      + '<div class="anilox-spec">'+right+'</div>'
       + '</div>';
   }).join("");
 }
@@ -2948,6 +2968,85 @@ function setAniloxFromScan(value){
     .filter(x=>x && (x.color || x.lpi || x.bcm))
     .map(x=>({ color:String(x.color||"").trim(), lpi:String(x.lpi||"").trim(), bcm:String(x.bcm||"").trim() }));
   if(cleaned.length){ jobListsState.anilox = cleaned; saveJobLists(); renderAnilox(); }
+}
+
+// Material/stock context captured from the last docket scan (helps anilox recommendation).
+let aniloxStock = "";
+
+function aniloxIndexForColor(color){
+  const c = String(color).trim().toLowerCase();
+  return (jobListsState.anilox || []).findIndex(a => String(a.color).trim().toLowerCase() === c);
+}
+// Drop anilox rows whose color no longer matches any color box.
+function reconcileAnilox(){
+  const colors = (jobListsState.colors || []).map(c=>String(c).trim().toLowerCase()).filter(Boolean);
+  const before = (jobListsState.anilox || []).length;
+  jobListsState.anilox = (jobListsState.anilox || []).filter(a => colors.includes(String(a.color).trim().toLowerCase()));
+  if(jobListsState.anilox.length !== before){ saveJobLists(); renderAnilox(); }
+}
+
+const aniloxTimers = {};
+function startAniloxProgress(color){
+  const tick = ()=>{
+    const idx = aniloxIndexForColor(color);
+    if(idx < 0 || !jobListsState.anilox[idx].loading){ stopAniloxProgress(color); return; }
+    const cur = jobListsState.anilox[idx].pct || 0;
+    jobListsState.anilox[idx].pct = cur < 90 ? cur + Math.max(1, Math.round((90 - cur) / 6)) : 90;
+    renderAnilox();
+  };
+  stopAniloxProgress(color);
+  aniloxTimers[color] = setInterval(tick, 250);
+}
+function stopAniloxProgress(color){
+  if(aniloxTimers[color]){ clearInterval(aniloxTimers[color]); delete aniloxTimers[color]; }
+}
+
+function upsertAnilox(entry){
+  const idx = aniloxIndexForColor(entry.color);
+  if(idx >= 0) jobListsState.anilox[idx] = Object.assign({}, jobListsState.anilox[idx], entry);
+  else jobListsState.anilox.push(entry);
+}
+
+// Manually (re)generate the recommended anilox for a single color via Gemini.
+async function regenerateAniloxFor(color){
+  color = String(color || "").trim();
+  if(!color || /^plain$/i.test(color)) return;
+  const existing = aniloxIndexForColor(color);
+  // If we already have a finished recommendation for this exact color, don't re-call.
+  if(existing >= 0){
+    const e = jobListsState.anilox[existing];
+    if(e && !e.loading && (e.lpi || e.bcm)) return;
+  }
+  const apiKey = (document.getElementById("apiKey") || {}).value ? document.getElementById("apiKey").value.trim() : "";
+  if(!apiKey){
+    upsertAnilox({ color, loading:false, lpi:"", bcm:"", note:"Add API key to recommend" });
+    saveJobLists(); renderAnilox(); return;
+  }
+  upsertAnilox({ color, loading:true, pct:5, note:"", lpi:"", bcm:"" });
+  saveJobLists(); renderAnilox(); startAniloxProgress(color);
+  try{
+    const prompt =
+      "You are a flexographic prepress expert. Recommend the single best anilox roll to run ONE print color on the given stock.\n" +
+      'Color: "' + color + '"\n' +
+      'Stock / material: "' + (aniloxStock || "unknown") + '"\n' +
+      "Rules: A named PMS / Pantone SPOT color is a solid spot ink — recommend a heavier roll (lower LPI, higher BCM) even if the name contains the word \"Light\". " +
+      "Reserve fine high-LPI / low-BCM rolls for true process (CMYK) screens, fine text, or vignettes. Consider the stock (film vs paper, coated vs uncoated).\n" +
+      'Return ONLY compact JSON, no other text: {"lpi":"800","bcm":"3.5"}';
+    const requestBody = { contents: [ { parts: [ { text: prompt } ] } ] };
+    const { body } = await callGeminiWithFallback(apiKey, requestBody);
+    const obj = parseGeminiJson(extractText(body));
+    const lpi = String(obj.lpi ?? obj.LPI ?? "").replace(/[^0-9.]/g,"").trim();
+    const bcm = String(obj.bcm ?? obj.BCM ?? "").replace(/[^0-9.]/g,"").trim();
+    stopAniloxProgress(color);
+    if(lpi || bcm) upsertAnilox({ color, loading:false, pct:100, lpi, bcm, note:"" });
+    else upsertAnilox({ color, loading:false, lpi:"", bcm:"", note:"No recommendation" });
+  }catch(err){
+    stopAniloxProgress(color);
+    upsertAnilox({ color, loading:false, lpi:"", bcm:"", note:"Could not recommend" });
+  }finally{
+    stopAniloxProgress(color);
+    saveJobLists(); renderAnilox();
+  }
 }
 
 // Notes live in a single textarea, one per line.
@@ -2980,6 +3079,11 @@ function detectJobType(parsed){
 
 // Fill the shared Job Info (used for every job type).
 function fillJobInfo(parsed, fields){
+  // Remember the stock/material so manual anilox regeneration has context.
+  aniloxStock = String(
+    parsed.stock ?? parsed.material ?? parsed.materialDescription ?? parsed.material_description ??
+    parsed.paperSpec ?? parsed.extractedPaperSpec ?? lastMaterialDescription ?? ""
+  ).trim();
   const setIf=(id,v)=>{ const el=document.getElementById(id); if(el && v!==null && v!==undefined && v!=="") { el.value=v; el.dispatchEvent(new Event("input",{bubbles:true})); } };
   const po = parsed.productionOrder ?? parsed.production_order ?? null;
   let docket = parsed.docketNumber ?? parsed.docket_number ?? null;
@@ -3437,12 +3541,34 @@ document.addEventListener("DOMContentLoaded",()=>{
     });
     document.addEventListener("click",(e)=>{
       const del = e.target.closest && e.target.closest(".joblist-del");
-      if(del){ delJobListItem(del.dataset.kind, Number(del.dataset.idx)); }
+      if(del){
+        const kind = del.dataset.kind, idx = Number(del.dataset.idx);
+        delJobListItem(kind, idx);
+        // Deleting a color removes its recommended anilox too.
+        if(kind === "colors") reconcileAnilox();
+      }
     });
     document.addEventListener("input",(e)=>{
       const f = e.target;
       if(f && f.dataset && f.dataset.kind && (f.classList.contains("joblist-input") || f.classList.contains("note-input"))){
         updateJobListItem(f.dataset.kind, Number(f.dataset.idx), f.value);
+      }
+    });
+    // When a color box is committed (blur / Enter), drop orphan anilox rows and
+    // generate a fresh recommendation for the new/corrected color.
+    document.addEventListener("focusout",(e)=>{
+      const f = e.target;
+      if(f && f.classList && f.classList.contains("joblist-input") && f.dataset.kind === "colors"){
+        reconcileAnilox();
+        const val = f.value.trim();
+        if(val) regenerateAniloxFor(val);
+      }
+    });
+    document.addEventListener("keydown",(e)=>{
+      const f = e.target;
+      if(e.key === "Enter" && f && f.classList && f.classList.contains("joblist-input") && f.dataset.kind === "colors"){
+        e.preventDefault();
+        f.blur();
       }
     });
 
