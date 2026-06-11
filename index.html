@@ -714,6 +714,8 @@ body.dark .ecci-display{
 .anilox-lpi{ font-weight:800; font-size:15px; }
 .anilox-bcm{ font-size:12px; color:var(--muted); }
 .anilox-loading{ font-size:13px; font-weight:700; color:var(--accent, #2563eb); }
+.anilox-spec{ display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+.anilox-class{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); }
 /* Sub-navigation */
 .subnav-bar{
   display:flex; gap:5px;
@@ -818,6 +820,11 @@ body.dark .ecci-display{
       <div>
         <label for="rollDirection">Roll Direction</label>
         <input id="rollDirection" placeholder="1" inputmode="text">
+      </div>
+      <div class="full">
+        <label for="stockInfo">Stock Info</label>
+        <input id="stockInfo" placeholder="e.g. 2.4mil WH.BOPP TC AT20N 40#" inputmode="text" autocomplete="off">
+        <p class="card-sub" style="margin-top:4px;">Verify the substrate the app read. Editing it re-resolves every recommended anilox.</p>
       </div>
       <div class="full">
         <div class="joblist-head">
@@ -2203,7 +2210,9 @@ Required JSON schema:
   "crossPerfTPI": string | null,
   "labelColor": string | null,
   "colors": string[] | null,
-  "aniloxRecommendations": [ { "color": string, "lpi": string, "bcm": string } ] | null,
+  "stockInfo": string | null,
+  "substrateClass": "FILM_NONPOROUS" | "COATED_PAPER" | "UNCOATED_POROUS" | null,
+  "aniloxRecommendations": [ { "color": string, "weightClass": "HEAVY_DARK" | "MEDIUM_PASTEL" | "VIBRANT_TRANSPARENT" | "PROCESS_SCREEN" } ] | null,
   "dies": string[] | null,
   "notes": string[] | null,
   "rollDirection": string | null,
@@ -2249,12 +2258,21 @@ Strict rules:
    - Split lines with multiple colors on "&", "+", and commas, but keep each color's own PMS code with it.
      e.g. "2/0 - PMS 362 (Green) & Black + Hawk imaging" -> ["PMS 362 (Green)","Black","Hawk imaging"].
    - If the docket is "Plain" (no print), return ["Plain"]. One array entry per distinct color.
-7c-ii-b. aniloxRecommendations: for EACH print color in "colors" (skip "Plain"), recommend the best anilox roll to run it.
-   - Give "lpi" (line screen, lines per inch, e.g. "800", "1200") and "bcm" (cell volume in BCM, e.g. "3.5", "2.0").
-   - A named PMS / Pantone SPOT color is a SOLID spot ink — recommend a heavier roll (lower LPI, higher BCM), even if the name contains the word "Light" or a light hue. Do NOT treat a spot color as a fine process tint just because of its name.
-   - Only recommend a fine high-LPI/low-BCM roll for genuine process (CMYK) screens, fine text, or vignettes.
-   - Base it on the ink AND the stock/material (coated vs uncoated, film vs paper). This is a best-practice starting recommendation.
-   - "color" must match the matching entry in the colors array. One object per color. If Plain or no print, return null.
+7c-ii-b. stockInfo, substrateClass, and aniloxRecommendations work together. DO NOT output any LPI or BCM numbers — the app resolves those from a table. Your job is ONLY to read the stock and classify.
+   - stockInfo: copy the RAW substrate / stock description string EXACTLY as printed, e.g. "2.4mil WH.BOPP TC AT20N 40#" or "2.5MIL GLS.WH BOPP TC LP50". This is the "Stock:" line. Keep it verbatim.
+   - substrateClass: classify the stock into ONE of these exact enums:
+     * "FILM_NONPOROUS" — films/synthetics: BOPP, PP, PE, PET, polyester, vinyl/PVC, clear or white film, "non-porous".
+     * "COATED_PAPER" — coated/gloss/semi-gloss papers, C1S/C2S, SBS, coated tag.
+     * "UNCOATED_POROUS" — uncoated/porous: offset, text, bond, uncoated tag, newsprint, fluorescent paper.
+     If unsure, prefer "FILM_NONPOROUS" when the stock mentions any film/mil/BOPP/PET; otherwise "UNCOATED_POROUS".
+   - aniloxRecommendations: for EACH print color in "colors" (skip "Plain"), output ONLY a "weightClass" enum describing the INK's pigment/coverage behaviour (NOT line screen numbers):
+     * "HEAVY_DARK" — dense dark solids: blacks, navy/dark blue, dark greens, dark browns. (Tight cells prevent flooding/bleed.)
+     * "MEDIUM_PASTEL" — pastels, light/medium tints, and OPAQUE WHITES: e.g. "PMS 365 (Light Green)", pinks, light blues, opaque white bases. (Needs heavier ink film to avoid pinholing, especially on film.)
+     * "VIBRANT_TRANSPARENT" — high-saturation/transparent inks: bright orange, reflex blue, rhodamine, fluorescents, rich reds. (Needs open cells to build saturation.)
+     * "PROCESS_SCREEN" — true CMYK process screens, fine text, vignettes, tints under ~30% — ONLY when the docket clearly indicates process/screened work.
+     Default rule: a named PMS / Pantone SPOT color is a SOLID spot ink — classify by its hue density (most light/pastel spots = "MEDIUM_PASTEL", dark spots = "HEAVY_DARK", vivid spots = "VIBRANT_TRANSPARENT"). NEVER classify a spot color as "PROCESS_SCREEN" just because its name contains "Light".
+     e.g. color "PMS 365 (Light Green)" -> { "color":"PMS 365 (Light Green)", "weightClass":"MEDIUM_PASTEL" }.
+     "color" must match the matching entry in the colors array exactly. One object per color. If Plain or no print, return null.
 7c-iii. dies is an ARRAY of the die / tool codes from the "Die:" line, extracted as the EXACT raw alphanumeric strings exactly as printed.
    - Capture EVERY die code on the line, including ones introduced by "and", "and perf die", "&", etc. There may be 1 to 4.
    - DO NOT truncate, clean, or normalise. Keep any leading letters (e.g. "MA", "F", "RD") AND any trailing letters/suffixes (e.g. "SP", "PR", "S"). Copy the characters verbatim.
@@ -2953,7 +2971,9 @@ function renderAnilox(){
       const lpi = String(a.lpi || "").trim();
       const bcm = String(a.bcm || "").trim();
       const spec = (lpi ? lpi + " LPI" : "") + (lpi && bcm ? " · " : "") + (bcm ? bcm + " BCM" : "");
-      right = '<span class="anilox-lpi">' + escHtml(spec || "—") + '</span>';
+      const tag = a.weightClass && WEIGHT_LABEL[a.weightClass]
+        ? '<div class="anilox-class">'+escHtml(WEIGHT_LABEL[a.weightClass])+'</div>' : "";
+      right = '<span class="anilox-lpi">' + escHtml(spec || "—") + '</span>' + tag;
     }
     return '<div class="anilox-row">'
       + '<div class="anilox-color"><span class="anilox-swatch" style="background:'+swatchFor(color)+'"></span>'
@@ -2965,13 +2985,70 @@ function renderAnilox(){
 function setAniloxFromScan(value){
   if(!Array.isArray(value)) return;
   const cleaned = value
-    .filter(x=>x && (x.color || x.lpi || x.bcm))
-    .map(x=>({ color:String(x.color||"").trim(), lpi:String(x.lpi||"").trim(), bcm:String(x.bcm||"").trim() }));
+    .filter(x=>x && (x.color || x.weightClass || x.lpi || x.bcm))
+    .map(x=>{
+      const color = String(x.color||"").trim();
+      // New flow: AI gives a weightClass enum; resolve LPI/BCM locally from the matrix.
+      const wc = x.weightClass ? normWeightClass(x.weightClass) : null;
+      if(wc){
+        const r = resolveAnilox(wc, aniloxSubstrateClass);
+        return { color, weightClass:r.weightClass, substrateClass:r.substrateClass, lpi:r.lpi, bcm:r.bcm };
+      }
+      // Backward-compat: if a raw lpi/bcm ever comes through, keep it.
+      return { color, lpi:String(x.lpi||"").trim(), bcm:String(x.bcm||"").trim() };
+    });
   if(cleaned.length){ jobListsState.anilox = cleaned; saveJobLists(); renderAnilox(); }
 }
 
 // Material/stock context captured from the last docket scan (helps anilox recommendation).
 let aniloxStock = "";
+let aniloxSubstrateClass = "FILM_NONPOROUS";
+
+/* ---- Anilox resolver: class x substrate -> { lpi, bcm } ----
+   The AI only classifies; these numbers live here and are tunable against the roll library.
+   Film sits at the OPEN end of each band (lower LPI, higher BCM) to avoid starved/pinholed solids. */
+const WEIGHT_CLASSES = ["HEAVY_DARK","MEDIUM_PASTEL","VIBRANT_TRANSPARENT","PROCESS_SCREEN"];
+const SUBSTRATE_CLASSES = ["FILM_NONPOROUS","COATED_PAPER","UNCOATED_POROUS"];
+const DEFAULT_WEIGHT_CLASS = "MEDIUM_PASTEL";       // safe: heavier film, avoids starving a solid
+const DEFAULT_SUBSTRATE_CLASS = "FILM_NONPOROUS";
+const ANILOX_MATRIX = {
+  HEAVY_DARK:          { FILM_NONPOROUS:{lpi:600,bcm:3.2}, COATED_PAPER:{lpi:650,bcm:2.8}, UNCOATED_POROUS:{lpi:550,bcm:3.6} },
+  MEDIUM_PASTEL:       { FILM_NONPOROUS:{lpi:400,bcm:4.0}, COATED_PAPER:{lpi:500,bcm:4.0}, UNCOATED_POROUS:{lpi:450,bcm:4.8} },
+  VIBRANT_TRANSPARENT: { FILM_NONPOROUS:{lpi:300,bcm:6.0}, COATED_PAPER:{lpi:360,bcm:5.5}, UNCOATED_POROUS:{lpi:240,bcm:7.5} },
+  PROCESS_SCREEN:      { FILM_NONPOROUS:{lpi:800,bcm:2.5}, COATED_PAPER:{lpi:900,bcm:2.2}, UNCOATED_POROUS:{lpi:700,bcm:2.8} }
+};
+const WEIGHT_LABEL = {
+  HEAVY_DARK:"Heavy / dark", MEDIUM_PASTEL:"Pastel / opaque",
+  VIBRANT_TRANSPARENT:"Vibrant", PROCESS_SCREEN:"Process"
+};
+function normWeightClass(w){ w = String(w||"").toUpperCase().replace(/[^A-Z_]/g,""); return WEIGHT_CLASSES.includes(w) ? w : DEFAULT_WEIGHT_CLASS; }
+function normSubstrateClass(s){ s = String(s||"").toUpperCase().replace(/[^A-Z_]/g,""); return SUBSTRATE_CLASSES.includes(s) ? s : null; }
+// Local fallback when the AI doesn't give a substrate class (e.g. a hand-typed stock string).
+function classifySubstrateLocal(stock){
+  const s = String(stock||"").toLowerCase();
+  if(!s) return null;
+  if(/bopp|pet\b|poly(ester|propylene)?|\bpp\b|\bpe\b|vinyl|pvc|film|non[- ]?porous|mylar|\bmil\b|clear/.test(s)) return "FILM_NONPOROUS";
+  if(/uncoat|porous|offset|\btext\b|\bbond\b|newsprint|fluor/.test(s)) return "UNCOATED_POROUS";
+  if(/coat|gloss|semi|c1s|c2s|sbs|cast|\btag\b/.test(s)) return "COATED_PAPER";
+  return null;
+}
+function resolveAnilox(weightClass, substrateClass){
+  const w = normWeightClass(weightClass);
+  const s = normSubstrateClass(substrateClass) || DEFAULT_SUBSTRATE_CLASS;
+  const cell = (ANILOX_MATRIX[w] && ANILOX_MATRIX[w][s]) || ANILOX_MATRIX[DEFAULT_WEIGHT_CLASS][DEFAULT_SUBSTRATE_CLASS];
+  return { lpi:String(cell.lpi), bcm:String(cell.bcm), weightClass:w, substrateClass:s };
+}
+// Re-resolve every anilox row against the current substrate (instant, no API call).
+function reresolveAllAnilox(){
+  (jobListsState.anilox || []).forEach(a=>{
+    if(a.loading) return;
+    if(a.weightClass){
+      const r = resolveAnilox(a.weightClass, aniloxSubstrateClass);
+      a.lpi = r.lpi; a.bcm = r.bcm; a.substrateClass = r.substrateClass; a.note = "";
+    }
+  });
+  saveJobLists(); renderAnilox();
+}
 
 function aniloxIndexForColor(color){
   const c = String(color).trim().toLowerCase();
@@ -3026,20 +3103,23 @@ async function regenerateAniloxFor(color){
   saveJobLists(); renderAnilox(); startAniloxProgress(color);
   try{
     const prompt =
-      "You are a flexographic prepress expert. Recommend the single best anilox roll to run ONE print color on the given stock.\n" +
+      "You are a flexographic prepress expert. Classify ONE print color and the stock. Output ONLY enums, NO numbers.\n" +
       'Color: "' + color + '"\n' +
       'Stock / material: "' + (aniloxStock || "unknown") + '"\n' +
-      "Rules: A named PMS / Pantone SPOT color is a solid spot ink — recommend a heavier roll (lower LPI, higher BCM) even if the name contains the word \"Light\". " +
-      "Reserve fine high-LPI / low-BCM rolls for true process (CMYK) screens, fine text, or vignettes. Consider the stock (film vs paper, coated vs uncoated).\n" +
-      'Return ONLY compact JSON, no other text: {"lpi":"800","bcm":"3.5"}';
+      "weightClass (ink pigment/coverage behaviour), choose ONE: HEAVY_DARK (blacks, navy, dark greens), MEDIUM_PASTEL (pastels, light tints, opaque whites — e.g. PMS 365 Light Green), VIBRANT_TRANSPARENT (bright orange, reflex blue, fluorescents, rich reds), PROCESS_SCREEN (true CMYK screens / fine text / vignettes only).\n" +
+      "A named PMS/Pantone SPOT color is a SOLID ink — never PROCESS_SCREEN just because the name says 'Light'.\n" +
+      "substrateClass, choose ONE: FILM_NONPOROUS (BOPP, PET, PP, PE, vinyl, film), COATED_PAPER (coated/gloss), UNCOATED_POROUS (uncoated/offset/text/bond).\n" +
+      'Return ONLY compact JSON, no other text: {"weightClass":"MEDIUM_PASTEL","substrateClass":"FILM_NONPOROUS"}';
     const requestBody = { contents: [ { parts: [ { text: prompt } ] } ] };
     const { body } = await callGeminiWithFallback(apiKey, requestBody);
     const obj = parseGeminiJson(extractText(body));
-    const lpi = String(obj.lpi ?? obj.LPI ?? "").replace(/[^0-9.]/g,"").trim();
-    const bcm = String(obj.bcm ?? obj.BCM ?? "").replace(/[^0-9.]/g,"").trim();
+    const wc = normWeightClass(obj.weightClass);
+    // Trust the freshly-read substrate for this color; also update the global if the AI gave one.
+    const sc = normSubstrateClass(obj.substrateClass) || classifySubstrateLocal(aniloxStock) || aniloxSubstrateClass;
+    aniloxSubstrateClass = sc;
+    const r = resolveAnilox(wc, sc);
     stopAniloxProgress(color);
-    if(lpi || bcm) upsertAnilox({ color, loading:false, pct:100, lpi, bcm, note:"" });
-    else upsertAnilox({ color, loading:false, lpi:"", bcm:"", note:"No recommendation" });
+    upsertAnilox({ color, loading:false, pct:100, weightClass:r.weightClass, substrateClass:r.substrateClass, lpi:r.lpi, bcm:r.bcm, note:"" });
   }catch(err){
     stopAniloxProgress(color);
     upsertAnilox({ color, loading:false, lpi:"", bcm:"", note:"Could not recommend" });
@@ -3081,10 +3161,13 @@ function detectJobType(parsed){
 function fillJobInfo(parsed, fields){
   // Remember the stock/material so manual anilox regeneration has context.
   aniloxStock = String(
-    parsed.stock ?? parsed.material ?? parsed.materialDescription ?? parsed.material_description ??
+    parsed.stockInfo ?? parsed.stock ?? parsed.material ?? parsed.materialDescription ?? parsed.material_description ??
     parsed.paperSpec ?? parsed.extractedPaperSpec ?? lastMaterialDescription ?? ""
   ).trim();
+  // Substrate class: prefer the AI's enum, else classify the stock string locally.
+  aniloxSubstrateClass = normSubstrateClass(parsed.substrateClass) || classifySubstrateLocal(aniloxStock) || DEFAULT_SUBSTRATE_CLASS;
   const setIf=(id,v)=>{ const el=document.getElementById(id); if(el && v!==null && v!==undefined && v!=="") { el.value=v; el.dispatchEvent(new Event("input",{bubbles:true})); } };
+  setIf("stockInfo", aniloxStock);
   const po = parsed.productionOrder ?? parsed.production_order ?? null;
   let docket = parsed.docketNumber ?? parsed.docket_number ?? null;
   if(!docket && po && typeof deriveDocketNumber === "function") docket = deriveDocketNumber(po);
@@ -3331,6 +3414,7 @@ function resetShift(){
   safeRemove(TALLY_KEY);
   safeRemove(JOBLISTS_KEY);
   jobListsState.dies = []; jobListsState.colors = []; jobListsState.notes = []; jobListsState.anilox = [];
+  aniloxStock = ""; aniloxSubstrateClass = DEFAULT_SUBSTRATE_CLASS;
   renderAllJobLists();
   safeRemove("ROLL_CALC_MATERIAL_THICKNESS");
   TABS.forEach(t=>{ tallyState[t] = []; });
@@ -3571,6 +3655,19 @@ document.addEventListener("DOMContentLoaded",()=>{
         f.blur();
       }
     });
+    // Editing Stock Info re-derives the substrate class and re-resolves all anilox rows (instant, no API call).
+    (function(){
+      const stock = document.getElementById("stockInfo");
+      if(!stock) return;
+      const apply = ()=>{
+        aniloxStock = stock.value.trim();
+        const sc = classifySubstrateLocal(aniloxStock);
+        if(sc) aniloxSubstrateClass = sc;
+        reresolveAllAnilox();
+      };
+      stock.addEventListener("change", apply);
+      stock.addEventListener("focusout", apply);
+    })();
 
     /* ---- Sheeter / Folder total-box cameras + live recompute ---- */
     ["sheeter","folder"].forEach(p=>{
@@ -3618,6 +3715,15 @@ document.addEventListener("DOMContentLoaded",()=>{
     syncExtraUI();
     loadJobLists();
     renderAllJobLists();
+    // Restore anilox stock context from the (persisted) Stock Info field.
+    (function(){
+      const stock = document.getElementById("stockInfo");
+      if(stock && stock.value.trim()){
+        aniloxStock = stock.value.trim();
+        const sc = classifySubstrateLocal(aniloxStock);
+        if(sc) aniloxSubstrateClass = sc;
+      }
+    })();
     // Save on every input/textarea change anywhere in the app.
     document.addEventListener("input", saveAllInputs);
     // Restore the active tab last.
