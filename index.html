@@ -714,13 +714,10 @@ body.dark .ecci-display{
 .anilox-lpi{ font-weight:800; font-size:15px; }
 .anilox-bcm{ font-size:12px; color:var(--muted); }
 .anilox-loading{ font-size:13px; font-weight:700; color:var(--accent, #2563eb); }
-.anilox-spec{ display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
-.anilox-class{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); }
-.anilox-class-sel{
-  font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.02em;
-  color:var(--muted); background:var(--card); border:1px solid var(--line);
-  border-radius:7px; padding:3px 6px; max-width:150px;
-}
+.anilox-spec{ display:flex; flex-direction:column; align-items:flex-end; gap:3px; max-width:62%; }
+.anilox-reason{ font-size:11px; color:var(--muted); text-align:right; line-height:1.35; }
+.anilox-note{ font-size:13px; color:var(--muted); }
+.anilox-retry{ color:var(--accent, #2563eb); font-weight:700; cursor:pointer; text-decoration:underline; }
 /* Sub-navigation */
 .subnav-bar{
   display:flex; gap:5px;
@@ -2216,8 +2213,6 @@ Required JSON schema:
   "labelColor": string | null,
   "colors": string[] | null,
   "stockInfo": string | null,
-  "substrateClass": "FILM_NONPOROUS" | "COATED_PAPER" | "UNCOATED_POROUS" | null,
-  "aniloxRecommendations": [ { "color": string, "weightClass": "HEAVY_DARK" | "MEDIUM_PASTEL" | "VIBRANT_TRANSPARENT" | "PROCESS_SCREEN" } ] | null,
   "dies": string[] | null,
   "notes": string[] | null,
   "rollDirection": string | null,
@@ -2263,22 +2258,7 @@ Strict rules:
    - Split lines with multiple colors on "&", "+", and commas, but keep each color's own PMS code with it.
      e.g. "2/0 - PMS 362 (Green) & Black + Hawk imaging" -> ["PMS 362 (Green)","Black","Hawk imaging"].
    - If the docket is "Plain" (no print), return ["Plain"]. One array entry per distinct color.
-7c-ii-b. stockInfo, substrateClass, and aniloxRecommendations work together. DO NOT output any LPI or BCM numbers — the app resolves those from a table. Your job is ONLY to read the stock and classify.
-   - stockInfo: copy the RAW substrate / stock description string EXACTLY as printed, e.g. "2.4mil WH.BOPP TC AT20N 40#" or "2.5MIL GLS.WH BOPP TC LP50". This is the "Stock:" line. Keep it verbatim.
-   - substrateClass: classify the stock into ONE of these exact enums:
-     * "FILM_NONPOROUS" — films/synthetics: BOPP, PP, PE, PET, polyester, vinyl/PVC, clear or white film, "non-porous".
-     * "COATED_PAPER" — coated/gloss/semi-gloss papers, C1S/C2S, SBS, coated tag.
-     * "UNCOATED_POROUS" — uncoated/porous: offset, text, bond, uncoated tag, newsprint, fluorescent paper.
-     If unsure, prefer "FILM_NONPOROUS" when the stock mentions any film/mil/BOPP/PET; otherwise "UNCOATED_POROUS".
-   - aniloxRecommendations: for EACH print color in "colors" (skip "Plain"), output ONLY a "weightClass" enum describing the INK's pigment/coverage behaviour (NOT line screen numbers):
-     * "HEAVY_DARK" — dense dark solids: blacks, navy/dark blue, dark greens, dark browns. (Tight cells prevent flooding/bleed.)
-     * "MEDIUM_PASTEL" — pastels, light/medium tints, and OPAQUE WHITES: e.g. "PMS 365 (Light Green)", pinks, light blues, opaque white bases. (Needs heavier ink film to avoid pinholing, especially on film.)
-     * "VIBRANT_TRANSPARENT" — high-saturation/transparent inks: bright orange, reflex blue, rhodamine, fluorescents, rich reds. (Needs open cells to build saturation.)
-     * "PROCESS_SCREEN" — true CMYK process screens, fine text, vignettes, tints under ~30% — ONLY when the docket clearly indicates process/screened work.
-     Default rule: a named PMS / Pantone SPOT color is a SOLID spot ink — classify by its hue density (most light/pastel spots = "MEDIUM_PASTEL", dark spots = "HEAVY_DARK", vivid spots = "VIBRANT_TRANSPARENT"). NEVER classify a spot color as "PROCESS_SCREEN" just because its name contains "Light".
-     If only a bare PMS number is given (no hue word), use your knowledge of the Pantone system to infer the hue and density — e.g. dark navies/blacks/dark greens -> HEAVY_DARK; pale yellows, light blues, pinks, pastels -> MEDIUM_PASTEL; Reflex Blue, bright orange, warm/rubine reds, fluorescents -> VIBRANT_TRANSPARENT. If you genuinely cannot tell, use "MEDIUM_PASTEL".
-     e.g. color "PMS 365 (Light Green)" -> { "color":"PMS 365 (Light Green)", "weightClass":"MEDIUM_PASTEL" }.
-     "color" must match the matching entry in the colors array exactly. One object per color. If Plain or no print, return null.
+7c-ii-b. stockInfo: copy the RAW substrate / stock description string EXACTLY as printed, e.g. "2.4mil WH.BOPP TC AT20N 40#" or "2.5MIL GLS.WH BOPP TC LP50". This is the "Stock:" line, kept verbatim. The app uses it to recommend the anilox per color separately — do NOT output any LPI/BCM here.
 7c-iii. dies is an ARRAY of the die / tool codes from the "Die:" line, extracted as the EXACT raw alphanumeric strings exactly as printed.
    - Capture EVERY die code on the line, including ones introduced by "and", "and perf die", "&", etc. There may be 1 to 4.
    - DO NOT truncate, clean, or normalise. Keep any leading letters (e.g. "MA", "F", "RD") AND any trailing letters/suffixes (e.g. "SP", "PR", "S"). Copy the characters verbatim.
@@ -2972,17 +2952,14 @@ function renderAnilox(){
     if(a.loading){
       right = '<span class="anilox-loading">Recommending… ' + (a.pct || 0) + '%</span>';
     }else if(a.note){
-      right = '<span class="anilox-bcm">' + escHtml(a.note) + '</span>';
+      const retry = /retry/i.test(a.note) ? ' anilox-retry" data-color="'+escAttr(color)+'"' : '"';
+      right = '<span class="anilox-note'+retry+'>' + escHtml(a.note) + '</span>';
     }else{
       const lpi = String(a.lpi || "").trim();
       const bcm = String(a.bcm || "").trim();
       const spec = (lpi ? lpi + " LPI" : "") + (lpi && bcm ? " · " : "") + (bcm ? bcm + " BCM" : "");
-      const cur = normWeightClass(a.weightClass);
-      const opts = WEIGHT_CLASSES.map(wc =>
-        '<option value="'+wc+'"' + (wc===cur ? ' selected' : '') + '>' + WEIGHT_LABEL[wc] + '</option>'
-      ).join("");
-      const sel = '<select class="anilox-class-sel" data-color="'+escAttr(color)+'">'+opts+'</select>';
-      right = '<span class="anilox-lpi">' + escHtml(spec || "—") + '</span>' + sel;
+      const reason = a.reason ? '<div class="anilox-reason">'+escHtml(a.reason)+'</div>' : "";
+      right = '<span class="anilox-lpi">' + escHtml(spec || "—") + '</span>' + reason;
     }
     return '<div class="anilox-row">'
       + '<div class="anilox-color"><span class="anilox-swatch" style="background:'+swatchFor(color)+'"></span>'
@@ -3094,12 +3071,13 @@ function upsertAnilox(entry){
 }
 
 // Manually (re)generate the recommended anilox for a single color via Gemini.
-async function regenerateAniloxFor(color){
+async function regenerateAniloxFor(color, opts){
+  opts = opts || {};
   color = String(color || "").trim();
   if(!color || /^plain$/i.test(color)) return;
   const existing = aniloxIndexForColor(color);
-  // If we already have a finished recommendation for this exact color, don't re-call.
-  if(existing >= 0){
+  // On a plain blur (not forced), don't re-call if we already have a finished recommendation.
+  if(!opts.force && existing >= 0){
     const e = jobListsState.anilox[existing];
     if(e && !e.loading && (e.lpi || e.bcm)) return;
   }
@@ -3108,34 +3086,56 @@ async function regenerateAniloxFor(color){
     upsertAnilox({ color, loading:false, lpi:"", bcm:"", note:"Add API key to recommend" });
     saveJobLists(); renderAnilox(); return;
   }
+  const stock = (aniloxStock || ((document.getElementById("stockInfo")||{}).value || "")).trim() || "unknown";
   upsertAnilox({ color, loading:true, pct:5, note:"", lpi:"", bcm:"" });
   saveJobLists(); renderAnilox(); startAniloxProgress(color);
-  try{
-    const prompt =
-      "You are a flexographic prepress expert. Classify ONE print color and the stock. Output ONLY enums, NO numbers.\n" +
-      'Color: "' + color + '"\n' +
-      'Stock / material: "' + (aniloxStock || "unknown") + '"\n' +
-      "weightClass (ink pigment/coverage behaviour), choose ONE: HEAVY_DARK (blacks, navy, dark greens), MEDIUM_PASTEL (pastels, light tints, opaque whites — e.g. PMS 365 Light Green), VIBRANT_TRANSPARENT (bright orange, reflex blue, fluorescents, rich reds), PROCESS_SCREEN (true CMYK screens / fine text / vignettes only).\n" +
-      "A named PMS/Pantone SPOT color is a SOLID ink — never PROCESS_SCREEN just because the name says 'Light'.\n" +
-      "substrateClass, choose ONE: FILM_NONPOROUS (BOPP, PET, PP, PE, vinyl, film), COATED_PAPER (coated/gloss), UNCOATED_POROUS (uncoated/offset/text/bond).\n" +
-      'Return ONLY compact JSON, no other text: {"weightClass":"MEDIUM_PASTEL","substrateClass":"FILM_NONPOROUS"}';
-    const requestBody = { contents: [ { parts: [ { text: prompt } ] } ] };
+
+  const prompt =
+    "You are a senior flexographic press operator and anilox specialist with deep knowledge of Pantone spot inks and substrates. " +
+    "Recommend the ideal anilox roll to print ONE spot color on a specific stock, exactly as you would advise on the press floor.\n\n" +
+    'Color: "' + color + '"\n' +
+    'Stock / substrate: "' + stock + '"\n\n' +
+    "Use what you know about this SPECIFIC Pantone color — its real hue, darkness, opacity and whether it is a dense solid, an opaque/white base, a vibrant transparent, or a light tint — and the substrate. " +
+    "Non-absorbent film (BOPP, PET, PP, vinyl) needs MORE ink volume and a LOWER line count to avoid pinholing and starvation; absorbent uncoated paper needs LESS. " +
+    "Different colors should get different rolls where appropriate — do not give a generic answer. " +
+    "Use realistic narrow-web flexo line counts (e.g. 200, 300, 360, 440, 550, 650, 800, 1000, 1200 LPI) with a matching BCM volume.\n\n" +
+    'Think in ONE short "reason" phrase, then give the numbers. Return ONLY compact JSON, no markdown, no extra text:\n' +
+    '{"reason":"short why","lpi":<number>,"bcm":<number>}';
+
+  async function askOnce(){
+    const requestBody = {
+      contents: [ { parts: [ { text: prompt } ] } ],
+      generationConfig: { temperature: 0 }   // deterministic-ish: stable on re-scan
+    };
     const { body } = await callGeminiWithFallback(apiKey, requestBody);
-    const obj = parseGeminiJson(extractText(body));
-    const wc = normWeightClass(obj.weightClass);
-    // Trust the freshly-read substrate for this color; also update the global if the AI gave one.
-    const sc = normSubstrateClass(obj.substrateClass) || classifySubstrateLocal(aniloxStock) || aniloxSubstrateClass;
-    aniloxSubstrateClass = sc;
-    const r = resolveAnilox(wc, sc);
+    return parseGeminiJson(extractText(body));
+  }
+
+  try{
+    let obj;
+    try { obj = await askOnce(); }
+    catch(e1){ obj = await askOnce(); }   // one retry on parse/transport hiccup
+    const lpi = String(obj.lpi ?? obj.LPI ?? obj.lines ?? "").replace(/[^0-9.]/g,"").trim();
+    const bcm = String(obj.bcm ?? obj.BCM ?? obj.volume ?? "").replace(/[^0-9.]/g,"").trim();
+    const reason = String(obj.reason || obj.note || "").trim();
     stopAniloxProgress(color);
-    upsertAnilox({ color, loading:false, pct:100, weightClass:r.weightClass, substrateClass:r.substrateClass, lpi:r.lpi, bcm:r.bcm, note:"" });
+    if(lpi || bcm) upsertAnilox({ color, loading:false, pct:100, lpi, bcm, reason, note:"" });
+    else upsertAnilox({ color, loading:false, lpi:"", bcm:"", note:"Tap to retry" });
   }catch(err){
     stopAniloxProgress(color);
-    upsertAnilox({ color, loading:false, lpi:"", bcm:"", note:"Could not recommend" });
+    upsertAnilox({ color, loading:false, lpi:"", bcm:"", note:"Tap to retry" });
   }finally{
     stopAniloxProgress(color);
     saveJobLists(); renderAnilox();
   }
+}
+
+// Recommend for every current color (used after a docket scan and after editing Stock Info).
+function recommendAniloxForAll(){
+  (jobListsState.colors || []).forEach(c=>{
+    const color = String(c).trim();
+    if(color && !/^plain$/i.test(color)) regenerateAniloxFor(color, { force:true });
+  });
 }
 
 // Notes live in a single textarea, one per line.
@@ -3187,7 +3187,8 @@ function fillJobInfo(parsed, fields){
   setIf("rollDirection", parsed.rollDirection ?? parsed.roll_direction ?? null);
   setJobListFromScan("dies", parsed.dies ?? parsed.die ?? parsed.dieCodes);
   setJobListFromScan("colors", parsed.colors ?? parsed.colours ?? parsed.labelColor ?? parsed.label_color);
-  setAniloxFromScan(parsed.aniloxRecommendations ?? parsed.anilox ?? parsed.anilox_recommendations);
+  // After a scan, ask the model for a real per-color anilox (numbers), considering the stock.
+  recommendAniloxForAll();
   setNotesFromScan(parsed.notes ?? parsed.instructions ?? parsed.specialInstructions);
 }
 
@@ -3664,27 +3665,21 @@ document.addEventListener("DOMContentLoaded",()=>{
         f.blur();
       }
     });
-    // Manual override: operator picks the ink weight class -> re-resolve that row instantly (no API).
-    document.addEventListener("change",(e)=>{
-      const sel = e.target;
-      if(sel && sel.classList && sel.classList.contains("anilox-class-sel")){
-        const color = sel.dataset.color;
-        const idx = aniloxIndexForColor(color);
-        if(idx < 0) return;
-        const r = resolveAnilox(sel.value, aniloxSubstrateClass);
-        jobListsState.anilox[idx] = Object.assign({}, jobListsState.anilox[idx],
-          { weightClass:r.weightClass, substrateClass:r.substrateClass, lpi:r.lpi, bcm:r.bcm, loading:false, note:"" });
-        saveJobLists(); renderAnilox();
-      }
+    // Tap a failed anilox row to retry its recommendation.
+    document.addEventListener("click",(e)=>{
+      const r = e.target.closest && e.target.closest(".anilox-retry");
+      if(r && r.dataset.color){ regenerateAniloxFor(r.dataset.color, { force:true }); }
     });
     (function(){
       const stock = document.getElementById("stockInfo");
       if(!stock) return;
+      let last = stock.value.trim();
       const apply = ()=>{
-        aniloxStock = stock.value.trim();
-        const sc = classifySubstrateLocal(aniloxStock);
-        if(sc) aniloxSubstrateClass = sc;
-        reresolveAllAnilox();
+        const now = stock.value.trim();
+        if(now === last) return;       // only re-run if the stock actually changed
+        last = now;
+        aniloxStock = now;
+        recommendAniloxForAll();       // stock changes the answer -> re-ask per color
       };
       stock.addEventListener("change", apply);
       stock.addEventListener("focusout", apply);
