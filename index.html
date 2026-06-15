@@ -149,7 +149,43 @@ button{
   margin:18px 0;
   box-shadow:0 1px 2px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.06);
 }
-/* Collapsible tool cards */
+/* Complete Job button */
+.complete-job-btn{
+  width:100%; margin-top:14px; padding:16px;
+  background:var(--black); color:#fff; border:none; border-radius:14px;
+  font-size:16px; font-weight:800; letter-spacing:-.01em;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+  transition: opacity .15s;
+}
+.complete-job-btn:active{ opacity:.8; }
+/* Shift log job cards */
+.sl-card{
+  border:1px solid var(--line); border-radius:14px; overflow:hidden;
+  margin-bottom:12px;
+}
+.sl-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px; cursor:pointer; gap:10px;
+  background:var(--field);
+}
+.sl-header-left{ display:flex; flex-direction:column; gap:2px; }
+.sl-docket{ font-size:17px; font-weight:800; }
+.sl-meta{ font-size:12px; color:var(--muted); font-weight:600; }
+.sl-header-right{ display:flex; align-items:center; gap:8px; }
+.sl-good{ font-size:16px; font-weight:800; color:#1f9d55; white-space:nowrap; }
+.sl-chev{ font-size:20px; color:var(--muted); transition:transform .2s; }
+.sl-card.open .sl-chev{ transform:rotate(90deg); }
+.sl-body{ display:none; padding:12px 14px; border-top:1px solid var(--line); }
+.sl-card.open .sl-body{ display:block; }
+.sl-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.sl-cell{ background:var(--bg); border-radius:10px; padding:8px 10px; }
+.sl-cell.full{ grid-column:1/-1; }
+.sl-cell-label{ font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+.sl-cell-value{ font-size:18px; font-weight:800; margin-top:2px; }
+.sl-cell.waste .sl-cell-value{ color:var(--danger); }
+.sl-remove{ margin-top:10px; font-size:13px; font-weight:700; color:var(--danger); background:none; border:none; padding:0; cursor:pointer; }
+/* My Shift tab empty state */
+#myShiftEmpty{ text-align:center; padding:16px 0; }
 .collapsible > h2.card-toggle{
   cursor:pointer; margin:0;
   display:flex; align-items:center; justify-content:space-between;
@@ -863,6 +899,7 @@ body.dark .ecci-display{
     <button data-tab="roll" class="active" type="button">Roll</button>
     <button data-tab="sheeter" type="button">Sheeter</button>
     <button data-tab="folder" type="button">Folder</button>
+    <button data-tab="myshift" type="button">My Shift</button>
   </div>
 
   <button class="reset-btn" id="resetShiftBtn" type="button">Reset / New Shift</button>
@@ -1018,7 +1055,7 @@ body.dark .ecci-display{
   </section>
 
   <section class="card">
-    <h2>End of Shift Count</h2>
+    <h2>End of Job Count</h2>
 
     <label for="rollMasterStart">Master Start Counter</label>
     <input id="rollMasterStart" placeholder="0" inputmode="decimal">
@@ -1074,7 +1111,7 @@ body.dark .ecci-display{
       </div>
     </div>
 
-    <button id="rollShiftBtn" class="primary" type="button">Calculate Shift Summary</button>
+    <button id="rollShiftBtn" class="primary" type="button">Calculate Job Summary</button>
     <div id="rollShiftDual" class="dual-btns" style="display:none;">
       <button id="rollShiftWithout" class="secondary-btn" type="button">Calculate WITHOUT Extra</button>
       <button id="rollShiftWith" class="primary" type="button">Calculate WITH Extra</button>
@@ -1088,6 +1125,7 @@ body.dark .ecci-display{
       <div class="shift-cell waste"><div class="sc-label">Wasted Impressions</div><div class="sc-value" id="rollWaste">—</div></div>
       <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="rollWastePct">—</div></div>
     </div>
+    <button id="rollCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">✓ Complete Job &amp; Save to My Shift</button>
   </section>
 
   </div><!-- /panel-roll -->
@@ -1119,7 +1157,7 @@ body.dark .ecci-display{
       </section>
 
       <section class="card">
-        <h2>End of Shift Count</h2>
+        <h2>End of Job Count</h2>
         <label for="sheeterTotalBoxes">Total Boxes Completed</label>
         <div class="field-cam">
           <input id="sheeterTotalBoxes" placeholder="e.g. 47" inputmode="decimal" style="font-size:22px;font-weight:800;">
@@ -1136,7 +1174,7 @@ body.dark .ecci-display{
         <input id="sheeterMasterStart" placeholder="0" inputmode="decimal">
         <label for="sheeterMasterEnd">Master End Counter</label>
         <input id="sheeterMasterEnd" placeholder="0" inputmode="decimal">
-        <button id="sheeterShiftBtn" class="primary" type="button" style="margin-top:4px;">Calculate Shift Summary</button>
+        <button id="sheeterShiftBtn" class="primary" type="button" style="margin-top:4px;">Calculate Job Summary</button>
         <div id="sheeterShiftError" class="error"></div>
         <div class="shift-grid">
           <div class="shift-cell full"><div class="sc-label">Total Labels (Boxes × Labels/Box)</div><div class="sc-value" id="sheeterLabels">—</div></div>
@@ -1145,6 +1183,7 @@ body.dark .ecci-display{
           <div class="shift-cell waste"><div class="sc-label">Wasted Impressions</div><div class="sc-value" id="sheeterWaste">—</div></div>
           <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="sheeterWastePct">—</div></div>
         </div>
+        <button id="sheeterCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">✓ Complete Job &amp; Save to My Shift</button>
       </section>
   </div><!-- /panel-sheeter -->
 
@@ -1183,7 +1222,7 @@ body.dark .ecci-display{
       </section>
 
       <section class="card">
-        <h2>End of Shift Count</h2>
+        <h2>End of Job Count</h2>
         <label for="folderTotalBoxes">Total Boxes Completed</label>
         <div class="field-cam">
           <input id="folderTotalBoxes" placeholder="e.g. 32" inputmode="decimal" style="font-size:22px;font-weight:800;">
@@ -1200,7 +1239,7 @@ body.dark .ecci-display{
         <input id="folderMasterStart" placeholder="0" inputmode="decimal">
         <label for="folderMasterEnd">Master End Counter</label>
         <input id="folderMasterEnd" placeholder="0" inputmode="decimal">
-        <button id="folderShiftBtn" class="primary" type="button" style="margin-top:4px;">Calculate Shift Summary</button>
+        <button id="folderShiftBtn" class="primary" type="button" style="margin-top:4px;">Calculate Job Summary</button>
         <div id="folderShiftError" class="error"></div>
         <div class="shift-grid">
           <div class="shift-cell full"><div class="sc-label">Total Labels (Boxes × Labels/Box)</div><div class="sc-value" id="folderLabels">—</div></div>
@@ -1209,8 +1248,34 @@ body.dark .ecci-display{
           <div class="shift-cell waste"><div class="sc-label">Wasted Impressions</div><div class="sc-value" id="folderWaste">—</div></div>
           <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="folderWastePct">—</div></div>
         </div>
+        <button id="folderCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">✓ Complete Job &amp; Save to My Shift</button>
       </section>
   </div><!-- /panel-folder -->
+
+  <!-- ===== MY SHIFT TAB ===== -->
+  <div class="tab-panel" id="panel-myshift">
+
+    <section class="card">
+      <h2>My Shift</h2>
+      <p class="card-sub" id="myShiftEmpty">No jobs completed yet. Calculate and complete a job to see it here.</p>
+      <div id="shiftLogList"></div>
+    </section>
+
+    <section class="card" id="shiftTotalsCard" style="display:none;">
+      <h2>End of Shift Summary</h2>
+      <p class="card-sub">Total across all completed jobs this shift.</p>
+      <div class="shift-grid">
+        <div class="shift-cell full"><div class="sc-label">Total Labels (Good)</div><div class="sc-value" id="stTotalLabels">—</div></div>
+        <div class="shift-cell"><div class="sc-label">Good Impressions</div><div class="sc-value" id="stGood">—</div></div>
+        <div class="shift-cell"><div class="sc-label">Gross Impressions</div><div class="sc-value" id="stGross">—</div></div>
+        <div class="shift-cell waste"><div class="sc-label">Wasted Impressions</div><div class="sc-value" id="stWaste">—</div></div>
+        <div class="shift-cell"><div class="sc-label">Overall Wastage %</div><div class="sc-value" id="stWastePct">—</div></div>
+      </div>
+    </section>
+
+    <button id="clearShiftLogBtn" class="danger-outline" type="button" style="width:100%;margin-top:4px;">Clear Shift Log</button>
+
+  </div><!-- /panel-myshift -->
 </main>
 
 <script>
@@ -2583,12 +2648,18 @@ function handleLabelPhoto(file){
 function handleDocketPhoto(file){
   docketPhotoFile=file;
   showError("docketScanError","");
-  if(file){
-    // Auto-start as soon as a photo is taken or uploaded.
-    runGeminiScan(file,"docket");
-  }else{
-    showSuccess("docketScanSuccess","No docket photo selected.");
+  if(!file){ showSuccess("docketScanSuccess","No docket photo selected."); return; }
+  // If any tab already has computed results, prompt before overwriting.
+  const activeTabs = ["roll","sheeter","folder"].filter(currentJobHasResults);
+  if(activeTabs.length > 0){
+    const proceed = confirm(
+      "You have unsaved job results from the current docket.\n\n" +
+      "Tip: go to the job tab, tap \"Complete Job & Save to My Shift\" first — then scan the new docket.\n\n" +
+      "Scan the new docket anyway without saving?"
+    );
+    if(!proceed) return;
   }
+  runGeminiScan(file,"docket");
 }
 
 function handleTabDocketPhoto(tab, file){
@@ -2685,6 +2756,108 @@ function clearCoreValues(){
 const TABS = ["roll","sheeter","folder"];
 const TALLY_UNIT = { roll:"Roll", sheeter:"Carton", folder:"Carton" };
 const TAB_KEY = "RC_ACTIVE_TAB_V1";
+/* ================================================================
+   MY SHIFT — Shift Log
+   ================================================================ */
+const SHIFTLOG_KEY = "RC_SHIFTLOG_V1";
+let shiftLog = [];
+
+function loadShiftLog(){
+  try{
+    const arr = JSON.parse(safeGet(SHIFTLOG_KEY) || "[]");
+    shiftLog = Array.isArray(arr) ? arr : [];
+  }catch(e){ shiftLog = []; }
+}
+function saveShiftLog(){ safeSet(SHIFTLOG_KEY, JSON.stringify(shiftLog)); }
+
+function readJobResults(prefix){
+  const g = id => { const el=document.getElementById(id); return el ? el.textContent.trim() : ""; };
+  const parseVal = s => { const n=parseFloat(String(s||"").replace(/,/g,"")); return isNaN(n) ? 0 : n; };
+  return {
+    labels:   parseVal(g(prefix+"Labels")),
+    good:     parseVal(g(prefix+"Good")),
+    gross:    parseVal(g(prefix+"Gross")),
+    waste:    parseVal(g(prefix+"Waste")),
+    wastePct: g(prefix+"WastePct"),
+    rolls:    prefix==="roll" ? (tallyState.roll||[]).length : null
+  };
+}
+function currentJobHasResults(prefix){
+  const r = readJobResults(prefix);
+  return r.good > 0 || r.gross > 0;
+}
+function commitJob(prefix){
+  const results = readJobResults(prefix);
+  if(!results.good && !results.gross){
+    alert("Calculate the job summary first, then tap Complete Job.");
+    return false;
+  }
+  const entry = {
+    id: Date.now(),
+    docket:    ((document.getElementById("docketNumber")||{}).value || "—").trim(),
+    qty:       ((document.getElementById("jobQuantity")||{}).value || ""),
+    jobType:   prefix,
+    typeLabel: prefix==="roll" ? "Roll" : prefix==="sheeter" ? "Sheeter" : "Folder",
+    completedAt: new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),
+    ...results
+  };
+  shiftLog.push(entry);
+  saveShiftLog();
+  renderShiftLog();
+  return true;
+}
+function removeShiftEntry(id){
+  shiftLog = shiftLog.filter(e=>e.id!==id);
+  saveShiftLog(); renderShiftLog();
+}
+function fmt(n){ return Number.isFinite(n) && n>0 ? n.toLocaleString() : "—"; }
+function renderShiftLog(){
+  const list    = document.getElementById("shiftLogList");
+  const empty   = document.getElementById("myShiftEmpty");
+  const totCard = document.getElementById("shiftTotalsCard");
+  if(!list) return;
+  if(!shiftLog.length){
+    list.innerHTML=""; 
+    if(empty) empty.style.display="block";
+    if(totCard) totCard.style.display="none";
+    return;
+  }
+  if(empty) empty.style.display="none";
+  if(totCard) totCard.style.display="block";
+  list.innerHTML = shiftLog.map(e=>{
+    const rollLine = e.rolls !== null ? (e.rolls+(e.rolls===1?" roll":" rolls")+" · ") : "";
+    const meta = e.typeLabel+" · "+rollLine+e.completedAt+(e.qty?" · Qty: "+e.qty:"");
+    return '<div class="sl-card open" data-slid="'+e.id+'">'
+      +'<div class="sl-header">'
+      +'<div class="sl-header-left"><div class="sl-docket">'+escHtml(e.docket)+'</div><div class="sl-meta">'+escHtml(meta)+'</div></div>'
+      +'<div class="sl-header-right"><span class="sl-good">'+fmt(e.good)+'</span><span class="sl-chev">›</span></div>'
+      +'</div>'
+      +'<div class="sl-body"><div class="sl-grid">'
+      +'<div class="sl-cell full"><div class="sl-cell-label">Total Labels</div><div class="sl-cell-value">'+fmt(e.labels)+'</div></div>'
+      +'<div class="sl-cell"><div class="sl-cell-label">Good Impressions</div><div class="sl-cell-value">'+fmt(e.good)+'</div></div>'
+      +'<div class="sl-cell"><div class="sl-cell-label">Gross Impressions</div><div class="sl-cell-value">'+fmt(e.gross)+'</div></div>'
+      +'<div class="sl-cell waste"><div class="sl-cell-label">Wasted Impressions</div><div class="sl-cell-value">'+fmt(e.waste)+'</div></div>'
+      +'<div class="sl-cell"><div class="sl-cell-label">Wastage %</div><div class="sl-cell-value">'+escHtml(e.wastePct||"—")+'</div></div>'
+      +'</div>'
+      +'<button class="sl-remove" data-slremove="'+e.id+'" type="button">Remove this job</button>'
+      +'</div></div>';
+  }).join("");
+  // Totals
+  const tot = shiftLog.reduce((s,e)=>({
+    labels:s.labels+(e.labels||0), good:s.good+(e.good||0),
+    gross:s.gross+(e.gross||0),   waste:s.waste+(e.waste||0)
+  }),{labels:0,good:0,gross:0,waste:0});
+  const pct = tot.gross>0 ? ((tot.waste/tot.gross)*100).toFixed(1)+"%" : "—";
+  ["stTotalLabels:"+fmt(tot.labels),"stGood:"+fmt(tot.good),"stGross:"+fmt(tot.gross),"stWaste:"+fmt(tot.waste),"stWastePct:"+pct]
+    .forEach(pair=>{ const [id,v]=pair.split(":"); const el=document.getElementById(id); if(el)el.textContent=v; });
+}
+function updateCompleteJobBtn(prefix){
+  const btn=document.getElementById(prefix+"CompleteJobBtn");
+  if(btn) btn.style.display = currentJobHasResults(prefix) ? "flex" : "none";
+}
+function onJobCalculated(prefix){ updateCompleteJobBtn(prefix); }
+
+/* ================================================================ */
 const TALLY_KEY = "RC_TALLY_V1";
 const INPUT_KEY = "RC_INPUTS_V1";
 const tallyState = { roll:[], sheeter:[], folder:[] };
@@ -2696,8 +2869,9 @@ function setText(id, value){
 
 /* ---- Tab switching (persisted) ---- */
 function switchTab(name){
-  if(!TABS.includes(name)) name = "roll";
-  TABS.forEach(t=>{
+  const ALL_TABS = [...TABS, "myshift"];
+  if(!ALL_TABS.includes(name)) name = "roll";
+  ALL_TABS.forEach(t=>{
     const panel = document.getElementById("panel-" + t);
     if(panel) panel.classList.toggle("active", t === name);
   });
@@ -2831,7 +3005,7 @@ function setupCollapsibles(){
     if(card.classList.contains("collapsible")) return;
     const h2 = card.querySelector(":scope > h2");
     if(!h2) return;
-    const keepOpen = /End of Shift Count/i.test(h2.textContent);
+    const keepOpen = /End of Job Count/i.test(h2.textContent);
     // Move everything after the h2 into a body wrapper.
     const body = document.createElement("div");
     body.className = "card-body";
@@ -3366,6 +3540,7 @@ function calcShift(prefix, mode){
   if(waste < 0 && errEl){
     errEl.textContent = "Note: Good impressions exceed Gross — check the counters, repeat/across, or tally.";
   }
+  onJobCalculated(prefix);   // show Complete Job button now results exist
   return true;
 }
 
@@ -3708,6 +3883,38 @@ document.addEventListener("DOMContentLoaded",()=>{
     /* ---- Reset / New Shift ---- */
     bind("resetShiftBtn","click",resetShift);
 
+    /* ---- My Shift: Complete Job buttons ---- */
+    ["roll","sheeter","folder"].forEach(prefix=>{
+      bind(prefix+"CompleteJobBtn","click",()=>{
+        if(commitJob(prefix)){
+          // Switch to My Shift tab so the operator sees the saved entry.
+          switchTab("myshift");
+        }
+      });
+    });
+
+    /* ---- My Shift: collapse/expand individual job cards ---- */
+    document.addEventListener("click",(e)=>{
+      const hdr = e.target.closest && e.target.closest(".sl-header");
+      if(hdr){
+        const card = hdr.closest(".sl-card");
+        if(card) card.classList.toggle("open");
+        return;
+      }
+      const rem = e.target.closest && e.target.closest("[data-slremove]");
+      if(rem && confirm("Remove this job from the shift log?")){
+        removeShiftEntry(Number(rem.dataset.slremove));
+      }
+    });
+
+    /* ---- My Shift: clear shift log ---- */
+    bind("clearShiftLogBtn","click",()=>{
+      if(!shiftLog.length) return;
+      if(confirm("Clear the entire shift log?\n\nThis removes all completed jobs. It cannot be undone.")){ 
+        shiftLog = []; saveShiftLog(); renderShiftLog();
+      }
+    });
+
     /* ---- Bulletproof persistence ---- */
     loadTallyState();
     restoreAllInputs();
@@ -3731,6 +3938,10 @@ document.addEventListener("DOMContentLoaded",()=>{
     syncExtraUI();
     loadJobLists();
     renderAllJobLists();
+    loadShiftLog();
+    renderShiftLog();
+    // Restore Complete Job button visibility for any already-computed results.
+    ["roll","sheeter","folder"].forEach(updateCompleteJobBtn);
     // Restore anilox stock context from the (persisted) Stock Info field.
     (function(){
       const stock = document.getElementById("stockInfo");
