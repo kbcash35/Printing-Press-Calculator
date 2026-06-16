@@ -149,7 +149,13 @@ button{
   margin:18px 0;
   box-shadow:0 1px 2px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.06);
 }
-/* Complete Job button */
+/* B.Bunch Counter */
+.bb-main-label{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin-bottom:4px; }
+.bb-main-value{ font-size:52px; font-weight:900; letter-spacing:-.03em; line-height:1; }
+.bb-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
+.bb-cell{ background:var(--field); border-radius:10px; padding:10px 12px; }
+.bb-label{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); }
+.bb-value{ font-size:20px; font-weight:800; margin-top:3px; }
 .complete-job-btn{
   width:100%; margin-top:14px; padding:16px;
   background:var(--black); color:#fff; border:none; border-radius:14px;
@@ -1125,7 +1131,7 @@ body.dark .ecci-display{
       <div class="shift-cell waste"><div class="sc-label">Wasted Impressions</div><div class="sc-value" id="rollWaste">—</div></div>
       <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="rollWastePct">—</div></div>
     </div>
-    <button id="rollCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">✓ Complete Job &amp; Save to My Shift</button>
+    <button id="rollCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">✓ Save Job to My Shift</button>
   </section>
 
   </div><!-- /panel-roll -->
@@ -1183,7 +1189,7 @@ body.dark .ecci-display{
           <div class="shift-cell waste"><div class="sc-label">Wasted Impressions</div><div class="sc-value" id="sheeterWaste">—</div></div>
           <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="sheeterWastePct">—</div></div>
         </div>
-        <button id="sheeterCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">✓ Complete Job &amp; Save to My Shift</button>
+        <button id="sheeterCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">✓ Save Job to My Shift</button>
       </section>
   </div><!-- /panel-sheeter -->
 
@@ -1196,8 +1202,8 @@ body.dark .ecci-display{
         <input id="folderSpec" placeholder="e.g. 53710 or 60# offset" inputmode="text" autocomplete="off">
         <label for="folderCaliper">Material Thickness / Caliper (optional)</label>
         <input id="folderCaliper" placeholder="0.0040" inputmode="decimal">
-        <label for="folderFoldSize">Fold Size (inches)</label>
-        <input id="folderFoldSize" placeholder="e.g. 3.5" inputmode="decimal">
+        <label for="folderFoldSize">Fanfold Size / Repeat (inches)</label>
+        <input id="folderFoldSize" placeholder="e.g. 12.25" inputmode="decimal">
       </section>
       <section class="card">
         <h2>Gear Size</h2>
@@ -1248,8 +1254,47 @@ body.dark .ecci-display{
           <div class="shift-cell waste"><div class="sc-label">Wasted Impressions</div><div class="sc-value" id="folderWaste">—</div></div>
           <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="folderWastePct">—</div></div>
         </div>
-        <button id="folderCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">✓ Complete Job &amp; Save to My Shift</button>
+        <button id="folderCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">✓ Save Job to My Shift</button>
       </section>
+
+      <section class="card">
+        <h2>B.Bunch Counter</h2>
+        <p class="card-sub">Calculates the B.Bunch counter setting — how many fold cycles before each pack is complete.</p>
+        <div class="two-col">
+          <div>
+            <label for="bbLabelsPerFold">Labels per Fold Sheet</label>
+            <input id="bbLabelsPerFold" placeholder="e.g. 4" inputmode="decimal">
+          </div>
+          <div>
+            <label for="bbPackSize">Labels per Pack / Bag</label>
+            <input id="bbPackSize" placeholder="e.g. 2000" inputmode="decimal">
+          </div>
+        </div>
+        <div class="answer-card" style="margin-top:12px;">
+          <div class="bb-main-label">B.Bunch Counter Setting</div>
+          <div id="bbCounter" class="bb-main-value">—</div>
+          <div class="card-sub" style="margin-top:2px;">Set this on the press — it stops after this many fold cycles, giving you one complete pack.</div>
+        </div>
+        <div class="bb-grid">
+          <div class="bb-cell">
+            <div class="bb-label">Total Packs</div>
+            <div class="bb-value" id="bbTotalPacks">—</div>
+          </div>
+          <div class="bb-cell">
+            <div class="bb-label">Total Fold Cycles</div>
+            <div class="bb-value" id="bbTotalFolds">—</div>
+          </div>
+          <div class="bb-cell">
+            <div class="bb-label">Labels per Stream</div>
+            <div class="bb-value" id="bbLabelsPerStream">—</div>
+          </div>
+          <div class="bb-cell">
+            <div class="bb-label">Folds per Pack</div>
+            <div class="bb-value" id="bbFoldsPerPack">—</div>
+          </div>
+        </div>
+      </section>
+
   </div><!-- /panel-folder -->
 
   <!-- ===== MY SHIFT TAB ===== -->
@@ -2985,7 +3030,33 @@ async function scanNumberInto(targetId, file, statusPrefix){
   }
 }
 
-/* ---- Folder gear size: Fold Size x 8 ---- */
+/* ---- B.Bunch Counter (Folder) ---- */
+function calcBBunch(){
+  const labelsPerFold = cleanNumber("bbLabelsPerFold");
+  const packSize      = cleanNumber("bbPackSize");
+  const totalQty      = cleanNumber("jobQuantity");   // from shared Job Info
+  const streams       = cleanNumber("folderAcross") || 1;
+
+  const setText = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+
+  if(!labelsPerFold || !packSize || labelsPerFold <= 0 || packSize <= 0){
+    ["bbCounter","bbTotalPacks","bbTotalFolds","bbLabelsPerStream","bbFoldsPerPack"]
+      .forEach(id=>setText(id,"—"));
+    return;
+  }
+  const foldsPerPack   = Math.round(packSize / labelsPerFold);   // = B.Bunch setting
+  const totalPacks     = totalQty > 0 ? Math.round(totalQty / packSize) : null;
+  const totalFolds     = totalPacks !== null ? totalPacks * foldsPerPack : null;
+  const labelsPerStream= streams > 0 ? Math.round(packSize / streams) : packSize;
+
+  setText("bbCounter",      foldsPerPack.toLocaleString());
+  setText("bbFoldsPerPack", foldsPerPack.toLocaleString());
+  setText("bbTotalPacks",   totalPacks   !== null ? totalPacks.toLocaleString()  : "—");
+  setText("bbTotalFolds",   totalFolds   !== null ? totalFolds.toLocaleString()  : "—");
+  setText("bbLabelsPerStream", labelsPerStream.toLocaleString());
+}
+
+/* ---- Folder gear size: Fanfold Size (repeat) x 8 ---- */
 function updateFolderGear(fillInput){
   const fold = cleanNumber("folderFoldSize");
   const ans = document.getElementById("folderGearAnswer");
@@ -3005,7 +3076,7 @@ function setupCollapsibles(){
     if(card.classList.contains("collapsible")) return;
     const h2 = card.querySelector(":scope > h2");
     if(!h2) return;
-    const keepOpen = /End of Job Count/i.test(h2.textContent);
+    const keepOpen = false; // All sections start collapsed; operator expands as needed.
     // Move everything after the h2 into a body wrapper.
     const body = document.createElement("div");
     body.className = "card-body";
@@ -3878,6 +3949,11 @@ document.addEventListener("DOMContentLoaded",()=>{
         scanNumberInto(inp.dataset.numtarget, f, inp.dataset.status || "roll");
         e.target.value = "";
       });
+    });
+
+    /* ---- B.Bunch Counter ---- */
+    ["bbLabelsPerFold","bbPackSize","folderAcross","jobQuantity"].forEach(id=>{
+      bind(id,"input",calcBBunch);
     });
 
     /* ---- Reset / New Shift ---- */
