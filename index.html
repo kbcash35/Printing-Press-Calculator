@@ -149,6 +149,12 @@ button{
   margin:18px 0;
   box-shadow:0 1px 2px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.06);
 }
+/* Box range helper note */
+.box-range-note{
+  font-size:13px; font-weight:700; color:#1f9d55;
+  background:rgba(31,157,85,.08); border-radius:8px;
+  padding:8px 10px; margin:2px 0 12px;
+}
 /* B.Bunch Counter */
 .bb-main-label{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin-bottom:4px; }
 .bb-main-value{ font-size:52px; font-weight:900; letter-spacing:-.03em; line-height:1; }
@@ -1143,8 +1149,6 @@ body.dark .ecci-display{
         <h2>Sheeter Job</h2>
         <label for="sheeterSpec">Material Spec / Stock</label>
         <input id="sheeterSpec" placeholder="e.g. 53710 or 100# gloss text" inputmode="text" autocomplete="off">
-        <label for="sheeterCaliper">Material Thickness / Caliper (optional)</label>
-        <input id="sheeterCaliper" placeholder="0.0056" inputmode="decimal">
         <label for="sheeterSheetSize">Sheet Size (optional)</label>
         <input id="sheeterSheetSize" placeholder="e.g. 12 x 18" inputmode="text" autocomplete="off">
       </section>
@@ -1164,6 +1168,11 @@ body.dark .ecci-display{
 
       <section class="card">
         <h2>End of Job Count</h2>
+        <div class="two-col">
+          <div><label for="sheeterStartBox">Start Box #</label><input id="sheeterStartBox" placeholder="e.g. 1" inputmode="decimal"></div>
+          <div><label for="sheeterEndBox">End Box #</label><input id="sheeterEndBox" placeholder="e.g. 47" inputmode="decimal"></div>
+        </div>
+        <div class="box-range-note" id="sheeterBoxRangeNote" style="display:none;"></div>
         <label for="sheeterTotalBoxes">Total Boxes Completed</label>
         <div class="field-cam">
           <input id="sheeterTotalBoxes" placeholder="e.g. 47" inputmode="decimal" style="font-size:22px;font-weight:800;">
@@ -1200,8 +1209,6 @@ body.dark .ecci-display{
         <h2>Folder Job</h2>
         <label for="folderSpec">Material Spec / Stock</label>
         <input id="folderSpec" placeholder="e.g. 53710 or 60# offset" inputmode="text" autocomplete="off">
-        <label for="folderCaliper">Material Thickness / Caliper (optional)</label>
-        <input id="folderCaliper" placeholder="0.0040" inputmode="decimal">
         <label for="folderFoldSize">Fanfold Size / Repeat (inches)</label>
         <input id="folderFoldSize" placeholder="e.g. 12.25" inputmode="decimal">
       </section>
@@ -1229,6 +1236,11 @@ body.dark .ecci-display{
 
       <section class="card">
         <h2>End of Job Count</h2>
+        <div class="two-col">
+          <div><label for="folderStartBox">Start Box #</label><input id="folderStartBox" placeholder="e.g. 1" inputmode="decimal"></div>
+          <div><label for="folderEndBox">End Box #</label><input id="folderEndBox" placeholder="e.g. 32" inputmode="decimal"></div>
+        </div>
+        <div class="box-range-note" id="folderBoxRangeNote" style="display:none;"></div>
         <label for="folderTotalBoxes">Total Boxes Completed</label>
         <div class="field-cam">
           <input id="folderTotalBoxes" placeholder="e.g. 32" inputmode="decimal" style="font-size:22px;font-weight:800;">
@@ -2313,6 +2325,9 @@ Required JSON schema:
 {
   "repeatLength": number | null,
   "labelsAcross": number | null,
+  "fanfoldSize": number | null,
+  "labelsPerFoldSheet": number | null,
+  "labelsPerPack": number | null,
   "totalQuantity": number | null,
   "salesQuantity": number | null,
   "finishedRollQuantity": number | null,
@@ -2327,6 +2342,7 @@ Required JSON schema:
   "notes": string[] | null,
   "rollDirection": string | null,
   "jobType": string | null,
+  "group": string | null,
   "materialSpecCode": string | null,
   "materialDescription": string | null,
   "materialThickness": number | null
@@ -2381,10 +2397,18 @@ Strict rules:
    - Capture each separate instruction as its own array entry. Omit pure material/size lines already captured elsewhere. If none, return [].
 7d. rollDirection is the roll/rewind direction.
    - Look for "Roll Direction", e.g. "Roll Direction # 1" -> "1". Return just the number/letter if clear, otherwise the full text.
-7e. jobType is "roll" if this is a roll/rewind job, otherwise "sheet" (or "fanfold").
-   - Signals of a ROLL job: "/ roll", "RL####", "Roll Direction", "Rewind", a "Core code" line, "M/Roll", or a Group ending in "-R".
-   - Signals of a SHEET/fanfold job: "sheets", "fanfold", "cut", sheet counts.
-   - If unclear, return "roll".
+7e. jobType: return EXACTLY one of "roll", "sheeter", or "folder".
+   - "folder" (fan-fold) signals: the words "Fanfold"/"Fanfolded"/"folded"/"folds per pack"/"folds per ctn"/"fold sheet", "keep on L2 for folding", a Group ending in "-F" (e.g. "DLabel-F"), or fold-related cartoning. If ANY fold signal is present, return "folder".
+   - "roll" signals: "/ roll", "RL####", "Roll Direction", "Rewind", a "Core code" line, "M/Roll", or a Group ending in "-R".
+   - "sheeter" signals: "sheets", "cut", "sheeted", flat sheet counts (and NOT fanfolded).
+   - Fold signals win over roll/sheet signals. If still unclear, return "roll".
+7e-i. fanfoldSize is the FAN-FOLD repeat length in inches — the distance of one fold, NOT the cross-perf spacing and NOT the label depth.
+   - Look for "Fanfolded @ X\"" (e.g. "Fanfolded @ 12.25\"" -> 12.25), or the Prepress repeat (e.g. "12.25\" repeat & 98 teeth" -> 12.25).
+   - This is usually larger than the label depth. e.g. label depth 6", cross-perf 6.125", but fanfold 12.25". Prefer the "Fanfolded @" value.
+   - If no fanfold value is present, return null.
+7e-ii. labelsPerFoldSheet is the number of labels on one fold sheet, e.g. "# of labels per fold sheet is 4" -> 4. If absent, return null.
+7e-iii. labelsPerPack is the labels per pack/bag, e.g. "poly bag in 2,000's" or "packs of 2,000" -> 2000. If absent, return null.
+7e-iv. group is the "Group:" value exactly as printed, e.g. "DLabel-F", "DLabel-R", "DLabel-N". If absent, return null.
 8. carrierWidth must come ONLY from the "Carrier Size" or "Carrier" line, and is the value labeled "wide" (the WIDTH, not the depth).
    - The width is the number that comes right after the word "Carrier" and before "wide".
    - NEVER use the "Label Size" width for carrierWidth. In Example B, Label Size width is 3.0000 but carrierWidth is 3.1250.
@@ -2495,24 +2519,30 @@ Rules:
       const qty = normalizeNumber(parsed.totalQuantity ?? parsed.total_quantity ?? parsed.totalLabels ?? parsed.quantity ?? fields.labels);
       const spec = parsed.materialSpecCode ?? parsed.material_spec_code ?? parsed.extractedPaperSpec ?? null;
       const desc = parsed.materialDescription ?? parsed.material_description ?? null;
-      const thick = getDetectedThickness(parsed, fields);
+      // Material thickness/caliper is only relevant for roll jobs — skip it here.
       const setVal=(id,v)=>{ const el=document.getElementById(id); if(el && v!==null && v!==undefined && v!=="") el.value=v; };
 
       setVal(tab+"Spec", spec || desc || "");
-      if(thick) setVal(tab+"Caliper", thick);
       if(repeat){ setVal(tab+"Repeat", repeat); setVal(tab+"ImpRepeat", repeat); }
       if(across){ setVal(tab+"Across", across); setVal(tab+"ImpAcross", across); }
       if(qty) setVal(tab+"ImpLabels", qty);
 
       let foldNote = "";
       if(tab === "folder"){
-        // Best available docket dimension for fold size is the repeat / cutoff.
-        const foldSize = normalizeNumber(parsed.foldSize ?? parsed.fold_size ?? parsed.cutoff ?? repeat);
-        const gearFromDocket = normalizeNumber(parsed.gearSize ?? parsed.gear_size ?? parsed.gear);
+        // Fan-fold size is the fold repeat (e.g. "Fanfolded @ 12.25"). Fall back to the prepress/label repeat only if needed.
+        const foldSize = normalizeNumber(parsed.fanfoldSize ?? parsed.fanfold_size ?? parsed.foldSize ?? parsed.fold_size ?? parsed.cutoff);
         if(foldSize) setVal("folderFoldSize", foldSize);
-        if(gearFromDocket) setVal("folderGearSize", gearFromDocket);
-        updateFolderGear(!gearFromDocket); // if docket gave no gear, compute from fold size x 8
-        foldNote = foldSize ? (" Fold size " + foldSize + " in.") : "";
+        // Gear size is ALWAYS Fanfold Size x 8 (it isn't printed on the docket) — compute it.
+        updateFolderGear(true);
+
+        // B.Bunch counter inputs, if the docket states them.
+        const lpf  = normalizeNumber(parsed.labelsPerFoldSheet ?? parsed.labels_per_fold_sheet ?? parsed.labelsPerFold);
+        const pack = normalizeNumber(parsed.labelsPerPack ?? parsed.labels_per_pack ?? parsed.packSize);
+        if(lpf)  setVal("bbLabelsPerFold", lpf);
+        if(pack) setVal("bbPackSize", pack);
+        if(typeof calcBBunch === "function") calcBBunch();
+
+        foldNote = foldSize ? (" Fanfold " + foldSize + " in, gear " + Math.round(foldSize*8) + ".") : "";
       }
 
       calcImprFor(tab);
@@ -3030,6 +3060,31 @@ async function scanNumberInto(targetId, file, statusPrefix){
   }
 }
 
+/* ---- Total boxes from Start Box # / End Box # (sheeter & folder) ---- */
+function calcBoxRange(prefix){
+  const start = cleanNumber(prefix+"StartBox");
+  const end   = cleanNumber(prefix+"EndBox");
+  const note  = document.getElementById(prefix+"BoxRangeNote");
+  const total = document.getElementById(prefix+"TotalBoxes");
+  const haveBoth = Number.isFinite(start) && Number.isFinite(end);
+  if(!haveBoth){ if(note) note.style.display = "none"; return; }
+  // Inclusive box numbering: boxes Start..End => (End - Start + 1).
+  const count = Math.round(end - start + 1);
+  if(count <= 0){
+    if(note){ note.style.display="block"; note.style.color="var(--danger)"; note.style.background="rgba(224,36,36,.08)";
+      note.textContent = "End box # must be greater than or equal to start box #."; }
+    return;
+  }
+  if(total){
+    total.value = count;
+    total.dispatchEvent(new Event("input",{bubbles:true})); // recompute shift live
+  }
+  if(note){
+    note.style.display="block"; note.style.color="#1f9d55"; note.style.background="rgba(31,157,85,.08)";
+    note.textContent = "Boxes " + formatNumber(start) + "–" + formatNumber(end) + " = " + formatNumber(count) + " boxes (inclusive).";
+  }
+}
+
 /* ---- B.Bunch Counter (Folder) ---- */
 function calcBBunch(){
   const labelsPerFold = cleanNumber("bbLabelsPerFold");
@@ -3403,10 +3458,15 @@ function detectJobType(parsed){
   if(/fold/.test(explicit)) return "folder";
   if(/sheet/.test(explicit)) return "sheeter";
   if(/roll|rewind/.test(explicit)) return "roll";
-  const blob = [parsed.materialDescription, parsed.jobType,
-    Array.isArray(parsed.notes) ? parsed.notes.join(" ") : parsed.notes]
-    .map(x=>String(x||"")).join(" ").toLowerCase();
-  if(/fan ?fold|z-?fold|tri-?fold|folded/.test(blob)) return "folder";
+  // Look across all available text for fold/roll/sheet signals.
+  const blob = [
+    parsed.materialDescription, parsed.jobType, parsed.group, parsed.stockInfo,
+    parsed.fanfoldSize, parsed.labelsPerFoldSheet,
+    Array.isArray(parsed.notes) ? parsed.notes.join(" ") : parsed.notes
+  ].map(x=>String(x||"")).join(" ").toLowerCase();
+  // Fold signals (incl. an explicit fanfold size or labels-per-fold) win first.
+  if(/fan ?fold|folded|folds? per|fold sheet|for folding|dlabel-?f|\bz-?fold\b|tri-?fold/.test(blob)) return "folder";
+  if(parsed.fanfoldSize || parsed.labelsPerFoldSheet) return "folder";
   if(/\bsheet(ed|s)?\b|flat sheet|cut sheet/.test(blob) && !/\/\s*roll|rewind|core code/.test(blob)) return "sheeter";
   return "roll";
 }
@@ -3948,6 +4008,13 @@ document.addEventListener("DOMContentLoaded",()=>{
         const f = e.target.files && e.target.files[0];
         scanNumberInto(inp.dataset.numtarget, f, inp.dataset.status || "roll");
         e.target.value = "";
+      });
+    });
+
+    /* ---- Total boxes from Start/End box # ---- */
+    ["sheeter","folder"].forEach(prefix=>{
+      [prefix+"StartBox", prefix+"EndBox"].forEach(id=>{
+        bind(id,"input",()=>calcBoxRange(prefix));
       });
     });
 
