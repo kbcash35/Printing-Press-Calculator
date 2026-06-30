@@ -196,6 +196,21 @@ button{
 .sl-cell-value{ font-size:18px; font-weight:800; margin-top:2px; }
 .sl-cell.waste .sl-cell-value{ color:var(--danger); }
 .sl-remove{ margin-top:10px; font-size:13px; font-weight:700; color:var(--danger); background:none; border:none; padding:0; cursor:pointer; }
+/* Shift entry actions + edit mode */
+.sl-actions{ display:flex; align-items:center; gap:16px; margin-top:12px; }
+.sl-edit{ font-size:13px; font-weight:800; color:var(--text); background:none; border:none; padding:0; cursor:pointer; text-decoration:underline; }
+.sl-actions .sl-remove{ margin-top:0; }
+.sl-edit-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+.sl-edit-row label{ font-size:13px; font-weight:700; color:var(--muted); flex:0 0 auto; }
+.sl-edit-row input{
+  flex:1 1 auto; min-width:0; max-width:60%; text-align:right;
+  border:1px solid var(--line); border-radius:8px; padding:8px 10px;
+  font-size:16px; font-weight:700; background:var(--field);
+}
+.sl-edit-actions{ display:flex; gap:10px; margin-top:14px; }
+.sl-save{ flex:1; background:var(--black); color:#fff; border:none; border-radius:10px; padding:12px; font-size:15px; font-weight:800; cursor:pointer; }
+.sl-cancel{ flex:0 0 auto; background:var(--field); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:12px 18px; font-size:15px; font-weight:700; cursor:pointer; }
+.sl-card.editing{ border-color:var(--text); }
 /* My Shift tab empty state */
 #myShiftEmpty{ text-align:center; padding:16px 0; }
 .collapsible > h2.card-toggle{
@@ -477,9 +492,15 @@ input[type=file]{
 .tally-row span:first-child{ flex:0 0 auto; font-weight:700; color:#3e4048; font-size:14px; }
 .tally-amt{ flex:1 1 auto; min-width:0; text-align:right; font-weight:800; font-size:16px; }
 .tally-del{
-  flex:0 0 auto; width:28px; height:28px; border-radius:8px;
-  border:1px solid #ffbfc0; background:var(--card); color:var(--danger); font-weight:800;
+  flex:0 0 auto;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:50%;
+  border:none; background:var(--field); color:var(--muted);
+  font-size:17px; line-height:1; font-weight:700;
+  cursor:pointer; transition:background .15s ease, color .15s ease, transform .1s ease;
 }
+.tally-del:hover{ background:#ffe1e1; color:var(--danger); }
+.tally-del:active{ transform:scale(.9); }
 .tally-empty{ padding:14px; color:#7a7d85; text-align:center; font-size:14px; }
 .running-total{
   display:flex; justify-content:space-between; align-items:center; gap:10px;
@@ -2724,12 +2745,12 @@ function handleDocketPhoto(file){
   docketPhotoFile=file;
   showError("docketScanError","");
   if(!file){ showSuccess("docketScanSuccess","No docket photo selected."); return; }
-  // If any tab already has computed results, prompt before overwriting.
-  const activeTabs = ["roll","sheeter","folder"].filter(currentJobHasResults);
-  if(activeTabs.length > 0){
+  // Only prompt if a tab has results that have NOT been saved to My Shift yet.
+  const unsaved = ["roll","sheeter","folder"].filter(hasUnsavedJob);
+  if(unsaved.length > 0){
     const proceed = confirm(
       "You have unsaved job results from the current docket.\n\n" +
-      "Tip: go to the job tab, tap \"Complete Job & Save to My Shift\" first — then scan the new docket.\n\n" +
+      "Tip: go to the job tab and tap \u201cSave Job to My Shift\u201d first — then scan the new docket.\n\n" +
       "Scan the new docket anyway without saving?"
     );
     if(!proceed) return;
@@ -2836,6 +2857,18 @@ const TAB_KEY = "RC_ACTIVE_TAB_V1";
    ================================================================ */
 const SHIFTLOG_KEY = "RC_SHIFTLOG_V1";
 let shiftLog = [];
+// Tracks the results signature that was last saved per tab, so we don't re-prompt to save.
+const lastSavedSig = { roll:null, sheeter:null, folder:null };
+
+function resultsSignature(prefix){
+  const r = readJobResults(prefix);
+  return [r.good, r.gross, r.waste, r.labels, r.rolls].join("|");
+}
+// True only when the current tab has results that have NOT yet been saved to My Shift.
+function hasUnsavedJob(prefix){
+  if(!currentJobHasResults(prefix)) return false;
+  return resultsSignature(prefix) !== lastSavedSig[prefix];
+}
 
 function loadShiftLog(){
   try{
@@ -2864,7 +2897,7 @@ function currentJobHasResults(prefix){
 function commitJob(prefix){
   const results = readJobResults(prefix);
   if(!results.good && !results.gross){
-    alert("Calculate the job summary first, then tap Complete Job.");
+    alert("Calculate the job summary first, then tap “Save Job to My Shift”.");
     return false;
   }
   const entry = {
@@ -2879,6 +2912,7 @@ function commitJob(prefix){
   shiftLog.push(entry);
   saveShiftLog();
   renderShiftLog();
+  lastSavedSig[prefix] = resultsSignature(prefix); // mark current results as saved
   return true;
 }
 function removeShiftEntry(id){
@@ -2900,8 +2934,31 @@ function renderShiftLog(){
   if(empty) empty.style.display="none";
   if(totCard) totCard.style.display="block";
   list.innerHTML = shiftLog.map(e=>{
-    const rollLine = e.rolls !== null ? (e.rolls+(e.rolls===1?" roll":" rolls")+" · ") : "";
+    const rollLine = e.rolls !== null && e.rolls !== undefined ? (e.rolls+(e.rolls===1?" roll":" rolls")+" · ") : "";
     const meta = e.typeLabel+" · "+rollLine+e.completedAt+(e.qty?" · Qty: "+e.qty:"");
+
+    if(e.id === editingShiftId){
+      // ----- EDIT MODE -----
+      const rollsRow = e.jobType === "roll"
+        ? '<div class="sl-edit-row"><label>Rolls</label><input type="number" inputmode="decimal" data-ef="rolls" value="'+(e.rolls!=null?e.rolls:"")+'"></div>'
+        : "";
+      return '<div class="sl-card open editing" data-slid="'+e.id+'">'
+        +'<div class="sl-header"><div class="sl-header-left"><div class="sl-docket">Editing…</div><div class="sl-meta">'+escHtml(e.typeLabel)+'</div></div></div>'
+        +'<div class="sl-body">'
+        +'<div class="sl-edit-row"><label>Docket #</label><input type="text" data-ef="docket" value="'+escAttr(e.docket)+'"></div>'
+        +'<div class="sl-edit-row"><label>Total Labels</label><input type="number" inputmode="decimal" data-ef="labels" value="'+(e.labels||"")+'"></div>'
+        +'<div class="sl-edit-row"><label>Good Impressions</label><input type="number" inputmode="decimal" data-ef="good" value="'+(e.good||"")+'"></div>'
+        +'<div class="sl-edit-row"><label>Gross Impressions</label><input type="number" inputmode="decimal" data-ef="gross" value="'+(e.gross||"")+'"></div>'
+        +rollsRow
+        +'<p class="card-sub" style="margin:8px 0 0;">Wasted impressions and wastage % recalculate automatically (Gross − Good).</p>'
+        +'<div class="sl-edit-actions">'
+        +'<button class="sl-save" data-slsave="'+e.id+'" type="button">Save changes</button>'
+        +'<button class="sl-cancel" data-slcancel="1" type="button">Cancel</button>'
+        +'</div>'
+        +'</div></div>';
+    }
+
+    // ----- READ MODE -----
     return '<div class="sl-card open" data-slid="'+e.id+'">'
       +'<div class="sl-header">'
       +'<div class="sl-header-left"><div class="sl-docket">'+escHtml(e.docket)+'</div><div class="sl-meta">'+escHtml(meta)+'</div></div>'
@@ -2914,7 +2971,10 @@ function renderShiftLog(){
       +'<div class="sl-cell waste"><div class="sl-cell-label">Wasted Impressions</div><div class="sl-cell-value">'+fmt(e.waste)+'</div></div>'
       +'<div class="sl-cell"><div class="sl-cell-label">Wastage %</div><div class="sl-cell-value">'+escHtml(e.wastePct||"—")+'</div></div>'
       +'</div>'
+      +'<div class="sl-actions">'
+      +'<button class="sl-edit" data-sledit="'+e.id+'" type="button">Edit</button>'
       +'<button class="sl-remove" data-slremove="'+e.id+'" type="button">Remove this job</button>'
+      +'</div>'
       +'</div></div>';
   }).join("");
   // Totals
@@ -2925,6 +2985,29 @@ function renderShiftLog(){
   const pct = tot.gross>0 ? ((tot.waste/tot.gross)*100).toFixed(1)+"%" : "—";
   ["stTotalLabels:"+fmt(tot.labels),"stGood:"+fmt(tot.good),"stGross:"+fmt(tot.gross),"stWaste:"+fmt(tot.waste),"stWastePct:"+pct]
     .forEach(pair=>{ const [id,v]=pair.split(":"); const el=document.getElementById(id); if(el)el.textContent=v; });
+}
+
+// ----- Shift entry editing -----
+let editingShiftId = null;
+function editShiftEntry(id){ editingShiftId = id; renderShiftLog(); }
+function cancelEditShift(){ editingShiftId = null; renderShiftLog(); }
+function saveEditShift(id){
+  const card = document.querySelector('.sl-card.editing[data-slid="'+id+'"]');
+  if(!card) return;
+  const get = ef => { const el = card.querySelector('[data-ef="'+ef+'"]'); return el ? el.value.trim() : ""; };
+  const num = v => { const n = parseFloat(String(v).replace(/,/g,"")); return isNaN(n) ? 0 : n; };
+  const entry = shiftLog.find(e=>e.id===id);
+  if(!entry) return;
+  entry.docket = get("docket") || "—";
+  entry.labels = num(get("labels"));
+  entry.good   = num(get("good"));
+  entry.gross  = num(get("gross"));
+  if(entry.jobType === "roll"){ const r = get("rolls"); entry.rolls = r==="" ? entry.rolls : Math.round(num(r)); }
+  entry.waste  = Math.max(0, entry.gross - entry.good);
+  entry.wastePct = entry.gross > 0 ? (entry.waste / entry.gross * 100).toFixed(2) + "%" : "—";
+  editingShiftId = null;
+  saveShiftLog();
+  renderShiftLog();
 }
 function updateCompleteJobBtn(prefix){
   const btn=document.getElementById(prefix+"CompleteJobBtn");
@@ -3723,12 +3806,15 @@ function restoreAllInputs(){
 
 /* ---- Reset / New Shift ---- */
 function resetShift(){
-  const ok = window.confirm("Start a NEW SHIFT?\n\nThis clears every entered value, all tallies, job info, and shift totals on this device.\n\nThis cannot be undone.");
+  const ok = window.confirm("Start a NEW SHIFT?\n\nThis clears every entered value, all tallies, job info, shift totals, AND the My Shift log (all saved jobs) on this device.\n\nThis cannot be undone.");
   if(!ok) return;
 
   safeRemove(INPUT_KEY);
   safeRemove(TALLY_KEY);
   safeRemove(JOBLISTS_KEY);
+  // New shift -> clear the saved-jobs log too.
+  shiftLog = []; editingShiftId = null; saveShiftLog(); renderShiftLog();
+  lastSavedSig.roll = lastSavedSig.sheeter = lastSavedSig.folder = null;
   jobListsState.dies = []; jobListsState.colors = []; jobListsState.notes = []; jobListsState.anilox = [];
   aniloxStock = ""; aniloxSubstrateClass = DEFAULT_SUBSTRATE_CLASS;
   renderAllJobLists();
@@ -4036,17 +4122,25 @@ document.addEventListener("DOMContentLoaded",()=>{
       });
     });
 
-    /* ---- My Shift: collapse/expand individual job cards ---- */
+    /* ---- My Shift: card interactions ---- */
     document.addEventListener("click",(e)=>{
+      // Edit / Save / Cancel / Remove (check these before header toggle)
+      const editBtn = e.target.closest && e.target.closest("[data-sledit]");
+      if(editBtn){ editShiftEntry(Number(editBtn.dataset.sledit)); return; }
+      const saveBtn = e.target.closest && e.target.closest("[data-slsave]");
+      if(saveBtn){ saveEditShift(Number(saveBtn.dataset.slsave)); return; }
+      const cancelBtn = e.target.closest && e.target.closest("[data-slcancel]");
+      if(cancelBtn){ cancelEditShift(); return; }
+      const rem = e.target.closest && e.target.closest("[data-slremove]");
+      if(rem){
+        if(confirm("Remove this job from the shift log?")) removeShiftEntry(Number(rem.dataset.slremove));
+        return;
+      }
+      // Collapse/expand (but not while editing, and not when tapping inputs/buttons)
       const hdr = e.target.closest && e.target.closest(".sl-header");
       if(hdr){
         const card = hdr.closest(".sl-card");
-        if(card) card.classList.toggle("open");
-        return;
-      }
-      const rem = e.target.closest && e.target.closest("[data-slremove]");
-      if(rem && confirm("Remove this job from the shift log?")){
-        removeShiftEntry(Number(rem.dataset.slremove));
+        if(card && !card.classList.contains("editing")) card.classList.toggle("open");
       }
     });
 
@@ -4054,7 +4148,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     bind("clearShiftLogBtn","click",()=>{
       if(!shiftLog.length) return;
       if(confirm("Clear the entire shift log?\n\nThis removes all completed jobs. It cannot be undone.")){ 
-        shiftLog = []; saveShiftLog(); renderShiftLog();
+        shiftLog = []; editingShiftId = null; saveShiftLog(); renderShiftLog();
       }
     });
 
