@@ -211,6 +211,25 @@ button{
 .sl-save{ flex:1; background:var(--black); color:#fff; border:none; border-radius:10px; padding:12px; font-size:15px; font-weight:800; cursor:pointer; }
 .sl-cancel{ flex:0 0 auto; background:var(--field); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:12px 18px; font-size:15px; font-weight:700; cursor:pointer; }
 .sl-card.editing{ border-color:var(--text); }
+/* Edit form: roll-by-roll rows */
+.sl-roll-list{ display:flex; flex-direction:column; gap:8px; margin:6px 0 10px; }
+.sl-roll-row{ display:flex; align-items:center; gap:10px; }
+.sl-roll-num{ flex:0 0 64px; font-size:13px; font-weight:700; color:var(--muted); }
+.sl-roll-input{ flex:1 1 auto; min-width:0; border:1px solid var(--line); border-radius:8px; padding:9px 11px; font-size:16px; font-weight:700; background:var(--field); text-align:right; }
+.sl-roll-empty{ font-size:13px; color:var(--muted); padding:8px 0; }
+.sl-add-roll{ width:100%; background:var(--field); border:1px dashed var(--line); border-radius:10px; padding:10px; font-size:14px; font-weight:700; color:var(--text); cursor:pointer; margin-bottom:10px; }
+.sl-add-roll:active{ transform:scale(.99); }
+/* Edit form: two-column rows */
+.sl-edit-two{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px; }
+.sl-edit-two label{ display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:3px; }
+.sl-edit-two input{ width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:8px; padding:9px 11px; font-size:16px; font-weight:700; background:var(--field); }
+/* Edit form: live preview */
+.sl-preview{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0 4px; padding-top:12px; border-top:1px dashed var(--line); }
+.sl-pv{ background:var(--field); border-radius:10px; padding:8px 11px; display:flex; flex-direction:column; gap:2px; }
+.sl-pv.full{ grid-column:1/-1; }
+.sl-pv span{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); }
+.sl-pv b{ font-size:18px; font-weight:800; }
+.sl-pv.waste b{ color:var(--danger); }
 /* My Shift tab empty state */
 #myShiftEmpty{ text-align:center; padding:16px 0; }
 .collapsible > h2.card-toggle{
@@ -2894,6 +2913,51 @@ function currentJobHasResults(prefix){
   const r = readJobResults(prefix);
   return r.good > 0 || r.gross > 0;
 }
+
+// Pure re-implementation of the shift math (mirrors calcShift) for editing saved jobs.
+function snapNum(v){ const n = parseFloat(String(v).replace(/,/g,"")); return isNaN(n) ? null : n; }
+function computeJobResults(jobType, inp){
+  const repeat = snapNum(inp.repeat), across = snapNum(inp.across);
+  const start  = snapNum(inp.start),  end    = snapNum(inp.end);
+  let totalLabels = 0, rolls = null;
+  if(jobType === "roll"){
+    const tally = (inp.tally || []).map(snapNum).filter(n=>n!==null);
+    rolls = tally.length;
+    totalLabels = tally.reduce((a,b)=>a+b,0) + (snapNum(inp.extraLabels) || 0);
+  }else{
+    totalLabels = (snapNum(inp.totalBoxes) || 0) * (snapNum(inp.labelsPerBox) || 0);
+  }
+  const haveRA = repeat && across && repeat > 0 && across > 0;
+  const good = haveRA ? (totalLabels * repeat / 10 / across) : 0;
+  const haveCounters = start !== null && end !== null;
+  const gross = haveCounters ? Math.max(0, end - start) : 0;
+  const waste = Math.max(0, gross - good);
+  const wastePct = gross > 0 ? (waste / gross * 100).toFixed(2) + "%" : "—";
+  return {
+    labels: Math.round(totalLabels),
+    good: Math.round(good),
+    gross: Math.round(gross),
+    waste: Math.round(waste),
+    wastePct, rolls,
+    valid: haveRA && haveCounters
+  };
+}
+
+// Snapshot the raw inputs that produced a job's results (so they can be edited later).
+function snapshotInputs(prefix, results){
+  const gn = id => snapNum((document.getElementById(id)||{}).value);
+  if(prefix === "roll"){
+    const rawTally = (tallyState.roll || []).slice();
+    const extra = Math.max(0, Math.round((results.labels || 0) - rawTally.reduce((a,b)=>a+(Number(b)||0),0)));
+    return { tally: rawTally, extraLabels: extra,
+      start: gn("rollMasterStart"), end: gn("rollMasterEnd"),
+      repeat: getRollRepeat(), across: getRollAcross() };
+  }
+  return { totalBoxes: gn(prefix+"TotalBoxes"), labelsPerBox: gn(prefix+"LabelsPerCarton"),
+    start: gn(prefix+"MasterStart"), end: gn(prefix+"MasterEnd"),
+    repeat: gn(prefix+"Repeat"), across: gn(prefix+"Across") };
+}
+
 function commitJob(prefix){
   const results = readJobResults(prefix);
   if(!results.good && !results.gross){
@@ -2907,7 +2971,8 @@ function commitJob(prefix){
     jobType:   prefix,
     typeLabel: prefix==="roll" ? "Roll" : prefix==="sheeter" ? "Sheeter" : "Folder",
     completedAt: new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),
-    ...results
+    ...results,
+    inputs: snapshotInputs(prefix, results)
   };
   shiftLog.push(entry);
   saveShiftLog();
@@ -2938,24 +3003,7 @@ function renderShiftLog(){
     const meta = e.typeLabel+" · "+rollLine+e.completedAt+(e.qty?" · Qty: "+e.qty:"");
 
     if(e.id === editingShiftId){
-      // ----- EDIT MODE -----
-      const rollsRow = e.jobType === "roll"
-        ? '<div class="sl-edit-row"><label>Rolls</label><input type="number" inputmode="decimal" data-ef="rolls" value="'+(e.rolls!=null?e.rolls:"")+'"></div>'
-        : "";
-      return '<div class="sl-card open editing" data-slid="'+e.id+'">'
-        +'<div class="sl-header"><div class="sl-header-left"><div class="sl-docket">Editing…</div><div class="sl-meta">'+escHtml(e.typeLabel)+'</div></div></div>'
-        +'<div class="sl-body">'
-        +'<div class="sl-edit-row"><label>Docket #</label><input type="text" data-ef="docket" value="'+escAttr(e.docket)+'"></div>'
-        +'<div class="sl-edit-row"><label>Total Labels</label><input type="number" inputmode="decimal" data-ef="labels" value="'+(e.labels||"")+'"></div>'
-        +'<div class="sl-edit-row"><label>Good Impressions</label><input type="number" inputmode="decimal" data-ef="good" value="'+(e.good||"")+'"></div>'
-        +'<div class="sl-edit-row"><label>Gross Impressions</label><input type="number" inputmode="decimal" data-ef="gross" value="'+(e.gross||"")+'"></div>'
-        +rollsRow
-        +'<p class="card-sub" style="margin:8px 0 0;">Wasted impressions and wastage % recalculate automatically (Gross − Good).</p>'
-        +'<div class="sl-edit-actions">'
-        +'<button class="sl-save" data-slsave="'+e.id+'" type="button">Save changes</button>'
-        +'<button class="sl-cancel" data-slcancel="1" type="button">Cancel</button>'
-        +'</div>'
-        +'</div></div>';
+      return renderShiftEditForm(e);
     }
 
     // ----- READ MODE -----
@@ -2987,26 +3035,148 @@ function renderShiftLog(){
     .forEach(pair=>{ const [id,v]=pair.split(":"); const el=document.getElementById(id); if(el)el.textContent=v; });
 }
 
-// ----- Shift entry editing -----
+// ----- Shift entry editing (roll-by-roll + counters, live recalc) -----
 let editingShiftId = null;
-function editShiftEntry(id){ editingShiftId = id; renderShiftLog(); }
-function cancelEditShift(){ editingShiftId = null; renderShiftLog(); }
+let editWorking = null; // working copy of the entry's inputs while editing
+
+// Build an editable inputs object from an entry (synthesizing for older entries).
+function inputsForEntry(e){
+  if(e.inputs && typeof e.inputs === "object"){
+    return JSON.parse(JSON.stringify(e.inputs));
+  }
+  if(e.jobType === "roll"){
+    return { tally: (e.labels ? [e.labels] : []), extraLabels: 0,
+             start: 0, end: (e.gross || 0), repeat: null, across: null };
+  }
+  return { totalBoxes: null, labelsPerBox: null,
+           start: 0, end: (e.gross || 0), repeat: null, across: null };
+}
+
+function editShiftEntry(id){
+  const e = shiftLog.find(x=>x.id===id);
+  if(!e) return;
+  editingShiftId = id;
+  editWorking = inputsForEntry(e);
+  if(!Array.isArray(editWorking.tally)) editWorking.tally = [];
+  renderShiftLog();
+}
+function cancelEditShift(){ editingShiftId = null; editWorking = null; renderShiftLog(); }
+
+function renderShiftEditForm(e){
+  const inp = editWorking || inputsForEntry(e);
+  const v = x => (x===null||x===undefined||Number.isNaN(x)) ? "" : x;
+  let body = '<div class="sl-edit-row"><label>Docket #</label><input type="text" data-ef="docket" value="'+escAttr(e.docket)+'"></div>';
+
+  if(e.jobType === "roll"){
+    const rows = (inp.tally||[]).map((val,i)=>
+      '<div class="sl-roll-row">'
+      +'<span class="sl-roll-num">Roll '+(i+1)+'</span>'
+      +'<input class="sl-roll-input" type="number" inputmode="decimal" data-eroll="'+i+'" value="'+v(val)+'" placeholder="labels">'
+      +'<button class="tally-del" data-erollremove="'+i+'" type="button" aria-label="Remove roll">\u2715</button>'
+      +'</div>').join("");
+    body += '<div class="sl-roll-list">'+(rows || '<div class="sl-roll-empty">No rolls yet — add one.</div>')+'</div>'
+      +'<button class="sl-add-roll" data-erolladd="1" type="button">+ Add roll</button>'
+      +'<div class="sl-edit-row"><label>Extra labels</label><input type="number" inputmode="decimal" data-ef="extraLabels" value="'+v(inp.extraLabels)+'" placeholder="0"></div>'
+      +'<div class="sl-edit-two">'
+      +'<div><label>Repeat</label><input type="number" inputmode="decimal" data-ef="repeat" value="'+v(inp.repeat)+'"></div>'
+      +'<div><label>Across</label><input type="number" inputmode="decimal" data-ef="across" value="'+v(inp.across)+'"></div>'
+      +'</div>';
+  }else{
+    body += '<div class="sl-edit-two">'
+      +'<div><label>Total Boxes</label><input type="number" inputmode="decimal" data-ef="totalBoxes" value="'+v(inp.totalBoxes)+'"></div>'
+      +'<div><label>Labels / Box</label><input type="number" inputmode="decimal" data-ef="labelsPerBox" value="'+v(inp.labelsPerBox)+'"></div>'
+      +'</div>'
+      +'<div class="sl-edit-two">'
+      +'<div><label>Repeat</label><input type="number" inputmode="decimal" data-ef="repeat" value="'+v(inp.repeat)+'"></div>'
+      +'<div><label>Across</label><input type="number" inputmode="decimal" data-ef="across" value="'+v(inp.across)+'"></div>'
+      +'</div>';
+  }
+
+  // Master counters
+  body += '<div class="sl-edit-two">'
+    +'<div><label>Start Counter</label><input type="number" inputmode="decimal" data-ef="start" value="'+v(inp.start)+'"></div>'
+    +'<div><label>End Counter</label><input type="number" inputmode="decimal" data-ef="end" value="'+v(inp.end)+'"></div>'
+    +'</div>';
+
+  // Live preview
+  const r = computeJobResults(e.jobType, inp);
+  body += '<div class="sl-preview">'
+    +'<div class="sl-pv full"><span>Total Labels</span><b>'+fmt(r.labels)+'</b></div>'
+    +'<div class="sl-pv"><span>Good</span><b>'+fmt(r.good)+'</b></div>'
+    +'<div class="sl-pv"><span>Gross</span><b>'+fmt(r.gross)+'</b></div>'
+    +'<div class="sl-pv waste"><span>Wasted</span><b>'+fmt(r.waste)+'</b></div>'
+    +'<div class="sl-pv"><span>Wastage %</span><b>'+escHtml(r.wastePct||"—")+'</b></div>'
+    +'</div>';
+
+  body += '<div class="sl-edit-actions">'
+    +'<button class="sl-save" data-slsave="'+e.id+'" type="button">Save changes</button>'
+    +'<button class="sl-cancel" data-slcancel="1" type="button">Cancel</button>'
+    +'</div>';
+
+  return '<div class="sl-card open editing" data-slid="'+e.id+'">'
+    +'<div class="sl-header"><div class="sl-header-left"><div class="sl-docket">Editing — '+escHtml(e.typeLabel)+'</div><div class="sl-meta">Good impressions &amp; waste recalculate as you type</div></div></div>'
+    +'<div class="sl-body">'+body+'</div></div>';
+}
+
+// Re-read the form into editWorking and refresh just the preview (no full re-render, so focus stays).
+function syncEditWorkingFromForm(card){
+  if(!editWorking) return;
+  const get = ef => { const el = card.querySelector('[data-ef="'+ef+'"]'); return el ? el.value.trim() : ""; };
+  const e = shiftLog.find(x=>x.id===editingShiftId);
+  if(!e) return;
+  if(e.jobType === "roll"){
+    const rollInputs = card.querySelectorAll('[data-eroll]');
+    editWorking.tally = Array.from(rollInputs).map(el => snapNum(el.value));
+    editWorking.extraLabels = snapNum(get("extraLabels"));
+  }else{
+    editWorking.totalBoxes  = snapNum(get("totalBoxes"));
+    editWorking.labelsPerBox= snapNum(get("labelsPerBox"));
+  }
+  editWorking.repeat = snapNum(get("repeat"));
+  editWorking.across = snapNum(get("across"));
+  editWorking.start  = snapNum(get("start"));
+  editWorking.end    = snapNum(get("end"));
+  // Update preview cells in place.
+  const r = computeJobResults(e.jobType, editWorking);
+  const pv = card.querySelectorAll(".sl-preview b");
+  if(pv.length === 5){
+    pv[0].textContent = fmt(r.labels);
+    pv[1].textContent = fmt(r.good);
+    pv[2].textContent = fmt(r.gross);
+    pv[3].textContent = fmt(r.waste);
+    pv[4].textContent = r.wastePct || "—";
+  }
+}
+
 function saveEditShift(id){
   const card = document.querySelector('.sl-card.editing[data-slid="'+id+'"]');
-  if(!card) return;
-  const get = ef => { const el = card.querySelector('[data-ef="'+ef+'"]'); return el ? el.value.trim() : ""; };
-  const num = v => { const n = parseFloat(String(v).replace(/,/g,"")); return isNaN(n) ? 0 : n; };
   const entry = shiftLog.find(e=>e.id===id);
-  if(!entry) return;
-  entry.docket = get("docket") || "—";
-  entry.labels = num(get("labels"));
-  entry.good   = num(get("good"));
-  entry.gross  = num(get("gross"));
-  if(entry.jobType === "roll"){ const r = get("rolls"); entry.rolls = r==="" ? entry.rolls : Math.round(num(r)); }
-  entry.waste  = Math.max(0, entry.gross - entry.good);
-  entry.wastePct = entry.gross > 0 ? (entry.waste / entry.gross * 100).toFixed(2) + "%" : "—";
-  editingShiftId = null;
+  if(!card || !entry || !editWorking) { editingShiftId=null; editWorking=null; renderShiftLog(); return; }
+  syncEditWorkingFromForm(card);
+  const docketEl = card.querySelector('[data-ef="docket"]');
+  entry.docket = (docketEl ? docketEl.value.trim() : entry.docket) || "—";
+  const r = computeJobResults(entry.jobType, editWorking);
+  entry.labels = r.labels; entry.good = r.good; entry.gross = r.gross;
+  entry.waste = r.waste; entry.wastePct = r.wastePct;
+  if(r.rolls !== null) entry.rolls = r.rolls;
+  entry.inputs = JSON.parse(JSON.stringify(editWorking));
+  editingShiftId = null; editWorking = null;
   saveShiftLog();
+  renderShiftLog();
+}
+
+function addEditRoll(){
+  if(!editWorking) return;
+  if(!Array.isArray(editWorking.tally)) editWorking.tally = [];
+  editWorking.tally.push(null);
+  renderShiftLog();
+}
+function removeEditRoll(idx){
+  if(!editWorking || !Array.isArray(editWorking.tally)) return;
+  // Capture current edits before mutating so unsaved typing isn't lost.
+  const card = document.querySelector('.sl-card.editing[data-slid="'+editingShiftId+'"]');
+  if(card) syncEditWorkingFromForm(card);
+  editWorking.tally.splice(idx,1);
   renderShiftLog();
 }
 function updateCompleteJobBtn(prefix){
@@ -4013,10 +4183,10 @@ document.addEventListener("DOMContentLoaded",()=>{
     bind("rollShiftWithout","click",()=>calcShift("roll","without"));
     // Repeat/Across changes also affect the extra impressions->labels conversion
     ["rollRepeat","rollAcross"].forEach(id=>bind(id,"input",updateExtraViews));
-    // Delegated delete for tally rows
+    // Delegated delete for tally rows (skip edit-form roll-remove buttons)
     document.addEventListener("click",(e)=>{
       const del = e.target.closest && e.target.closest(".tally-del");
-      if(del){ deleteTally(del.dataset.prefix, Number(del.dataset.idx)); }
+      if(del && !del.hasAttribute("data-erollremove")){ deleteTally(del.dataset.prefix, Number(del.dataset.idx)); }
     });
 
     /* ---- Collapsible tool cards set up after Clear buttons are injected (below) ---- */
@@ -4131,6 +4301,10 @@ document.addEventListener("DOMContentLoaded",()=>{
       if(saveBtn){ saveEditShift(Number(saveBtn.dataset.slsave)); return; }
       const cancelBtn = e.target.closest && e.target.closest("[data-slcancel]");
       if(cancelBtn){ cancelEditShift(); return; }
+      const addRoll = e.target.closest && e.target.closest("[data-erolladd]");
+      if(addRoll){ addEditRoll(); return; }
+      const remRoll = e.target.closest && e.target.closest("[data-erollremove]");
+      if(remRoll){ removeEditRoll(Number(remRoll.dataset.erollremove)); return; }
       const rem = e.target.closest && e.target.closest("[data-slremove]");
       if(rem){
         if(confirm("Remove this job from the shift log?")) removeShiftEntry(Number(rem.dataset.slremove));
@@ -4142,6 +4316,15 @@ document.addEventListener("DOMContentLoaded",()=>{
         const card = hdr.closest(".sl-card");
         if(card && !card.classList.contains("editing")) card.classList.toggle("open");
       }
+    });
+
+    /* ---- My Shift: live recompute as edit-form fields change ---- */
+    document.addEventListener("input",(e)=>{
+      if(editingShiftId === null) return;
+      const t = e.target;
+      if(!t || !(t.matches("[data-ef]") || t.matches("[data-eroll]"))) return;
+      const card = t.closest(".sl-card.editing");
+      if(card) syncEditWorkingFromForm(card);
     });
 
     /* ---- My Shift: clear shift log ---- */
