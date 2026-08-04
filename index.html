@@ -149,7 +149,37 @@ button{
   margin:18px 0;
   box-shadow:0 1px 2px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.06);
 }
-/* Box range helper note */
+/* Mode toggle + docket switcher */
+.mode-card{ padding-bottom:14px; }
+.mode-toggle{ display:grid; grid-template-columns:1fr 1fr; gap:6px; background:var(--field); border-radius:12px; padding:4px; }
+.mode-toggle button{
+  border:none; background:none; border-radius:9px; padding:10px 8px;
+  font-size:14px; font-weight:800; color:var(--muted); cursor:pointer; transition:background .15s,color .15s;
+}
+.mode-toggle button.active{ background:var(--card); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.10); }
+.docket-bar{ margin-top:14px; padding-top:12px; border-top:1px solid var(--line); }
+.docket-bar-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+.docket-bar-head label{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+.docket-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.docket-chip{
+  display:inline-flex; align-items:center; gap:8px; max-width:100%;
+  border:1px solid var(--line); background:var(--field); color:var(--text);
+  border-radius:999px; padding:8px 12px; font-size:13px; font-weight:700; cursor:pointer;
+}
+.docket-chip.active{ background:var(--black); color:#fff; border-color:var(--black); }
+.docket-chip .dc-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:150px; }
+.docket-chip .dc-close{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:18px; height:18px; border-radius:50%; border:none; cursor:pointer;
+  background:rgba(0,0,0,.10); color:inherit; font-size:11px; line-height:1; font-weight:800; padding:0;
+}
+.docket-chip.active .dc-close{ background:rgba(255,255,255,.25); }
+.docket-chip .dc-close:hover{ background:#ffb3b3; color:var(--danger); }
+.docket-chips-empty{ font-size:13px; color:var(--muted); }
+/* Manual mode hides every scan / camera affordance */
+body.manual-mode .scan-card,
+body.manual-mode .tally-cam,
+body.manual-mode .scan-hide{ display:none !important; }
 .box-range-note{
   font-size:13px; font-weight:700; color:#1f9d55;
   background:rgba(31,157,85,.08); border-radius:8px;
@@ -180,9 +210,10 @@ button{
   padding:12px 14px; cursor:pointer; gap:10px;
   background:var(--field);
 }
-.sl-header-left{ display:flex; flex-direction:column; gap:2px; }
+.sl-header-left{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1 1 auto; }
+.sl-customer{ font-size:13px; font-weight:700; color:var(--text); line-height:1.25; overflow-wrap:anywhere; }
+.sl-meta{ font-size:11.5px; color:var(--muted); font-weight:600; line-height:1.3; overflow-wrap:anywhere; }
 .sl-docket{ font-size:17px; font-weight:800; }
-.sl-meta{ font-size:12px; color:var(--muted); font-weight:600; }
 .sl-header-right{ display:flex; align-items:center; gap:8px; }
 .sl-good{ font-size:16px; font-weight:800; color:#1f9d55; white-space:nowrap; }
 .sl-chev{ font-size:20px; color:var(--muted); transition:transform .2s; }
@@ -223,6 +254,14 @@ button{
 .sl-edit-two{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px; }
 .sl-edit-two label{ display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:3px; }
 .sl-edit-two input{ width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:8px; padding:9px 11px; font-size:16px; font-weight:700; background:var(--field); }
+.sl-edit-two select{
+  width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:8px;
+  padding:9px 11px; font-size:15px; font-weight:700; background:var(--field); color:var(--text);
+  -webkit-appearance:none; appearance:none;
+}
+.sl-extra-block{ border:1px solid var(--line); border-radius:10px; padding:10px 11px; margin:4px 0 10px; }
+.sl-extra-head{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); margin-bottom:8px; }
+.sl-extra-block .sl-edit-two:last-child{ margin-bottom:0; }
 /* Edit form: live preview */
 .sl-preview{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0 4px; padding-top:12px; border-top:1px dashed var(--line); }
 .sl-pv{ background:var(--field); border-radius:10px; padding:8px 11px; display:flex; flex-direction:column; gap:2px; }
@@ -873,6 +912,23 @@ body.dark .ecci-display{
     <p class="card-sub">Photo scan is optional. Manual calculator works without the key.</p>
   </section>
 
+  <!-- Mode toggle + open dockets -->
+  <section class="card mode-card">
+    <div class="mode-toggle" id="modeToggle">
+      <button data-mode="scan" class="active" type="button">📷 Scan Mode</button>
+      <button data-mode="manual" type="button">✏️ Manual Mode</button>
+    </div>
+    <p class="card-sub" id="modeHint" style="margin-top:8px;">Scan a docket to auto-fill the job. Switch to Manual Mode to type everything in yourself.</p>
+    <div class="docket-bar">
+      <div class="docket-bar-head">
+        <label>Open Dockets</label>
+        <button id="newDocketBtn" class="joblist-add" type="button">+ New docket</button>
+      </div>
+      <div class="docket-chips" id="docketChips"></div>
+      <p class="card-sub" id="docketBarHint">Each docket keeps its own job info, tallies and counters. Tap one to switch.</p>
+    </div>
+  </section>
+
   <!-- Universal Docket Scan + Job Info (landing) -->
   <section class="card scan-card">
     <h2 class="scan-title">Docket Scan</h2>
@@ -894,6 +950,10 @@ body.dark .ecci-display{
       <div class="full">
         <label for="docketNumber">Docket Number</label>
         <input id="docketNumber" placeholder="1371660" inputmode="numeric">
+      </div>
+      <div class="full">
+        <label for="customerName">Customer</label>
+        <input id="customerName" placeholder="e.g. ARLANXEO" inputmode="text" autocomplete="off">
       </div>
       <div>
         <label for="jobQuantity">Total Quantity</label>
@@ -2374,6 +2434,7 @@ Required JSON schema:
   "carrierWidth": number | null,
   "productionOrder": string | null,
   "docketNumber": string | null,
+  "customer": string | null,
   "crossPerfTPI": string | null,
   "labelColor": string | null,
   "colors": string[] | null,
@@ -2449,6 +2510,7 @@ Strict rules:
 7e-ii. labelsPerFoldSheet is the number of labels on one fold sheet, e.g. "# of labels per fold sheet is 4" -> 4. If absent, return null.
 7e-iii. labelsPerPack is the labels per pack/bag, e.g. "poly bag in 2,000's" or "packs of 2,000" -> 2000. If absent, return null.
 7e-iv. group is the "Group:" value exactly as printed, e.g. "DLabel-F", "DLabel-R", "DLabel-N". If absent, return null.
+7e-v. customer is the customer / client / bill-to company name (often near "Customer", "Sold to", "Ship to", "Account", or at the top of the docket). Return the company name only, no address or account number. If absent, return null.
 8. carrierWidth must come ONLY from the "Carrier Size" or "Carrier" line, and is the value labeled "wide" (the WIDTH, not the depth).
    - The width is the number that comes right after the word "Carrier" and before "wide".
    - NEVER use the "Label Size" width for carrierWidth. In Example B, Label Size width is 3.0000 but carrierWidth is 3.1250.
@@ -2593,6 +2655,7 @@ Rules:
       if(across) bits.push("across " + across);
       if(spec) bits.push("spec " + spec);
       showSuccess(successId, "Docket scan complete." + (bits.length ? " Found " + bits.join(", ") + "." : "") + foldNote);
+      if(typeof syncActiveDocket === "function") syncActiveDocket();
     }else{
       const docketData = {
         repeatLength: normalizeNumber(parsed.repeatLength ?? parsed.repeat_length ?? fields.repeat),
@@ -2744,6 +2807,7 @@ Rules:
         ? "Material spec detected: " + docketData.extractedPaperSpec + ". "
         : "No material spec found. ";
       showSuccess(successId,"Docket scan complete. Job values populated. " + specMsg + thicknessNote);
+      if(typeof syncActiveDocket === "function") syncActiveDocket();
     }
     }
   }catch(err){
@@ -2773,6 +2837,11 @@ function handleDocketPhoto(file){
       "Scan the new docket anyway without saving?"
     );
     if(!proceed) return;
+  }
+  // Park the current docket in its own slot so it can be returned to, then start a fresh one.
+  const hasCurrent = String((document.getElementById("docketNumber")||{}).value || "").trim() !== "";
+  if(hasCurrent && typeof newDocket === "function"){
+    newDocket();   // syncs the current docket, then opens a blank workspace for the incoming scan
   }
   runGeminiScan(file,"docket");
 }
@@ -2874,6 +2943,163 @@ const TAB_KEY = "RC_ACTIVE_TAB_V1";
 /* ================================================================
    MY SHIFT — Shift Log
    ================================================================ */
+/* ================================================================
+   MODE (scan / manual) + MULTI-DOCKET WORKSPACES
+   ================================================================ */
+const MODE_KEY = "RC_MODE_V1";
+const DOCKETS_KEY = "RC_DOCKETS_V1";
+let appMode = "scan";
+let docketWorkspaces = [];   // [{id, label, customer, inputs, tally, joblists, tab}]
+let activeDocketId = null;
+
+function applyMode(mode, persist){
+  appMode = (mode === "manual") ? "manual" : "scan";
+  document.body.classList.toggle("manual-mode", appMode === "manual");
+  document.querySelectorAll("#modeToggle button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.mode === appMode);
+  });
+  const hint = document.getElementById("modeHint");
+  if(hint){
+    hint.textContent = appMode === "manual"
+      ? "Manual Mode: camera and scan buttons are hidden. Enter Repeat, Across and counters yourself — everything else still calculates automatically."
+      : "Scan a docket to auto-fill the job. Switch to Manual Mode to type everything in yourself.";
+  }
+  if(persist) safeSet(MODE_KEY, appMode);
+}
+
+/* ---- Workspace capture / apply ---- */
+function captureWorkspace(){
+  const inputs = {};
+  document.querySelectorAll("input, textarea").forEach(el=>{
+    if(!el.id) return;
+    if(el.type === "file" || el.type === "range") return;
+    if(el.id === "apiKey") return;
+    inputs[el.id] = el.value;
+  });
+  return {
+    inputs,
+    tally: JSON.parse(JSON.stringify(tallyState || {})),
+    joblists: JSON.parse(JSON.stringify(jobListsState || {})),
+    tab: safeGet(TAB_KEY) || "roll"
+  };
+}
+function applyWorkspace(ws){
+  if(!ws) return;
+  // Clear every field first so a switch never leaves stale values behind.
+  document.querySelectorAll("input, textarea").forEach(el=>{
+    if(!el.id || el.type === "file" || el.type === "range" || el.id === "apiKey") return;
+    el.value = "";
+  });
+  Object.keys(ws.inputs || {}).forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && el.type !== "file" && el.type !== "range") el.value = ws.inputs[id];
+  });
+  if(ws.tally){ ["roll","sheeter","folder"].forEach(t=>{ tallyState[t] = Array.isArray(ws.tally[t]) ? ws.tally[t].slice() : []; }); }
+  if(ws.joblists){ ["dies","colors","notes","anilox"].forEach(k=>{ jobListsState[k] = Array.isArray(ws.joblists[k]) ? ws.joblists[k].slice() : []; }); }
+  saveTallyState(); saveJobLists();
+  TABS.forEach(renderTally);
+  renderAllJobLists();
+  ["roll","sheeter","folder"].forEach(p=>{ setText(p+"Labels","—"); setText(p+"Good","—"); setText(p+"Gross","—"); setText(p+"Waste","—"); setText(p+"WastePct","—"); });
+  if(ws.tab) switchTab(ws.tab);
+  recalculateAll();
+  saveAllInputs();
+  ["roll","sheeter","folder"].forEach(updateCompleteJobBtn);
+}
+
+function docketLabelNow(){
+  const d = (document.getElementById("docketNumber")||{}).value || "";
+  return d.trim() || "Untitled";
+}
+function docketCustomerNow(){
+  const c = (document.getElementById("customerName")||{}).value || "";
+  return c.trim();
+}
+
+function loadDockets(){
+  try{
+    const o = JSON.parse(safeGet(DOCKETS_KEY) || "{}");
+    docketWorkspaces = Array.isArray(o.list) ? o.list : [];
+    activeDocketId = o.activeId ?? null;
+  }catch(e){ docketWorkspaces = []; activeDocketId = null; }
+}
+function saveDockets(){
+  safeSet(DOCKETS_KEY, JSON.stringify({ list: docketWorkspaces, activeId: activeDocketId }));
+}
+
+// Persist whatever is on screen into the active docket slot (creating one if needed).
+function syncActiveDocket(){
+  const snap = captureWorkspace();
+  let ws = docketWorkspaces.find(d=>d.id === activeDocketId);
+  if(!ws){
+    ws = { id: Date.now(), ...snap };
+    docketWorkspaces.push(ws);
+    activeDocketId = ws.id;
+  }else{
+    Object.assign(ws, snap);
+  }
+  ws.label = docketLabelNow();
+  ws.customer = docketCustomerNow();
+  saveDockets();
+  renderDocketChips();
+}
+
+function switchDocket(id){
+  if(id === activeDocketId) return;
+  syncActiveDocket();                       // save what's on screen
+  const ws = docketWorkspaces.find(d=>d.id === id);
+  if(!ws) return;
+  activeDocketId = id;
+  applyWorkspace(ws);
+  saveDockets();
+  renderDocketChips();
+  window.scrollTo(0,0);
+}
+
+function newDocket(){
+  syncActiveDocket();
+  const ws = { id: Date.now(), label:"Untitled", customer:"",
+    inputs:{}, tally:{roll:[],sheeter:[],folder:[]}, joblists:{dies:[],colors:[],notes:[],anilox:[]}, tab:"roll" };
+  docketWorkspaces.push(ws);
+  activeDocketId = ws.id;
+  applyWorkspace(ws);
+  saveDockets();
+  renderDocketChips();
+  const dn = document.getElementById("docketNumber");
+  if(dn) dn.focus();
+}
+
+function closeDocket(id){
+  const idx = docketWorkspaces.findIndex(d=>d.id === id);
+  if(idx === -1) return;
+  const wasActive = (id === activeDocketId);
+  docketWorkspaces.splice(idx,1);
+  if(wasActive){
+    const next = docketWorkspaces[idx] || docketWorkspaces[idx-1] || null;
+    if(next){ activeDocketId = next.id; applyWorkspace(next); }
+    else{ activeDocketId = null; }
+  }
+  saveDockets();
+  renderDocketChips();
+}
+
+function renderDocketChips(){
+  const wrap = document.getElementById("docketChips");
+  if(!wrap) return;
+  if(!docketWorkspaces.length){
+    wrap.innerHTML = '<span class="docket-chips-empty">No saved dockets yet — scan or enter one, then tap “+ New docket” to start another.</span>';
+    return;
+  }
+  wrap.innerHTML = docketWorkspaces.map(d=>{
+    const name = d.label || "Untitled";
+    const sub  = d.customer ? " · " + d.customer : "";
+    return '<span class="docket-chip'+(d.id===activeDocketId?" active":"")+'" data-docketid="'+d.id+'">'
+      +'<span class="dc-name">'+escHtml(name + sub)+'</span>'
+      +'<button class="dc-close" data-docketclose="'+d.id+'" type="button" aria-label="Close docket">\u2715</button>'
+      +'</span>';
+  }).join("");
+}
+
+/* ================================================================ */
 const SHIFTLOG_KEY = "RC_SHIFTLOG_V1";
 let shiftLog = [];
 // Tracks the results signature that was last saved per tab, so we don't re-prompt to save.
@@ -2923,7 +3149,20 @@ function computeJobResults(jobType, inp){
   if(jobType === "roll"){
     const tally = (inp.tally || []).map(snapNum).filter(n=>n!==null);
     rolls = tally.length;
-    totalLabels = tally.reduce((a,b)=>a+b,0) + (snapNum(inp.extraLabels) || 0);
+    // Extras mirror computeExtraLabels(): amount x scope, converted if entered as impressions.
+    let extra = 0;
+    const amt = snapNum(inp.extraAmount);
+    if(inp.extraOn !== false && amt && amt > 0){
+      const base = (inp.extraScope === "perroll") ? amt * rolls : amt;
+      if(inp.extraUnit === "impressions"){
+        extra = (repeat && across) ? (base * 10 * across) / repeat : 0;
+      }else{
+        extra = base;
+      }
+    }else if(snapNum(inp.extraLabels)){
+      extra = snapNum(inp.extraLabels);   // legacy entries saved before units were stored
+    }
+    totalLabels = tally.reduce((a,b)=>a+b,0) + extra;
   }else{
     totalLabels = (snapNum(inp.totalBoxes) || 0) * (snapNum(inp.labelsPerBox) || 0);
   }
@@ -2946,10 +3185,15 @@ function computeJobResults(jobType, inp){
 // Snapshot the raw inputs that produced a job's results (so they can be edited later).
 function snapshotInputs(prefix, results){
   const gn = id => snapNum((document.getElementById(id)||{}).value);
+  const gv = (id,dflt) => ((document.getElementById(id)||{}).value || dflt);
   if(prefix === "roll"){
     const rawTally = (tallyState.roll || []).slice();
-    const extra = Math.max(0, Math.round((results.labels || 0) - rawTally.reduce((a,b)=>a+(Number(b)||0),0)));
-    return { tally: rawTally, extraLabels: extra,
+    const extraOn = gv("rollExtraOn","no") === "yes";
+    return { tally: rawTally,
+      extraOn,
+      extraAmount: extraOn ? gn("extraAmount") : null,
+      extraUnit:   gv("rollExtraUnit","labels"),
+      extraScope:  gv("rollExtraScope","total"),
       start: gn("rollMasterStart"), end: gn("rollMasterEnd"),
       repeat: getRollRepeat(), across: getRollAcross() };
   }
@@ -2971,6 +3215,8 @@ function commitJob(prefix){
     jobType:   prefix,
     typeLabel: prefix==="roll" ? "Roll" : prefix==="sheeter" ? "Sheeter" : "Folder",
     completedAt: new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),
+    completedDate: new Date().toLocaleDateString([],{month:"short",day:"numeric"}),
+    customer: ((document.getElementById("customerName")||{}).value || "").trim(),
     ...results,
     inputs: snapshotInputs(prefix, results)
   };
@@ -3000,7 +3246,9 @@ function renderShiftLog(){
   if(totCard) totCard.style.display="block";
   list.innerHTML = shiftLog.map(e=>{
     const rollLine = e.rolls !== null && e.rolls !== undefined ? (e.rolls+(e.rolls===1?" roll":" rolls")+" · ") : "";
-    const meta = e.typeLabel+" · "+rollLine+e.completedAt+(e.qty?" · Qty: "+e.qty:"");
+    const when = (e.completedDate ? e.completedDate+" " : "") + (e.completedAt||"");
+    const meta = e.typeLabel+" · "+rollLine+when+(e.qty?" · Qty: "+e.qty:"");
+    const custLine = e.customer ? '<div class="sl-customer">'+escHtml(e.customer)+'</div>' : "";
 
     if(e.id === editingShiftId){
       return renderShiftEditForm(e);
@@ -3009,7 +3257,7 @@ function renderShiftLog(){
     // ----- READ MODE -----
     return '<div class="sl-card open" data-slid="'+e.id+'">'
       +'<div class="sl-header">'
-      +'<div class="sl-header-left"><div class="sl-docket">'+escHtml(e.docket)+'</div><div class="sl-meta">'+escHtml(meta)+'</div></div>'
+      +'<div class="sl-header-left"><div class="sl-docket">'+escHtml(e.docket)+'</div>'+custLine+'<div class="sl-meta">'+escHtml(meta)+'</div></div>'
       +'<div class="sl-header-right"><span class="sl-good">'+fmt(e.good)+'</span><span class="sl-chev">›</span></div>'
       +'</div>'
       +'<div class="sl-body"><div class="sl-grid">'
@@ -3076,7 +3324,25 @@ function renderShiftEditForm(e){
       +'</div>').join("");
     body += '<div class="sl-roll-list">'+(rows || '<div class="sl-roll-empty">No rolls yet — add one.</div>')+'</div>'
       +'<button class="sl-add-roll" data-erolladd="1" type="button">+ Add roll</button>'
-      +'<div class="sl-edit-row"><label>Extra labels</label><input type="number" inputmode="decimal" data-ef="extraLabels" value="'+v(inp.extraLabels)+'" placeholder="0"></div>'
+      +'<div class="sl-extra-block">'
+      +'<div class="sl-extra-head">Extra (setup sheets, reruns, etc.)</div>'
+      +'<div class="sl-edit-two">'
+      +'<div><label>Amount</label><input type="number" inputmode="decimal" data-ef="extraAmount" value="'+v(inp.extraAmount)+'" placeholder="0"></div>'
+      +'<div><label>Counted as</label>'
+      +'<select data-ef="extraUnit">'
+      +'<option value="labels"'+(inp.extraUnit!=="impressions"?" selected":"")+'>Labels</option>'
+      +'<option value="impressions"'+(inp.extraUnit==="impressions"?" selected":"")+'>Impressions / count</option>'
+      +'</select></div>'
+      +'</div>'
+      +'<div class="sl-edit-two">'
+      +'<div><label>Applies to</label>'
+      +'<select data-ef="extraScope">'
+      +'<option value="total"'+(inp.extraScope!=="perroll"?" selected":"")+'>Total (once)</option>'
+      +'<option value="perroll"'+(inp.extraScope==="perroll"?" selected":"")+'>Per roll</option>'
+      +'</select></div>'
+      +'<div></div>'
+      +'</div>'
+      +'</div>'
       +'<div class="sl-edit-two">'
       +'<div><label>Repeat</label><input type="number" inputmode="decimal" data-ef="repeat" value="'+v(inp.repeat)+'"></div>'
       +'<div><label>Across</label><input type="number" inputmode="decimal" data-ef="across" value="'+v(inp.across)+'"></div>'
@@ -3127,7 +3393,11 @@ function syncEditWorkingFromForm(card){
   if(e.jobType === "roll"){
     const rollInputs = card.querySelectorAll('[data-eroll]');
     editWorking.tally = Array.from(rollInputs).map(el => snapNum(el.value));
-    editWorking.extraLabels = snapNum(get("extraLabels"));
+    editWorking.extraAmount = snapNum(get("extraAmount"));
+    editWorking.extraUnit   = get("extraUnit") || "labels";
+    editWorking.extraScope  = get("extraScope") || "total";
+    editWorking.extraOn     = !!(editWorking.extraAmount && editWorking.extraAmount > 0);
+    delete editWorking.extraLabels;   // superseded by the raw amount/unit/scope
   }else{
     editWorking.totalBoxes  = snapNum(get("totalBoxes"));
     editWorking.labelsPerBox= snapNum(get("labelsPerBox"));
@@ -3739,6 +4009,12 @@ function fillJobInfo(parsed, fields){
   let docket = parsed.docketNumber ?? parsed.docket_number ?? null;
   if(!docket && po && typeof deriveDocketNumber === "function") docket = deriveDocketNumber(po);
   setIf("docketNumber", docket || po);
+  setIf("customerName", parsed.customer ?? parsed.customerName ?? parsed.customer_name ?? parsed.client ?? null);
+  // Repeat / Across feed the End of Job Count on every tab.
+  const scanRepeat = normalizeNumber(parsed.repeatLength ?? parsed.repeat_length ?? parsed.repeat);
+  const scanAcross = normalizeNumber(parsed.labelsAcross ?? parsed.labels_across ?? parsed.across);
+  if(scanRepeat){ ["roll","sheeter","folder"].forEach(t=>setIf(t+"Repeat", scanRepeat)); setIf("ecciRepeat", scanRepeat); setIf("impRepeat", scanRepeat); }
+  if(scanAcross){ ["roll","sheeter","folder"].forEach(t=>setIf(t+"Across", scanAcross)); setIf("ecciAcross", scanAcross); setIf("impAcross", scanAcross); }
   setIf("jobQuantity", normalizeNumber(parsed.totalQuantity ?? parsed.total_quantity ?? parsed.quantity));
   setIf("salesQuantity", normalizeNumber(parsed.salesQuantity ?? parsed.sales_quantity));
   setIf("crossPerfTPI", parsed.crossPerfTPI ?? parsed.cross_perf_tpi ?? null);
@@ -3984,6 +4260,9 @@ function resetShift(){
   safeRemove(JOBLISTS_KEY);
   // New shift -> clear the saved-jobs log too.
   shiftLog = []; editingShiftId = null; saveShiftLog(); renderShiftLog();
+  // and every parked docket workspace.
+  safeRemove(DOCKETS_KEY);
+  docketWorkspaces = []; activeDocketId = null; renderDocketChips();
   lastSavedSig.roll = lastSavedSig.sheeter = lastSavedSig.folder = null;
   jobListsState.dies = []; jobListsState.colors = []; jobListsState.notes = []; jobListsState.anilox = [];
   aniloxStock = ""; aniloxSubstrateClass = DEFAULT_SUBSTRATE_CLASS;
@@ -4292,6 +4571,35 @@ document.addEventListener("DOMContentLoaded",()=>{
       });
     });
 
+    /* ---- Mode toggle (scan / manual) ---- */
+    document.querySelectorAll("#modeToggle button").forEach(b=>{
+      b.addEventListener("click",()=>applyMode(b.dataset.mode, true));
+    });
+
+    /* ---- Multi-docket workspaces ---- */
+    bind("newDocketBtn","click",newDocket);
+    document.addEventListener("click",(e)=>{
+      const close = e.target.closest && e.target.closest("[data-docketclose]");
+      if(close){
+        e.stopPropagation();
+        const id = Number(close.dataset.docketclose);
+        const ws = docketWorkspaces.find(d=>d.id===id);
+        const nm = ws ? (ws.label||"this docket") : "this docket";
+        if(confirm("Close “"+nm+"”?\n\nIts entered values are removed. Jobs already saved to My Shift are not affected."))
+          closeDocket(id);
+        return;
+      }
+      const chip = e.target.closest && e.target.closest("[data-docketid]");
+      if(chip) switchDocket(Number(chip.dataset.docketid));
+    });
+    // Keep the active docket's label/customer chip in sync as they're typed.
+    ["docketNumber","customerName"].forEach(id=>{
+      bind(id,"input",()=>{
+        const ws = docketWorkspaces.find(d=>d.id===activeDocketId);
+        if(ws){ ws.label = docketLabelNow(); ws.customer = docketCustomerNow(); saveDockets(); renderDocketChips(); }
+      });
+    });
+
     /* ---- My Shift: card interactions ---- */
     document.addEventListener("click",(e)=>{
       // Edit / Save / Cancel / Remove (check these before header toggle)
@@ -4319,13 +4627,15 @@ document.addEventListener("DOMContentLoaded",()=>{
     });
 
     /* ---- My Shift: live recompute as edit-form fields change ---- */
-    document.addEventListener("input",(e)=>{
+    const editFormRecalc = (e)=>{
       if(editingShiftId === null) return;
       const t = e.target;
       if(!t || !(t.matches("[data-ef]") || t.matches("[data-eroll]"))) return;
       const card = t.closest(".sl-card.editing");
       if(card) syncEditWorkingFromForm(card);
-    });
+    };
+    document.addEventListener("input", editFormRecalc);
+    document.addEventListener("change", editFormRecalc);   // selects fire change, not input
 
     /* ---- My Shift: clear shift log ---- */
     bind("clearShiftLogBtn","click",()=>{
@@ -4360,6 +4670,15 @@ document.addEventListener("DOMContentLoaded",()=>{
     renderAllJobLists();
     loadShiftLog();
     renderShiftLog();
+    // Mode (scan / manual) + docket workspaces.
+    applyMode(safeGet(MODE_KEY) || "scan", false);
+    loadDockets();
+    // Adopt whatever is currently on screen as the active docket if none is set.
+    if(activeDocketId === null || !docketWorkspaces.some(d=>d.id===activeDocketId)){
+      syncActiveDocket();
+    }else{
+      renderDocketChips();
+    }
     // Restore Complete Job button visibility for any already-computed results.
     ["roll","sheeter","folder"].forEach(updateCompleteJobBtn);
     // Restore anilox stock context from the (persisted) Stock Info field.
@@ -4373,6 +4692,13 @@ document.addEventListener("DOMContentLoaded",()=>{
     })();
     // Save on every input/textarea change anywhere in the app.
     document.addEventListener("input", saveAllInputs);
+    // Keep the active docket workspace in step with on-screen edits (debounced).
+    let docketSyncTimer = null;
+    document.addEventListener("input",()=>{
+      if(editingShiftId !== null) return;      // don't capture while editing a saved job
+      clearTimeout(docketSyncTimer);
+      docketSyncTimer = setTimeout(syncActiveDocket, 600);
+    });
     // Restore the active tab last.
     switchTab(safeGet(TAB_KEY) || "roll");
 
