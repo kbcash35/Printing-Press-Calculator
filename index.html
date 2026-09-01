@@ -1249,8 +1249,10 @@ body.dark .ecci-display{
         <h2>Sheeter Job</h2>
         <label for="sheeterSpec">Material Spec / Stock</label>
         <input id="sheeterSpec" placeholder="e.g. 53710 or 100# gloss text" inputmode="text" autocomplete="off">
-        <label for="sheeterSheetSize">Sheet Size (optional)</label>
-        <input id="sheeterSheetSize" placeholder="e.g. 12 x 18" inputmode="text" autocomplete="off">
+        <label for="sheeterSheetSize">Label Sheet Size / Depth (inches)</label>
+        <input id="sheeterSheetSize" placeholder="11" inputmode="decimal">
+        <div id="sheeterSheetNote" class="box-range-note" style="display:none;"></div>
+        <p class="card-sub" style="margin-top:4px;">Sheeter jobs run 11&quot; sheets, 1 across. This feeds Repeat in the End of Job Count.</p>
       </section>
 
       <section class="card">
@@ -2426,6 +2428,7 @@ Required JSON schema:
   "repeatLength": number | null,
   "labelsAcross": number | null,
   "fanfoldSize": number | null,
+  "labelSheetSize": number | null,
   "labelsPerFoldSheet": number | null,
   "labelsPerPack": number | null,
   "totalQuantity": number | null,
@@ -2511,6 +2514,7 @@ Strict rules:
 7e-iii. labelsPerPack is the labels per pack/bag, e.g. "poly bag in 2,000's" or "packs of 2,000" -> 2000. If absent, return null.
 7e-iv. group is the "Group:" value exactly as printed, e.g. "DLabel-F", "DLabel-R", "DLabel-N". If absent, return null.
 7e-v. customer is the customer / client / bill-to company name (often near "Customer", "Sold to", "Ship to", "Account", or at the top of the docket). Return the company name only, no address or account number. If absent, return null.
+7e-vi. labelSheetSize is the SHEET depth in inches for sheeted jobs — look for "Label sheet size", "Sheet size", or a sheet depth/length dimension (e.g. "Label sheet size: 8.5\" wide x 11\" depth" -> 11). Return the DEPTH/length value, not the width. On sheeter jobs this is normally 11. If absent, return null.
 8. carrierWidth must come ONLY from the "Carrier Size" or "Carrier" line, and is the value labeled "wide" (the WIDTH, not the depth).
    - The width is the number that comes right after the word "Carrier" and before "wide".
    - NEVER use the "Label Size" width for carrierWidth. In Example B, Label Size width is 3.0000 but carrierWidth is 3.1250.
@@ -2630,6 +2634,32 @@ Rules:
       if(qty) setVal(tab+"ImpLabels", qty);
 
       let foldNote = "";
+      if(tab === "sheeter"){
+        // Sheeter jobs always run an 11" sheet, 1 across. Confirm against the docket's label sheet depth.
+        const SHEETER_SHEET = 11, SHEETER_ACROSS = 1;
+        const scanned = normalizeNumber(parsed.labelSheetSize ?? parsed.label_sheet_size ?? parsed.sheetSize ?? parsed.sheet_size);
+        const sheet = scanned || SHEETER_SHEET;
+        const force = (id,val)=>{ const el=document.getElementById(id); if(el) el.value = val; };
+        force("sheeterSheetSize", sheet);
+        force("sheeterRepeat", sheet);        // repeat = sheet depth
+        force("sheeterImpRepeat", sheet);
+        force("sheeterAcross", SHEETER_ACROSS);   // never printed on the docket
+        force("sheeterImpAcross", SHEETER_ACROSS);
+        const note = document.getElementById("sheeterSheetNote");
+        if(note){
+          note.style.display = "block";
+          if(scanned && Math.abs(scanned - SHEETER_SHEET) > 0.001){
+            note.style.color = "var(--danger)"; note.style.background = "rgba(224,36,36,.08)";
+            note.textContent = "Docket reads " + scanned + "\u2033 sheet depth — sheeter jobs are normally 11\u2033. Verify before running.";
+          }else{
+            note.style.color = "#1f9d55"; note.style.background = "rgba(31,157,85,.08)";
+            note.textContent = scanned
+              ? "Confirmed " + scanned + "\u2033 label sheet depth. Repeat " + sheet + "\u2033, 1 across."
+              : "No sheet depth on docket — using the standard 11\u2033. Repeat 11\u2033, 1 across.";
+          }
+        }
+        foldNote = " Sheet " + sheet + "\u2033, 1 across.";
+      }
       if(tab === "folder"){
         // Fan-fold size is the fold repeat (e.g. "Fanfolded @ 12.25"). Fall back to the prepress/label repeat only if needed.
         const foldSize = normalizeNumber(parsed.fanfoldSize ?? parsed.fanfold_size ?? parsed.foldSize ?? parsed.fold_size ?? parsed.cutoff);
@@ -3584,6 +3614,38 @@ async function scanNumberInto(targetId, file, statusPrefix){
 }
 
 /* ---- Total boxes from Start Box # / End Box # (sheeter & folder) ---- */
+/* ---- Sheeter: sheet depth drives Repeat; Across is always 1 ---- */
+function syncSheeterSheet(){
+  const sizeEl = document.getElementById("sheeterSheetSize");
+  if(!sizeEl) return;
+  const sheet = cleanNumber("sheeterSheetSize");
+  const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.value = val; };
+  // Across never appears on a sheeter docket — it is always 1.
+  const acr = document.getElementById("sheeterAcross");
+  if(acr && String(acr.value).trim() === "") set("sheeterAcross", 1);
+  const iacr = document.getElementById("sheeterImpAcross");
+  if(iacr && String(iacr.value).trim() === "") set("sheeterImpAcross", 1);
+  const note = document.getElementById("sheeterSheetNote");
+  if(!Number.isFinite(sheet) || sheet <= 0){
+    if(note) note.style.display = "none";
+    return;
+  }
+  set("sheeterRepeat", sheet);
+  set("sheeterImpRepeat", sheet);
+  if(note){
+    note.style.display = "block";
+    if(Math.abs(sheet - 11) > 0.001){
+      note.style.color = "var(--danger)"; note.style.background = "rgba(224,36,36,.08)";
+      note.textContent = "Sheeter jobs are normally 11\u2033 — double-check this sheet depth.";
+    }else{
+      note.style.color = "#1f9d55"; note.style.background = "rgba(31,157,85,.08)";
+      note.textContent = "Repeat set to 11\u2033, 1 across.";
+    }
+  }
+  calcImprFor("sheeter");
+  recomputeShift("sheeter", true);
+}
+
 function calcBoxRange(prefix){
   const start = cleanNumber(prefix+"StartBox");
   const end   = cleanNumber(prefix+"EndBox");
@@ -4546,6 +4608,9 @@ document.addEventListener("DOMContentLoaded",()=>{
       });
     });
 
+    /* ---- Sheeter: sheet depth -> repeat, across always 1 ---- */
+    bind("sheeterSheetSize","input",syncSheeterSheet);
+
     /* ---- Total boxes from Start/End box # ---- */
     ["sheeter","folder"].forEach(prefix=>{
       [prefix+"StartBox", prefix+"EndBox"].forEach(id=>{
@@ -4665,6 +4730,12 @@ document.addEventListener("DOMContentLoaded",()=>{
     });
     ["sheeter","folder"].forEach(calcImprFor);
     updateFolderGear(false);
+    // Sheeter defaults: 11" sheet, 1 across (blank fields only).
+    (function(){
+      const ss = document.getElementById("sheeterSheetSize");
+      if(ss && String(ss.value).trim() === "") ss.value = 11;
+      syncSheeterSheet();
+    })();
     syncExtraUI();
     loadJobLists();
     renderAllJobLists();
