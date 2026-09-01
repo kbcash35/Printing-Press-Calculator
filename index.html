@@ -149,7 +149,24 @@ button{
   margin:18px 0;
   box-shadow:0 1px 2px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.06);
 }
-/* Mode toggle + docket switcher */
+/* Settings: divider + toggle switch */
+.settings-divider{ height:1px; background:var(--line); margin:16px 0 14px; }
+.settings-switch{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; cursor:pointer; }
+.settings-switch .ss-title{ display:block; font-size:15px; font-weight:700; color:var(--text); }
+.settings-switch .ss-sub{ display:block; font-size:12.5px; font-weight:500; color:var(--muted); margin-top:3px; line-height:1.35; }
+.settings-switch input{ position:absolute; opacity:0; width:0; height:0; }
+.settings-switch .ss-track{
+  flex:0 0 auto; width:50px; height:30px; border-radius:999px;
+  background:var(--line); position:relative; transition:background .18s ease; margin-top:2px;
+}
+.settings-switch .ss-thumb{
+  position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%;
+  background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:transform .18s ease;
+}
+.settings-switch input:checked ~ .ss-track{ background:#1f9d55; }
+.settings-switch input:checked ~ .ss-track .ss-thumb{ transform:translateX(20px); }
+/* Hide the entire Job Info card app-wide */
+body.hide-jobinfo #jobInfoCard{ display:none !important; }
 .mode-card{ padding-bottom:14px; }
 .mode-toggle{ display:grid; grid-template-columns:1fr 1fr; gap:6px; background:var(--field); border-radius:12px; padding:4px; }
 .mode-toggle button{
@@ -910,6 +927,17 @@ body.dark .ecci-display{
     <div id="keySuccess" class="success"></div>
     <p class="card-sub">Model: gemini-2.5-flash, fallback: gemini-2.5-flash-lite.</p>
     <p class="card-sub">Photo scan is optional. Manual calculator works without the key.</p>
+
+    <div class="settings-divider"></div>
+    <h2 style="margin-top:0;">Display</h2>
+    <label class="settings-switch" for="hideJobInfoChk">
+      <span>
+        <span class="ss-title">Hide Job Info section</span>
+        <span class="ss-sub">Removes the whole Job Info card from every tab. Its values are kept and still used in calculations.</span>
+      </span>
+      <input id="hideJobInfoChk" type="checkbox">
+      <span class="ss-track"><span class="ss-thumb"></span></span>
+    </label>
   </section>
 
   <!-- Mode toggle + open dockets -->
@@ -944,7 +972,7 @@ body.dark .ecci-display{
     <div id="docketScanSuccess" class="success">No docket photo selected.</div>
   </section>
 
-  <section class="card">
+  <section class="card" id="jobInfoCard">
     <h2>Job Info</h2>
     <div class="compact-grid">
       <div class="full">
@@ -2504,7 +2532,7 @@ Strict rules:
 7e. jobType: return EXACTLY one of "roll", "sheeter", or "folder".
    - "folder" (fan-fold) signals: the words "Fanfold"/"Fanfolded"/"folded"/"folds per pack"/"folds per ctn"/"fold sheet", "keep on L2 for folding", a Group ending in "-F" (e.g. "DLabel-F"), or fold-related cartoning. If ANY fold signal is present, return "folder".
    - "roll" signals: "/ roll", "RL####", "Roll Direction", "Rewind", a "Core code" line, "M/Roll", or a Group ending in "-R".
-   - "sheeter" signals: "sheets", "cut", "sheeted", flat sheet counts (and NOT fanfolded).
+   - "sheeter" signals: a "Sheeter:" die/line, "Label Sheet size" or "Carrier Sheet size", "sheets", "sheeted", "chipboard every N sheets", sheet counts, or a carton/UOM like "CT500" (and NOT fanfolded).
    - Fold signals win over roll/sheet signals. If still unclear, return "roll".
 7e-i. fanfoldSize is the FAN-FOLD repeat length in inches — the distance of one fold, NOT the cross-perf spacing and NOT the label depth.
    - Look for "Fanfolded @ X\"" (e.g. "Fanfolded @ 12.25\"" -> 12.25), or the Prepress repeat (e.g. "12.25\" repeat & 98 teeth" -> 12.25).
@@ -2514,7 +2542,11 @@ Strict rules:
 7e-iii. labelsPerPack is the labels per pack/bag, e.g. "poly bag in 2,000's" or "packs of 2,000" -> 2000. If absent, return null.
 7e-iv. group is the "Group:" value exactly as printed, e.g. "DLabel-F", "DLabel-R", "DLabel-N". If absent, return null.
 7e-v. customer is the customer / client / bill-to company name (often near "Customer", "Sold to", "Ship to", "Account", or at the top of the docket). Return the company name only, no address or account number. If absent, return null.
-7e-vi. labelSheetSize is the SHEET depth in inches for sheeted jobs — look for "Label sheet size", "Sheet size", or a sheet depth/length dimension (e.g. "Label sheet size: 8.5\" wide x 11\" depth" -> 11). Return the DEPTH/length value, not the width. On sheeter jobs this is normally 11. If absent, return null.
+7e-vi. labelSheetSize is the SHEET depth in inches for sheeted/sheeter jobs. Look for "Label Sheet size", "Carrier Sheet size", "Sheet size", or "Sheeted @".
+   - Take the DEPTH value, not the width. e.g. "Label Sheet size: 8.5\" wide x 11\" depth" -> 11. e.g. "Carrier Sheet size: 8.5\" wide x 11\" depth" -> 11.
+   - Do NOT use a die size, face die, back die, or label size for this (e.g. "change to 2\" width x 1.375\" depth" is a DIE, not the sheet — ignore it).
+   - The Prepress line often confirms it, e.g. "8 across x 1 around - 88T - 11\"" -> 11.
+   - On sheeter jobs this is normally 11. If no sheet depth is stated, return null.
 8. carrierWidth must come ONLY from the "Carrier Size" or "Carrier" line, and is the value labeled "wide" (the WIDTH, not the depth).
    - The width is the number that comes right after the word "Carrier" and before "wide".
    - NEVER use the "Label Size" width for carrierWidth. In Example B, Label Size width is 3.0000 but carrierWidth is 3.1250.
@@ -2637,7 +2669,17 @@ Rules:
       if(tab === "sheeter"){
         // Sheeter jobs always run an 11" sheet, 1 across. Confirm against the docket's label sheet depth.
         const SHEETER_SHEET = 11, SHEETER_ACROSS = 1;
-        const scanned = normalizeNumber(parsed.labelSheetSize ?? parsed.label_sheet_size ?? parsed.sheetSize ?? parsed.sheet_size);
+        let scanned = normalizeNumber(parsed.labelSheetSize ?? parsed.label_sheet_size ?? parsed.sheetSize ?? parsed.sheet_size);
+        if(!scanned){
+          // Fallback: read the depth straight out of the docket text the AI returned.
+          const blob = [parsed.materialDescription, parsed.stockInfo, parsed.jobDescription,
+            Array.isArray(parsed.notes) ? parsed.notes.join(" ") : parsed.notes]
+            .map(x=>String(x||"")).join(" ");
+          // "Label Sheet size: 8.5" wide x 11" depth"  /  "Carrier Sheet size: ... 11" depth"
+          let m = blob.match(/(?:label|carrier)?\s*sheet\s*size[^\n]{0,60}?x\s*([\d.]+)\s*["\u2033]?\s*(?:depth|deep|long)/i);
+          if(!m) m = blob.match(/sheeted\s*@?\s*([\d.]+)/i);
+          if(m) scanned = normalizeNumber(m[1]);
+        }
         const sheet = scanned || SHEETER_SHEET;
         const force = (id,val)=>{ const el=document.getElementById(id); if(el) el.value = val; };
         force("sheeterSheetSize", sheet);
@@ -2977,6 +3019,14 @@ const TAB_KEY = "RC_ACTIVE_TAB_V1";
    MODE (scan / manual) + MULTI-DOCKET WORKSPACES
    ================================================================ */
 const MODE_KEY = "RC_MODE_V1";
+const HIDEJOBINFO_KEY = "RC_HIDE_JOBINFO_V1";
+
+function applyHideJobInfo(hidden, persist){
+  document.body.classList.toggle("hide-jobinfo", !!hidden);
+  const chk = document.getElementById("hideJobInfoChk");
+  if(chk) chk.checked = !!hidden;
+  if(persist) safeSet(HIDEJOBINFO_KEY, hidden ? "1" : "0");
+}
 const DOCKETS_KEY = "RC_DOCKETS_V1";
 let appMode = "scan";
 let docketWorkspaces = [];   // [{id, label, customer, inputs, tally, joblists, tab}]
@@ -3002,7 +3052,7 @@ function captureWorkspace(){
   const inputs = {};
   document.querySelectorAll("input, textarea").forEach(el=>{
     if(!el.id) return;
-    if(el.type === "file" || el.type === "range") return;
+    if(el.type === "file" || el.type === "range" || el.type === "checkbox") return;
     if(el.id === "apiKey") return;
     inputs[el.id] = el.value;
   });
@@ -3017,12 +3067,12 @@ function applyWorkspace(ws){
   if(!ws) return;
   // Clear every field first so a switch never leaves stale values behind.
   document.querySelectorAll("input, textarea").forEach(el=>{
-    if(!el.id || el.type === "file" || el.type === "range" || el.id === "apiKey") return;
+    if(!el.id || el.type === "file" || el.type === "range" || el.type === "checkbox" || el.id === "apiKey") return;
     el.value = "";
   });
   Object.keys(ws.inputs || {}).forEach(id=>{
     const el = document.getElementById(id);
-    if(el && el.type !== "file" && el.type !== "range") el.value = ws.inputs[id];
+    if(el && el.type !== "file" && el.type !== "range" && el.type !== "checkbox") el.value = ws.inputs[id];
   });
   if(ws.tally){ ["roll","sheeter","folder"].forEach(t=>{ tallyState[t] = Array.isArray(ws.tally[t]) ? ws.tally[t].slice() : []; }); }
   if(ws.joblists){ ["dies","colors","notes","anilox"].forEach(k=>{ jobListsState[k] = Array.isArray(ws.joblists[k]) ? ws.joblists[k].slice() : []; }); }
@@ -3712,7 +3762,7 @@ function updateFolderGear(fillInput){
 
 /* ---- Collapsible tool cards: title shows, body toggles open/closed ---- */
 function setupCollapsibles(){
-  document.querySelectorAll(".tab-panel section.card").forEach(card=>{
+  document.querySelectorAll(".tab-panel section.card, #jobInfoCard").forEach(card=>{
     if(card.classList.contains("collapsible")) return;
     const h2 = card.querySelector(":scope > h2");
     if(!h2) return;
@@ -4052,7 +4102,10 @@ function detectJobType(parsed){
   // Fold signals (incl. an explicit fanfold size or labels-per-fold) win first.
   if(/fan ?fold|folded|folds? per|fold sheet|for folding|dlabel-?f|\bz-?fold\b|tri-?fold/.test(blob)) return "folder";
   if(parsed.fanfoldSize || parsed.labelsPerFoldSheet) return "folder";
-  if(/\bsheet(ed|s)?\b|flat sheet|cut sheet/.test(blob) && !/\/\s*roll|rewind|core code/.test(blob)) return "sheeter";
+  // Sheeter: an explicit sheet depth, a "Sheeter:" line, or sheet/chipboard language.
+  if(parsed.labelSheetSize) return "sheeter";
+  if(/sheeter\s*[:#]|label sheet size|carrier sheet size|chipboard every|\bsheeted\b|\bsheet(s)?\b|flat sheet|cut sheet/.test(blob)
+     && !/\/\s*roll|rewind|core code/.test(blob)) return "sheeter";
   return "roll";
 }
 
@@ -4294,7 +4347,7 @@ function saveAllInputs(){
   const data = {};
   document.querySelectorAll("input, textarea").forEach(el=>{
     if(!el.id) return;
-    if(el.type === "file" || el.type === "range") return; // files can't persist; range mirrors its number input
+    if(el.type === "file" || el.type === "range" || el.type === "checkbox") return; // files can't persist; range mirrors its number input; checkboxes are settings
     if(el.id === "apiKey") return; // API key kept under its own key
     data[el.id] = el.value;
   });
@@ -4307,7 +4360,7 @@ function restoreAllInputs(){
     const data = JSON.parse(raw);
     Object.keys(data).forEach(id=>{
       const el = document.getElementById(id);
-      if(el && el.type !== "file" && el.type !== "range") el.value = data[id];
+      if(el && el.type !== "file" && el.type !== "range" && el.type !== "checkbox") el.value = data[id];
     });
   }catch(err){}
 }
@@ -4636,6 +4689,9 @@ document.addEventListener("DOMContentLoaded",()=>{
       });
     });
 
+    /* ---- Settings: hide Job Info section ---- */
+    bind("hideJobInfoChk","change",(e)=>applyHideJobInfo(e.target.checked, true));
+
     /* ---- Mode toggle (scan / manual) ---- */
     document.querySelectorAll("#modeToggle button").forEach(b=>{
       b.addEventListener("click",()=>applyMode(b.dataset.mode, true));
@@ -4743,6 +4799,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     renderShiftLog();
     // Mode (scan / manual) + docket workspaces.
     applyMode(safeGet(MODE_KEY) || "scan", false);
+    applyHideJobInfo(safeGet(HIDEJOBINFO_KEY) === "1", false);
     loadDockets();
     // Adopt whatever is currently on screen as the active docket if none is set.
     if(activeDocketId === null || !docketWorkspaces.some(d=>d.id===activeDocketId)){
