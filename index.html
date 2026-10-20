@@ -167,6 +167,55 @@ button{
 .settings-switch input:checked ~ .ss-track .ss-thumb{ transform:translateX(20px); }
 /* Hide the entire Job Info card app-wide */
 body.hide-jobinfo #jobInfoCard{ display:none !important; }
+/* Digital Run Sheet */
+.runsheet-card{ border:1.5px solid var(--text); }
+.rs-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.rs-title{ font-size:20px; font-weight:900; letter-spacing:-.02em; }
+.rs-sub{ font-size:13px; font-weight:600; color:var(--muted); margin-top:2px; overflow-wrap:anywhere; }
+.rs-pill{ flex:0 0 auto; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em;
+  padding:5px 10px; border-radius:999px; background:#fff4d6; color:#8a5a00; }
+.rs-pill.done{ background:rgba(31,157,85,.12); color:#1f9d55; }
+.rs-notice{ margin-top:12px; border-radius:12px; padding:11px 12px; background:var(--field); font-size:13.5px; font-weight:600; line-height:1.4; }
+.rs-notice.warn{ background:#fff4d6; color:#6b4600; }
+.rs-notice.ok{ background:rgba(31,157,85,.10); color:#14663a; }
+.rs-notice-btns{ display:flex; flex-wrap:wrap; gap:8px; margin-top:9px; }
+.rs-notice-btns button{ border:none; border-radius:9px; padding:9px 12px; font-size:13px; font-weight:800; cursor:pointer;
+  background:var(--black); color:#fff; }
+.rs-notice-btns button.ghost{ background:var(--card); color:var(--text); border:1px solid var(--line); }
+.rs-progress{ margin-top:12px; }
+.rs-progress-bar{ height:8px; border-radius:999px; background:var(--field); overflow:hidden; }
+.rs-progress-bar span{ display:block; height:100%; width:0; background:#1f9d55; border-radius:999px; transition:width .3s ease; }
+.rs-progress-txt{ font-size:12px; font-weight:700; color:var(--muted); margin-top:5px; }
+.rs-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+.rs-cell{ background:var(--field); border-radius:10px; padding:8px 11px; min-width:0; }
+.rs-cell.full{ grid-column:1/-1; }
+.rs-cell span{ display:block; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); }
+.rs-cell b{ display:block; font-size:17px; font-weight:800; margin-top:2px; overflow-wrap:anywhere; }
+.rs-cell.waste b{ color:var(--danger); }
+.rs-sessions{ margin-top:12px; border-top:1px solid var(--line); padding-top:10px; }
+.rs-sessions summary{ font-size:13px; font-weight:800; cursor:pointer; color:var(--text); }
+.rs-sess{ display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); }
+.rs-sess:last-child{ border-bottom:none; }
+.rs-sess-main{ flex:1 1 auto; min-width:0; }
+.rs-sess-when{ font-size:13px; font-weight:800; }
+.rs-sess-meta{ font-size:12px; font-weight:600; color:var(--muted); margin-top:2px; line-height:1.35; overflow-wrap:anywhere; }
+.rs-actions{ display:flex; gap:8px; margin-top:14px; }
+.rs-complete,.rs-reopen{ flex:1; border-radius:11px; padding:12px; font-size:14px; font-weight:800; cursor:pointer; }
+.rs-complete{ background:var(--card); color:#1f9d55; border:1.5px solid #1f9d55; }
+.rs-reopen{ background:var(--card); color:var(--text); border:1px solid var(--line); }
+.rs-prev{ border-radius:10px; padding:9px 11px; margin:0 0 12px; background:#eef4ff; color:#1d3d7a;
+  font-size:13px; font-weight:700; line-height:1.4; }
+.rs-prev b{ font-weight:900; }
+.rs-lib-row{ display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--line); cursor:pointer; }
+.rs-lib-row:last-child{ border-bottom:none; }
+.rs-lib-main{ flex:1 1 auto; min-width:0; }
+.rs-lib-docket{ font-size:15px; font-weight:800; }
+.rs-lib-meta{ font-size:12px; font-weight:600; color:var(--muted); margin-top:2px; overflow-wrap:anywhere; line-height:1.35; }
+.rs-lib-empty{ font-size:13px; color:var(--muted); padding:6px 0; }
+body.dark .rs-prev{ background:rgba(37,99,235,.18); color:#c9d9ff; }
+body.dark .rs-pill{ background:rgba(245,197,24,.18); color:#f5c518; }
+body.dark .rs-notice.warn{ background:rgba(245,197,24,.15); color:#f5d77a; }
+body.dark .rs-notice.ok{ color:#7fd6a4; }
 .mode-card{ padding-bottom:14px; }
 .mode-toggle{ display:grid; grid-template-columns:1fr 1fr; gap:6px; background:var(--field); border-radius:12px; padding:4px; }
 .mode-toggle button{
@@ -826,6 +875,13 @@ body.dark .ecci-display{
 }
 .joblist-del:hover{ background:#ffe1e1; color:var(--danger); }
 .joblist-del:active{ transform:scale(.9); }
+.color-lookup{
+  flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:50%; border:none; background:var(--field);
+  font-size:15px; line-height:1; cursor:pointer; transition:background .15s ease, transform .1s ease;
+}
+.color-lookup:hover{ background:#e1ecff; }
+.color-lookup:active{ transform:scale(.9); }
 /* Notes: bulleted, expandable, clearly separated */
 .notes-list .note-item{
   display:flex; align-items:flex-start; gap:8px;
@@ -954,6 +1010,32 @@ body.dark .ecci-display{
       </div>
       <div class="docket-chips" id="docketChips"></div>
       <p class="card-sub" id="docketBarHint">Each docket keeps its own job info, tallies and counters. Tap one to switch.</p>
+    </div>
+  </section>
+
+  <!-- Digital Run Sheet for the current docket (shown once a docket has one) -->
+  <section class="card runsheet-card" id="runSheetCard" style="display:none;">
+    <input type="hidden" id="rsSessionId" value="">
+    <div class="rs-head">
+      <div>
+        <div class="rs-title">Run Sheet</div>
+        <div class="rs-sub" id="rsSub"></div>
+      </div>
+      <span class="rs-pill" id="rsPill">In progress</span>
+    </div>
+    <div id="rsNotice"></div>
+    <div class="rs-progress" id="rsProgressWrap" style="display:none;">
+      <div class="rs-progress-bar"><span id="rsProgressFill"></span></div>
+      <div class="rs-progress-txt" id="rsProgressTxt"></div>
+    </div>
+    <div class="rs-grid" id="rsGrid"></div>
+    <details class="rs-sessions">
+      <summary id="rsSessionsSummary">Shift history</summary>
+      <div id="rsSessionList"></div>
+    </details>
+    <div class="rs-actions">
+      <button id="rsCompleteBtn" class="rs-complete" type="button">✓ Mark Job Completed</button>
+      <button id="rsReopenBtn" class="rs-reopen" type="button" style="display:none;">Reopen Job</button>
     </div>
   </section>
 
@@ -1196,6 +1278,7 @@ body.dark .ecci-display{
 
   <section class="card">
     <h2>End of Job Count</h2>
+    <div class="rs-prev" id="rollRunPrev" style="display:none;"></div>
 
     <label for="rollMasterStart">Master Start Counter</label>
     <input id="rollMasterStart" placeholder="0" inputmode="decimal">
@@ -1298,6 +1381,7 @@ body.dark .ecci-display{
 
       <section class="card">
         <h2>End of Job Count</h2>
+        <div class="rs-prev" id="sheeterRunPrev" style="display:none;"></div>
         <div class="two-col">
           <div><label for="sheeterStartBox">Start Box #</label><input id="sheeterStartBox" placeholder="e.g. 1" inputmode="decimal"></div>
           <div><label for="sheeterEndBox">End Box #</label><input id="sheeterEndBox" placeholder="e.g. 47" inputmode="decimal"></div>
@@ -1366,6 +1450,7 @@ body.dark .ecci-display{
 
       <section class="card">
         <h2>End of Job Count</h2>
+        <div class="rs-prev" id="folderRunPrev" style="display:none;"></div>
         <div class="two-col">
           <div><label for="folderStartBox">Start Box #</label><input id="folderStartBox" placeholder="e.g. 1" inputmode="decimal"></div>
           <div><label for="folderEndBox">End Box #</label><input id="folderEndBox" placeholder="e.g. 32" inputmode="decimal"></div>
@@ -1461,6 +1546,13 @@ body.dark .ecci-display{
     </section>
 
     <button id="clearShiftLogBtn" class="danger-outline" type="button" style="width:100%;margin-top:4px;">Clear Shift Log</button>
+
+    <section class="card" id="runSheetLibCard" style="margin-top:16px;">
+      <h2>Run Sheets</h2>
+      <p class="card-sub">Every docket worked on this phone. Tap one to recall it — or just type its docket number in Job Info.</p>
+      <input id="rsLibSearch" type="search" placeholder="Search docket # or customer" autocomplete="off" style="margin-bottom:10px;">
+      <div id="rsLibList"></div>
+    </section>
 
   </div><!-- /panel-myshift -->
 </main>
@@ -2486,6 +2578,9 @@ Strict rules:
    - On a "Carrier Size: X\" wide x Y\" depth" line, repeatLength is the DEPTH value Y.
    - If the docket shows "2.375\"" as the repeat/depth value, return repeatLength: 2.375.
 2. labelsAcross must come from Across / Run 4 across / Labels Across / number across.
+   - Look everywhere in the job description, including the Dies line and Prepress line. Common phrasings: "Run 2 across", "Run 3 across & finish 1 wide", "run 4 across", "4 across x 1 around", "2 up", "x2", "across 2", "4-across", "4 wide".
+   - For "Run N across & finish M wide", labelsAcross is N (the press across), not M.
+   - Do not confuse with "around" (that is around the cylinder, not across).
 3. totalQuantity is the TOTAL label/order quantity for the whole job.
    - Look for "Quantity", "Total Quantity", "Order Qty", "Total Qty", "Finished Qty", "Total Labels".
    - Strip commas. "320,000" -> 320000.
@@ -2728,6 +2823,7 @@ Rules:
       if(spec) bits.push("spec " + spec);
       showSuccess(successId, "Docket scan complete." + (bits.length ? " Found " + bits.join(", ") + "." : "") + foldNote);
       if(typeof syncActiveDocket === "function") syncActiveDocket();
+      if(typeof runSheetAfterScan === "function") runSheetAfterScan();
     }else{
       const docketData = {
         repeatLength: normalizeNumber(parsed.repeatLength ?? parsed.repeat_length ?? fields.repeat),
@@ -2880,6 +2976,7 @@ Rules:
         : "No material spec found. ";
       showSuccess(successId,"Docket scan complete. Job values populated. " + specMsg + thicknessNote);
       if(typeof syncActiveDocket === "function") syncActiveDocket();
+      if(typeof runSheetAfterScan === "function") runSheetAfterScan();
     }
     }
   }catch(err){
@@ -3084,6 +3181,7 @@ function applyWorkspace(ws){
   recalculateAll();
   saveAllInputs();
   ["roll","sheeter","folder"].forEach(updateCompleteJobBtn);
+  if(typeof renderRunSheetUI === "function") renderRunSheetUI();
 }
 
 function docketLabelNow(){
@@ -3176,6 +3274,453 @@ function renderDocketChips(){
       +'<span class="dc-name">'+escHtml(name + sub)+'</span>'
       +'<button class="dc-close" data-docketclose="'+d.id+'" type="button" aria-label="Close docket">\u2715</button>'
       +'</span>';
+  }).join("");
+}
+
+/* ================================================================ */
+/* ================================================================
+   DIGITAL RUN SHEET — per-docket history that survives clears and new shifts
+   (stored locally on this phone, keyed by docket number)
+   ================================================================ */
+const RUNSHEET_KEY = "RC_RUNSHEETS_V1";
+let runSheets = {};            // key -> { key, docket, customer, jobType, status, createdAt, updatedAt, completedAt, job, draft, sessions[] }
+let rsNotice = null;           // { key, kind, html }
+// Fields that hold a shift's COUNT (not the job definition) — stripped from the saved job, rolled forward on recall.
+const RS_COUNT_IDS = ["rollMasterStart","rollMasterEnd","rollTallyInput","extraAmount",
+  "sheeterStartBox","sheeterEndBox","sheeterTotalBoxes","sheeterMasterStart","sheeterMasterEnd",
+  "folderStartBox","folderEndBox","folderTotalBoxes","folderMasterStart","folderMasterEnd","rsSessionId"];
+const RS_PROGRESS_IDS = ["rollMasterEnd","sheeterMasterEnd","folderMasterEnd","sheeterTotalBoxes","folderTotalBoxes","sheeterEndBox","folderEndBox"];
+
+function loadRunSheets(){
+  try{ const o = JSON.parse(safeGet(RUNSHEET_KEY) || "{}"); runSheets = (o && typeof o === "object") ? o : {}; }
+  catch(e){ runSheets = {}; }
+}
+function saveRunSheets(){ safeSet(RUNSHEET_KEY, JSON.stringify(runSheets)); }
+
+// "D201411978" and "1411978" are the same docket.
+function normDocketKey(v){
+  let k = String(v || "").trim().toUpperCase().replace(/\s+/g, "");
+  if(/^D\d{9}$/.test(k)) k = k.slice(3);
+  return k;
+}
+function runKeyNow(){ return normDocketKey((document.getElementById("docketNumber") || {}).value); }
+function currentRunSheet(){ const k = runKeyNow(); return k ? (runSheets[k] || null) : null; }
+function screenSessionId(){ const el = document.getElementById("rsSessionId"); return el ? Number(el.value) || null : null; }
+function setScreenSessionId(id){ const el = document.getElementById("rsSessionId"); if(el) el.value = id ? String(id) : ""; }
+function jobTypeNow(){ const t = safeGet(TAB_KEY); return ["roll","sheeter","folder"].includes(t) ? t : null; }
+function rsTypeLabel(t){ return t === "roll" ? "Roll" : t === "sheeter" ? "Sheeter" : t === "folder" ? "Folder" : "Job"; }
+function rsWhen(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString([], { weekday:"short", month:"short", day:"numeric" }) + " · " +
+         d.toLocaleTimeString([], { hour:"numeric", minute:"2-digit" });
+}
+
+function ensureRunSheet(key){
+  if(!runSheets[key]){
+    runSheets[key] = { key, docket:key, customer:"", jobType: jobTypeNow(), status:"open",
+      createdAt: Date.now(), updatedAt: Date.now(), completedAt:null, job:null, draft:null, sessions:[] };
+  }
+  return runSheets[key];
+}
+
+function jobSnapshotFromScreen(){
+  const ws = captureWorkspace();
+  RS_COUNT_IDS.forEach(id=>{ delete ws.inputs[id]; });
+  return { inputs: ws.inputs, joblists: ws.joblists, tab: ws.tab };
+}
+function progSig(ws){
+  if(!ws) return "";
+  const i = ws.inputs || {};
+  return JSON.stringify([ (ws.tally && ws.tally.roll) || [], i.extraAmount || "",
+    ["rollMasterStart","rollMasterEnd","sheeterStartBox","sheeterEndBox","sheeterTotalBoxes","sheeterMasterStart","sheeterMasterEnd",
+     "folderStartBox","folderEndBox","folderTotalBoxes","folderMasterStart","folderMasterEnd"].map(id => String(i[id] || "").trim()) ]);
+}
+function hasProgressSnap(ws){
+  if(!ws) return false;
+  if(ws.tally && Array.isArray(ws.tally.roll) && ws.tally.roll.length) return true;
+  return RS_PROGRESS_IDS.some(id => String((ws.inputs || {})[id] || "").trim() !== "");
+}
+
+// Totals across saved shifts (optionally leaving one session out, e.g. the one currently on screen).
+function rsTotals(rec, excludeId){
+  const t = { shifts:0, rolls:0, boxes:0, labels:0, good:0, gross:0, waste:0, lastBox:null, lastCounterEnd:null };
+  (rec && rec.sessions || []).forEach(x=>{
+    if(excludeId && x.id === excludeId) return;
+    t.shifts++;
+    t.rolls  += Array.isArray(x.rolls) ? x.rolls.length : 0;
+    t.boxes  += Number(x.totalBoxes) || 0;
+    t.labels += Number(x.labels) || 0;
+    t.good   += Number(x.good)   || 0;
+    t.gross  += Number(x.gross)  || 0;
+    t.waste  += Number(x.waste)  || 0;
+    if(Number.isFinite(x.endBox) && x.endBox > 0) t.lastBox = x.endBox;
+    else if(Number(x.startBox) > 0 && Number(x.totalBoxes) > 0) t.lastBox = x.startBox + x.totalBoxes - 1;
+    else if(Number(x.totalBoxes) > 0) t.lastBox = (t.lastBox || 0) + Number(x.totalBoxes);
+    if(Number.isFinite(x.counterEnd) && x.counterEnd !== null) t.lastCounterEnd = x.counterEnd;
+  });
+  t.wastePct = t.gross > 0 ? (Math.max(0, t.waste) / t.gross * 100).toFixed(2) + "%" : "—";
+  return t;
+}
+// Roll numbering continues from earlier shifts (Roll 13, 14, …).
+function rollNumOffset(){
+  const rec = currentRunSheet();
+  return rec ? rsTotals(rec, screenSessionId()).rolls : 0;
+}
+
+// Build one shift's session from what's on screen.
+function sessionFromScreen(prefix, results){
+  const gn = id => snapNum((document.getElementById(id) || {}).value);
+  const inputs = snapshotInputs(prefix, results || {});
+  const r = results && (results.good || results.gross) ? results : computeJobResults(prefix, inputs);
+  const sess = { id: Date.now(), savedAt: Date.now(), jobType: prefix,
+    labels: r.labels || 0, good: r.good || 0, gross: r.gross || 0, waste: r.waste || 0, wastePct: r.wastePct || "—",
+    counterStart: inputs.start, counterEnd: inputs.end, inputs };
+  if(prefix === "roll"){
+    sess.rolls = (inputs.tally || []).slice();
+  }else{
+    sess.startBox = gn(prefix + "StartBox");
+    sess.endBox = gn(prefix + "EndBox");
+    sess.totalBoxes = inputs.totalBoxes;
+    sess.labelsPerBox = inputs.labelsPerBox;
+    if(!sess.endBox && sess.startBox && sess.totalBoxes) sess.endBox = sess.startBox + sess.totalBoxes - 1;
+  }
+  return sess;
+}
+
+// Keep the run sheet's job definition (and any unsaved progress) in step with the screen.
+function updateRunSheetFromScreen(opts){
+  opts = opts || {};
+  const key = runKeyNow();
+  if(!key) return;
+  let rec = runSheets[key];
+  if(!rec){ if(!opts.create) return; rec = ensureRunSheet(key); }
+  const cust = ((document.getElementById("customerName") || {}).value || "").trim();
+  if(cust) rec.customer = cust;
+  const jt = jobTypeNow(); if(jt) rec.jobType = jt;
+  rec.job = jobSnapshotFromScreen();
+  if(rec.status !== "completed"){
+    const ws = captureWorkspace();
+    // Only keep progress that is actually there — a cleared screen never wipes the saved count.
+    if(hasProgressSnap(ws)){
+      const sid = screenSessionId();
+      const saved = sid ? rec.sessions.find(x=>x.id === sid) : null;
+      if(saved && saved.progSig === progSig(ws)) rec.draft = null;          // already saved exactly as shown
+      else rec.draft = Object.assign(ws, { savedAt: Date.now() });
+    }
+  }
+  rec.updatedAt = Date.now();
+  saveRunSheets();
+  if(!opts.quiet) renderRunSheetUI();
+}
+
+// Save this shift's portion. Re-saving the same screen updates that session instead of adding a second one.
+function commitToRunSheet(prefix, results, myShiftId){
+  const key = runKeyNow();
+  if(!key) return null;
+  const rec = ensureRunSheet(key);
+  const sess = sessionFromScreen(prefix, results);
+  sess.myShiftId = myShiftId || null;
+  const existingId = screenSessionId();
+  const idx = existingId ? rec.sessions.findIndex(x=>x.id === existingId) : -1;
+  if(idx >= 0){
+    sess.id = existingId;
+    if(!sess.myShiftId) sess.myShiftId = rec.sessions[idx].myShiftId || null;
+    rec.sessions[idx] = sess;
+  }else{
+    rec.sessions.push(sess);
+  }
+  setScreenSessionId(sess.id);
+  sess.progSig = progSig(captureWorkspace());
+  rec.draft = null;
+  rec.jobType = prefix;
+  rec.job = jobSnapshotFromScreen();
+  const cust = ((document.getElementById("customerName") || {}).value || "").trim();
+  if(cust) rec.customer = cust;
+  rec.updatedAt = Date.now();
+  saveRunSheets();
+  saveAllInputs();
+  renderRunSheetUI();
+  return sess.id;
+}
+
+// Load a docket's job and pick up where the last shift stopped.
+function applyContinuation(rec){
+  const t = rsTotals(rec);
+  const set = (id,v)=>{ const el = document.getElementById(id); if(el && v !== null && v !== undefined) el.value = v; };
+  if(t.lastCounterEnd !== null){ ["rollMasterStart","sheeterMasterStart","folderMasterStart"].forEach(id=>set(id, t.lastCounterEnd)); }
+  if(t.lastBox){ ["sheeterStartBox","folderStartBox"].forEach(id=>set(id, t.lastBox + 1)); }
+  return t;
+}
+function continuationText(rec){
+  const t = rsTotals(rec);
+  const bits = [];
+  if(rec.jobType === "roll" || (!rec.jobType && t.rolls)) bits.push("Roll " + (t.rolls + 1));
+  if(t.lastBox) bits.push("Box " + (t.lastBox + 1));
+  if(t.lastCounterEnd !== null) bits.push("Counter " + formatNumber(t.lastCounterEnd));
+  return bits.join(" · ");
+}
+function loadContinuation(rec){
+  const base = rec.job || { inputs:{ docketNumber: rec.docket }, joblists:{}, tab: rec.jobType || "roll" };
+  const ws = { inputs: Object.assign({}, base.inputs || {}),
+    tally: { roll:[], sheeter:[], folder:[] },
+    joblists: base.joblists || {}, tab: rec.jobType || base.tab || "roll" };
+  applyWorkspace(ws);
+  applyContinuation(rec);
+  setScreenSessionId(null);
+  saveAllInputs();
+  recalculateAll();
+  if(typeof syncSheeterSheet === "function" && rec.jobType === "sheeter") syncSheeterSheet();
+}
+
+function loadRunSheet(key){
+  const rec = runSheets[key];
+  if(!rec) return false;
+  if(rec.status !== "completed" && rec.draft && hasProgressSnap(rec.draft)){
+    applyWorkspace(rec.draft);       // keeps its link to a saved shift, if it was continuing one
+    rsNotice = { key, kind:"warn", html:
+      "Unsaved count from <b>" + escHtml(rsWhen(rec.draft.savedAt)) + "</b> is loaded — it was never saved to My Shift." +
+      '<div class="rs-notice-btns"><button type="button" data-rsact="keepdraft">Continue this count</button>' +
+      '<button type="button" class="ghost" data-rsact="logdraft">Log it as the previous shift &amp; start fresh</button></div>' };
+  }else{
+    loadContinuation(rec);
+    rsNotice = rec.status === "completed"
+      ? { key, kind:"ok", html:"Recalled docket <b>" + escHtml(rec.docket) + "</b> — marked <b>Completed</b> " +
+          escHtml(rsWhen(rec.completedAt || rec.updatedAt)) + ". View only; tap Reopen Job to keep counting." }
+      : { key, kind:"ok", html:"Recalled docket <b>" + escHtml(rec.docket) + "</b>." +
+          (rec.sessions.length ? " Picks up at: <b>" + escHtml(continuationText(rec)) + "</b>." : " No shifts saved yet.") };
+  }
+  ["roll","sheeter","folder"].forEach(p=>{ lastSavedSig[p] = null; });
+  if(typeof syncActiveDocket === "function") syncActiveDocket();
+  renderRunSheetUI();
+  return true;
+}
+
+// Previous operator's unsaved draft -> log it as their shift, then continue clean.
+function logDraftAsSession(key){
+  const rec = runSheets[key];
+  if(!rec || !rec.draft) return;
+  applyWorkspace(rec.draft);
+  const prefix = rec.jobType || jobTypeNow() || "roll";
+  const sess = sessionFromScreen(prefix, null);
+  sess.savedAt = rec.draft.savedAt || Date.now();
+  sess.loggedFromDraft = true;
+  const linked = screenSessionId();
+  const li = linked ? rec.sessions.findIndex(x=>x.id === linked) : -1;
+  if(li >= 0){ sess.id = linked; sess.myShiftId = rec.sessions[li].myShiftId || null; rec.sessions[li] = sess; }
+  else if(sess.labels || sess.gross) rec.sessions.push(sess);
+  rec.draft = null;
+  rec.updatedAt = Date.now();
+  saveRunSheets();
+  loadContinuation(rec);
+  rsNotice = { key, kind:"ok", html:"Previous shift's count logged to the run sheet. Picks up at: <b>" + escHtml(continuationText(rec)) + "</b>." };
+  if(typeof syncActiveDocket === "function") syncActiveDocket();
+  renderRunSheetUI();
+}
+
+// After a docket scan: if this docket has history, carry its counts forward.
+function runSheetAfterScan(){
+  const key = runKeyNow();
+  if(!key) return;
+  const rec = runSheets[key];
+  if(rec){
+    if(rec.status === "completed"){
+      rsNotice = { key, kind:"ok", html:"This docket was marked <b>Completed</b> " + escHtml(rsWhen(rec.completedAt || rec.updatedAt)) + ". Tap Reopen Job to keep counting." };
+    }else if(rec.draft && hasProgressSnap(rec.draft)){
+      applyContinuation(rec);
+      rsNotice = { key, kind:"warn", html:
+        "This docket has an unsaved count from <b>" + escHtml(rsWhen(rec.draft.savedAt)) + "</b>." +
+        '<div class="rs-notice-btns"><button type="button" data-rsact="restoredraft">Restore that count</button>' +
+        '<button type="button" class="ghost" data-rsact="logdraft">Log it as the previous shift &amp; start fresh</button></div>' };
+    }else if(rec.sessions.length){
+      applyContinuation(rec);
+      rsNotice = { key, kind:"ok", html:"Docket <b>" + escHtml(rec.docket) + "</b> has " + rec.sessions.length +
+        " saved shift" + (rec.sessions.length === 1 ? "" : "s") + ". Picks up at: <b>" + escHtml(continuationText(rec)) + "</b>." };
+    }
+    setScreenSessionId(null);
+  }
+  updateRunSheetFromScreen({ create:true });
+}
+
+// Typing a docket number (then leaving the field) recalls it if this phone has seen it.
+function onDocketNumberCommitted(){
+  const key = runKeyNow();
+  if(!key) return;
+  const rec = runSheets[key];
+  if(rec){
+    const unsaved = ["roll","sheeter","folder"].filter(hasUnsavedJob);
+    if(unsaved.length && !confirm("Load docket " + rec.docket + "?\n\nThe results on screen haven't been saved to My Shift and will be replaced.")) return;
+    loadRunSheet(key);
+  }else{
+    updateRunSheetFromScreen({ create:true });
+  }
+}
+
+// Recall from the Run Sheets list.
+function recallRunSheet(key){
+  if(runKeyNow() === key){ renderRunSheetUI(); window.scrollTo(0,0); return; }
+  const open = (docketWorkspaces || []).find(d => normDocketKey(d.label) === key);
+  if(open){ switchDocket(open.id); rsNotice = null; renderRunSheetUI(); window.scrollTo(0,0); return; }
+  if(runKeyNow()) newDocket();      // keep the current docket in its own chip
+  loadRunSheet(key);
+  window.scrollTo(0,0);
+}
+
+function markRunSheetCompleted(){
+  const rec = currentRunSheet();
+  if(!rec) return;
+  const t = rsTotals(rec);
+  const unsaved = ["roll","sheeter","folder"].filter(hasUnsavedJob);
+  let msg = "Mark docket " + rec.docket + " as COMPLETED?\n\n" + t.shifts + " shift" + (t.shifts === 1 ? "" : "s") +
+    " logged · " + formatNumber(t.labels) + " labels.";
+  if(unsaved.length) msg += "\n\nThe count on screen hasn't been saved to My Shift and won't be included.";
+  if(!confirm(msg)) return;
+  rec.status = "completed"; rec.completedAt = Date.now(); rec.draft = null; rec.updatedAt = Date.now();
+  saveRunSheets();
+  rsNotice = { key: rec.key, kind:"ok", html:"Docket <b>" + escHtml(rec.docket) + "</b> marked completed. It stays in Run Sheets (My Shift tab) for reference." };
+  renderRunSheetUI();
+}
+function reopenRunSheet(){
+  const rec = currentRunSheet();
+  if(!rec) return;
+  rec.status = "open"; rec.completedAt = null; rec.updatedAt = Date.now();
+  saveRunSheets();
+  rsNotice = { key: rec.key, kind:"ok", html:"Reopened. Picks up at: <b>" + escHtml(continuationText(rec) || "the start") + "</b>." };
+  renderRunSheetUI();
+}
+function removeRunSession(sid){
+  const rec = currentRunSheet();
+  if(!rec) return;
+  const sess = rec.sessions.find(x=>x.id === sid);
+  if(!sess) return;
+  if(!confirm("Remove this shift from the run sheet?\n\n" + rsWhen(sess.savedAt) + " · " + formatNumber(sess.labels) + " labels.\n\nIts My Shift entry (if any) is kept.")) return;
+  rec.sessions = rec.sessions.filter(x=>x.id !== sid);
+  if(screenSessionId() === sid) setScreenSessionId(null);
+  shiftLog.forEach(e=>{ if(e.runSessionId === sid) e.runSessionId = null; });
+  saveShiftLog();
+  rec.updatedAt = Date.now();
+  saveRunSheets(); saveAllInputs();
+  renderRunSheetUI();
+}
+function deleteRunSheet(key){
+  const rec = runSheets[key];
+  if(!rec) return;
+  if(!confirm("Delete the run sheet for docket " + rec.docket + "?\n\nAll its shift history is removed from this phone. My Shift entries are kept.")) return;
+  delete runSheets[key];
+  saveRunSheets();
+  if(rsNotice && rsNotice.key === key) rsNotice = null;
+  renderRunSheetUI();
+}
+
+function renderRunSheetUI(){
+  const rec = currentRunSheet();
+  const card = document.getElementById("runSheetCard");
+  if(card){
+    if(!rec){ card.style.display = "none"; }
+    else{
+      card.style.display = "block";
+      const t = rsTotals(rec);
+      const done = rec.status === "completed";
+      const sub = ["Docket " + rec.docket, rec.customer, rsTypeLabel(rec.jobType) + " job", "started " + rsWhen(rec.createdAt).split(" · ")[0]]
+        .filter(Boolean).join(" · ");
+      setText("rsSub", sub);
+      const pill = document.getElementById("rsPill");
+      if(pill){ pill.textContent = done ? "Completed" : "In progress"; pill.classList.toggle("done", done); }
+      const notice = document.getElementById("rsNotice");
+      if(notice){
+        notice.innerHTML = (rsNotice && rsNotice.key === rec.key)
+          ? '<div class="rs-notice ' + (rsNotice.kind || "") + '">' + rsNotice.html + "</div>" : "";
+      }
+      // Progress against the order quantity.
+      const qty = snapNum((document.getElementById("jobQuantity") || {}).value) ||
+                  snapNum(((rec.job || {}).inputs || {}).jobQuantity);
+      const pw = document.getElementById("rsProgressWrap");
+      if(pw){
+        if(qty && qty > 0){
+          const pct = Math.min(100, t.labels / qty * 100);
+          pw.style.display = "block";
+          const fill = document.getElementById("rsProgressFill"); if(fill) fill.style.width = pct.toFixed(1) + "%";
+          setText("rsProgressTxt", formatNumber(t.labels) + " of " + formatNumber(qty) + " labels (" + pct.toFixed(1) + "%) — saved shifts");
+        }else pw.style.display = "none";
+      }
+      const isRoll = rec.jobType === "roll" || (!rec.jobType && t.rolls);
+      const cell = (label, val, cls) => '<div class="rs-cell' + (cls ? " " + cls : "") + '"><span>' + label + "</span><b>" + val + "</b></div>";
+      let g = cell("Shifts logged", t.shifts);
+      g += isRoll ? cell("Rolls done", t.rolls ? "1–" + t.rolls : "—")
+                  : cell("Boxes done", t.lastBox ? "1–" + formatNumber(t.lastBox) : (t.boxes ? formatNumber(t.boxes) : "—"));
+      g += cell("Total labels", fmt(t.labels), "full");
+      g += cell("Good impressions", fmt(t.good)) + cell("Gross impressions", fmt(t.gross));
+      g += cell("Wasted", fmt(t.waste), "waste") + cell("Wastage %", escHtml(t.wastePct));
+      g += cell("Picks up at", escHtml(done ? "Completed" : (continuationText(rec) || "Start")), "full");
+      const grid = document.getElementById("rsGrid"); if(grid) grid.innerHTML = g;
+      const list = document.getElementById("rsSessionList");
+      setText("rsSessionsSummary", "Shift history (" + rec.sessions.length + ")");
+      if(list){
+        const onScreen = screenSessionId();
+        let rollsSoFar = 0;
+        const rows = rec.sessions.map(x=>{
+          let what;
+          if(Array.isArray(x.rolls)){
+            const from = rollsSoFar + 1, to = rollsSoFar + x.rolls.length; rollsSoFar = to;
+            what = x.rolls.length ? ("Rolls " + from + (to > from ? "–" + to : "")) : "No rolls";
+          }else{
+            what = (x.startBox && x.endBox) ? ("Boxes " + formatNumber(x.startBox) + "–" + formatNumber(x.endBox))
+                 : (x.totalBoxes ? formatNumber(x.totalBoxes) + " boxes" : "No boxes");
+          }
+          const ctr = (x.counterStart !== null && x.counterStart !== undefined && x.counterEnd !== null && x.counterEnd !== undefined)
+            ? " · Counter " + formatNumber(x.counterStart) + " → " + formatNumber(x.counterEnd) : "";
+          const tag = x.id === onScreen ? " (on screen)" : (x.loggedFromDraft ? " (logged from unsaved)" : "");
+          return '<div class="rs-sess"><div class="rs-sess-main">' +
+            '<div class="rs-sess-when">' + escHtml(rsWhen(x.savedAt)) + escHtml(tag) + "</div>" +
+            '<div class="rs-sess-meta">' + escHtml(what + " · " + formatNumber(x.labels) + " labels · Good " + formatNumber(x.good) + ctr) + "</div>" +
+            "</div>" + (done ? "" : '<button class="tally-del" data-rssessdel="' + x.id + '" type="button" aria-label="Remove shift">✕</button>') + "</div>";
+        });
+        list.innerHTML = rows.length ? rows.reverse().join("") : '<div class="rs-lib-empty">No shifts saved yet. Tap “Save Job to My Shift” to log this shift\'s count.</div>';
+      }
+      const cb = document.getElementById("rsCompleteBtn"), rb = document.getElementById("rsReopenBtn");
+      if(cb) cb.style.display = done ? "none" : "block";
+      if(rb) rb.style.display = done ? "block" : "none";
+    }
+  }
+  // "Previous shifts" strip at the top of each End of Job Count.
+  ["roll","sheeter","folder"].forEach(prefix=>{
+    const el = document.getElementById(prefix + "RunPrev");
+    if(!el) return;
+    if(!rec || (rec.jobType && rec.jobType !== prefix)){ el.style.display = "none"; return; }
+    const t = rsTotals(rec, screenSessionId());
+    if(!t.shifts){ el.style.display = "none"; return; }
+    let html = "Previous shifts: ";
+    html += prefix === "roll"
+      ? "<b>Rolls 1–" + t.rolls + "</b>"
+      : (t.lastBox ? "<b>Boxes 1–" + formatNumber(t.lastBox) + "</b>" : "<b>" + formatNumber(t.boxes) + " boxes</b>");
+    html += " · <b>" + formatNumber(t.labels) + "</b> labels";
+    if(t.lastCounterEnd !== null) html += " · counter ended at <b>" + formatNumber(t.lastCounterEnd) + "</b>";
+    el.innerHTML = html;
+    el.style.display = "block";
+  });
+  renderTally("roll");          // roll numbers continue from earlier shifts
+  renderRunSheetLibrary();
+}
+
+function renderRunSheetLibrary(){
+  const list = document.getElementById("rsLibList");
+  if(!list) return;
+  const q = ((document.getElementById("rsLibSearch") || {}).value || "").trim().toLowerCase();
+  const recs = Object.values(runSheets)
+    .filter(r => !q || (r.docket + " " + (r.customer || "")).toLowerCase().includes(q))
+    .sort((a,b)=> (b.updatedAt || 0) - (a.updatedAt || 0));
+  if(!recs.length){
+    list.innerHTML = '<div class="rs-lib-empty">' + (q ? "No matching dockets." : "No run sheets yet. Scan or enter a docket to start one.") + "</div>";
+    return;
+  }
+  list.innerHTML = recs.map(r=>{
+    const t = rsTotals(r);
+    const meta = [r.customer, rsTypeLabel(r.jobType), t.shifts + " shift" + (t.shifts === 1 ? "" : "s"),
+      formatNumber(t.labels) + " labels", r.status === "completed" ? "Completed" : "In progress",
+      "updated " + rsWhen(r.updatedAt)].filter(Boolean).join(" · ");
+    return '<div class="rs-lib-row" data-rsrecall="' + escAttr(r.key) + '">' +
+      '<div class="rs-lib-main"><div class="rs-lib-docket">' + escHtml(r.docket) + "</div>" +
+      '<div class="rs-lib-meta">' + escHtml(meta) + "</div></div>" +
+      '<button class="tally-del" data-rsdel="' + escAttr(r.key) + '" type="button" aria-label="Delete run sheet">✕</button></div>';
   }).join("");
 }
 
@@ -3288,8 +3833,16 @@ function commitJob(prefix){
     alert("Calculate the job summary first, then tap “Save Job to My Shift”.");
     return false;
   }
+  const rsRec = currentRunSheet();
+  if(rsRec && rsRec.status === "completed"){
+    if(!confirm("Docket " + rsRec.docket + " is marked Completed.\n\nReopen it and add this shift's count?")) return false;
+    rsRec.status = "open"; rsRec.completedAt = null; saveRunSheets();
+  }
+  // Saving the same screen again updates this shift's entry instead of double-counting it.
+  const linkedSid = screenSessionId();
+  const prior = linkedSid ? shiftLog.find(e=>e.runSessionId === linkedSid) : null;
   const entry = {
-    id: Date.now(),
+    id: prior ? prior.id : Date.now(),
     docket:    ((document.getElementById("docketNumber")||{}).value || "—").trim(),
     qty:       ((document.getElementById("jobQuantity")||{}).value || ""),
     jobType:   prefix,
@@ -3300,7 +3853,9 @@ function commitJob(prefix){
     ...results,
     inputs: snapshotInputs(prefix, results)
   };
-  shiftLog.push(entry);
+  entry.runSessionId = commitToRunSheet(prefix, results, entry.id);
+  if(prior) shiftLog[shiftLog.indexOf(prior)] = entry;
+  else shiftLog.push(entry);
   saveShiftLog();
   renderShiftLog();
   lastSavedSig[prefix] = resultsSignature(prefix); // mark current results as saved
@@ -3510,9 +4065,32 @@ function saveEditShift(id){
   entry.waste = r.waste; entry.wastePct = r.wastePct;
   if(r.rolls !== null) entry.rolls = r.rolls;
   entry.inputs = JSON.parse(JSON.stringify(editWorking));
+  syncEditToRunSheet(entry);
   editingShiftId = null; editWorking = null;
   saveShiftLog();
   renderShiftLog();
+}
+// Keep the run sheet's copy of this shift in step with a My Shift correction.
+function syncEditToRunSheet(entry){
+  if(!entry || !entry.runSessionId || typeof runSheets === "undefined") return;
+  Object.values(runSheets).forEach(rec=>{
+    const sess = (rec.sessions || []).find(x=>x.id === entry.runSessionId);
+    if(!sess) return;
+    const inp = entry.inputs || {};
+    sess.labels = entry.labels; sess.good = entry.good; sess.gross = entry.gross;
+    sess.waste = entry.waste; sess.wastePct = entry.wastePct;
+    sess.counterStart = snapNum(inp.start); sess.counterEnd = snapNum(inp.end);
+    sess.inputs = JSON.parse(JSON.stringify(inp));
+    if(entry.jobType === "roll") sess.rolls = (inp.tally || []).map(snapNum).filter(n=>n!==null);
+    else{
+      sess.totalBoxes = snapNum(inp.totalBoxes); sess.labelsPerBox = snapNum(inp.labelsPerBox);
+      if(sess.startBox && sess.totalBoxes) sess.endBox = sess.startBox + sess.totalBoxes - 1;
+    }
+    sess.progSig = null;   // screen no longer matches exactly
+    rec.updatedAt = Date.now();
+  });
+  saveRunSheets();
+  renderRunSheetUI();
 }
 
 function addEditRoll(){
@@ -3581,7 +4159,7 @@ function renderTally(prefix){
       list.innerHTML = '<div class="tally-empty">No ' + TALLY_UNIT[prefix].toLowerCase() + 's added yet.</div>';
     }else{
       list.innerHTML = arr.map((n,i)=>
-        '<div class="tally-row"><span>' + TALLY_UNIT[prefix] + ' ' + (i+1) + '</span>' +
+        '<div class="tally-row"><span>' + TALLY_UNIT[prefix] + ' ' + ((prefix === "roll" && typeof rollNumOffset === "function" ? rollNumOffset() : 0) + i + 1) + '</span>' +
         '<span class="tally-amt">' + formatNumber(n) + '</span>' +
         '<button class="tally-del" data-prefix="' + prefix + '" data-idx="' + i + '" type="button" aria-label="Remove">\u2715</button></div>'
       ).join("");
@@ -3855,9 +4433,13 @@ function renderJobList(kind){
         + '<button class="joblist-del" data-kind="notes" data-idx="'+i+'" type="button" aria-label="Remove">\u2715</button>'
         + '</div>';
     }
+    const lookup = kind === "colors"
+      ? '<button class="color-lookup" data-colorlookup="'+i+'" type="button" aria-label="Find anilox for this color" title="Find anilox">\uD83D\uDD0D</button>'
+      : '';
     return '<div class="joblist-box">'
       + '<span class="joblist-num">'+word+' '+(i+1)+'</span>'
       + '<input class="joblist-input" data-kind="'+kind+'" data-idx="'+i+'" value="'+escAttr(val)+'" placeholder="'+word+'">'
+      + lookup
       + '<button class="joblist-del" data-kind="'+kind+'" data-idx="'+i+'" type="button" aria-label="Remove">\u2715</button>'
       + '</div>';
   }).join("");
@@ -4110,6 +4692,13 @@ function detectJobType(parsed){
 }
 
 // Fill the shared Job Info (used for every job type).
+function acrossFromText(blob){
+  const s = String(blob||"");
+  const pats = [/\brun\s+(\d{1,2})\s*(?:-\s*)?across/i, /\b(\d{1,2})\s*(?:-\s*)?across\s*x\s*\d+\s*around/i,
+                /\b(\d{1,2})\s*(?:-\s*)?across\b/i, /\bacross\s*[:x]?\s*(\d{1,2})\b/i, /\b(\d{1,2})\s*up\b/i];
+  for(const p of pats){ const m = s.match(p); if(m){ const n = +m[1]; if(n > 0 && n <= 24) return n; } }
+  return null;
+}
 function fillJobInfo(parsed, fields){
   // Remember the stock/material so manual anilox regeneration has context.
   aniloxStock = String(
@@ -4127,7 +4716,13 @@ function fillJobInfo(parsed, fields){
   setIf("customerName", parsed.customer ?? parsed.customerName ?? parsed.customer_name ?? parsed.client ?? null);
   // Repeat / Across feed the End of Job Count on every tab.
   const scanRepeat = normalizeNumber(parsed.repeatLength ?? parsed.repeat_length ?? parsed.repeat);
-  const scanAcross = normalizeNumber(parsed.labelsAcross ?? parsed.labels_across ?? parsed.across);
+  let scanAcross = normalizeNumber(parsed.labelsAcross ?? parsed.labels_across ?? parsed.across);
+  if(!scanAcross){
+    // Fallback: "Run 3 across", "8 across x 1 around", "2 up" etc. anywhere in the returned docket text.
+    scanAcross = acrossFromText([parsed.materialDescription, parsed.stockInfo,
+      Array.isArray(parsed.dies) ? parsed.dies.join(" ") : parsed.dies,
+      Array.isArray(parsed.notes) ? parsed.notes.join(" ") : parsed.notes].map(x=>String(x||"")).join(" \n "));
+  }
   if(scanRepeat){ ["roll","sheeter","folder"].forEach(t=>setIf(t+"Repeat", scanRepeat)); setIf("ecciRepeat", scanRepeat); setIf("impRepeat", scanRepeat); }
   if(scanAcross){ ["roll","sheeter","folder"].forEach(t=>setIf(t+"Across", scanAcross)); setIf("ecciAcross", scanAcross); setIf("impAcross", scanAcross); }
   setIf("jobQuantity", normalizeNumber(parsed.totalQuantity ?? parsed.total_quantity ?? parsed.quantity));
@@ -4378,6 +4973,8 @@ function resetShift(){
   // and every parked docket workspace.
   safeRemove(DOCKETS_KEY);
   docketWorkspaces = []; activeDocketId = null; renderDocketChips();
+  // Run sheets are NOT cleared — they carry a docket across shifts until it's marked completed.
+  rsNotice = null;
   lastSavedSig.roll = lastSavedSig.sheeter = lastSavedSig.folder = null;
   jobListsState.dies = []; jobListsState.colors = []; jobListsState.notes = []; jobListsState.anilox = [];
   aniloxStock = ""; aniloxSubstrateClass = DEFAULT_SUBSTRATE_CLASS;
@@ -4420,6 +5017,7 @@ function resetShift(){
   refreshThicknessNudgeLabel();
   recalculateAll();
   saveAllInputs();
+  renderRunSheetUI();
 }
 
 
@@ -4580,7 +5178,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     // Delegated delete for tally rows (skip edit-form roll-remove buttons)
     document.addEventListener("click",(e)=>{
       const del = e.target.closest && e.target.closest(".tally-del");
-      if(del && !del.hasAttribute("data-erollremove")){ deleteTally(del.dataset.prefix, Number(del.dataset.idx)); }
+      if(del && del.dataset.prefix && !del.hasAttribute("data-erollremove")){ deleteTally(del.dataset.prefix, Number(del.dataset.idx)); }
     });
 
     /* ---- Collapsible tool cards set up after Clear buttons are injected (below) ---- */
@@ -4609,9 +5207,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     document.addEventListener("focusout",(e)=>{
       const f = e.target;
       if(f && f.classList && f.classList.contains("joblist-input") && f.dataset.kind === "colors"){
-        reconcileAnilox();
-        const val = f.value.trim();
-        if(val) regenerateAniloxFor(val);
+        reconcileAnilox();   // drop anilox rows for colors that no longer exist; the \uD83D\uDD0D button fetches new ones
       }
     });
     document.addEventListener("keydown",(e)=>{
@@ -4620,6 +5216,20 @@ document.addEventListener("DOMContentLoaded",()=>{
         e.preventDefault();
         f.blur();
       }
+    });
+    // \uD83D\uDD0D next to a color: look up (or re-look up) its anilox via the API.
+    document.addEventListener("click",(e)=>{
+      const b = e.target.closest && e.target.closest("[data-colorlookup]");
+      if(!b) return;
+      const row = b.closest(".joblist-box");
+      const inp = row ? row.querySelector(".joblist-input") : null;
+      const val = inp ? inp.value.trim() : "";
+      if(!val){ if(inp) inp.focus(); return; }
+      updateJobListItem("colors", Number(b.dataset.colorlookup), val);
+      reconcileAnilox();
+      const wrap = document.getElementById("aniloxWrap");
+      regenerateAniloxFor(val, { force:true });
+      if(wrap) wrap.scrollIntoView({ behavior:"smooth", block:"nearest" });
     });
     // Tap a failed anilox row to retry its recommendation.
     document.addEventListener("click",(e)=>{
@@ -4691,6 +5301,36 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     /* ---- Settings: hide Job Info section ---- */
     bind("hideJobInfoChk","change",(e)=>applyHideJobInfo(e.target.checked, true));
+
+    /* ---- Digital Run Sheet ---- */
+    bind("docketNumber","change",onDocketNumberCommitted);
+    bind("rsCompleteBtn","click",markRunSheetCompleted);
+    bind("rsReopenBtn","click",reopenRunSheet);
+    bind("rsLibSearch","input",renderRunSheetLibrary);
+    document.addEventListener("click",(e)=>{
+      const t = e.target;
+      if(!t || !t.closest) return;
+      const act = t.closest("[data-rsact]");
+      if(act){
+        const rec = currentRunSheet();
+        const a = act.dataset.rsact;
+        if(a === "keepdraft"){ rsNotice = null; renderRunSheetUI(); }
+        else if(a === "restoredraft" && rec && rec.draft){
+          applyWorkspace(rec.draft);
+          rsNotice = { key: rec.key, kind:"ok", html:"Unsaved count restored. Tap \u201cSave Job to My Shift\u201d when this shift is done." };
+          syncActiveDocket();
+          renderRunSheetUI();
+        }
+        else if(a === "logdraft" && rec) logDraftAsSession(rec.key);
+        return;
+      }
+      const sd = t.closest("[data-rssessdel]");
+      if(sd){ removeRunSession(Number(sd.dataset.rssessdel)); return; }
+      const del = t.closest("[data-rsdel]");
+      if(del){ e.stopPropagation(); deleteRunSheet(del.dataset.rsdel); return; }
+      const rc = t.closest("[data-rsrecall]");
+      if(rc){ recallRunSheet(rc.dataset.rsrecall); }
+    });
 
     /* ---- Mode toggle (scan / manual) ---- */
     document.querySelectorAll("#modeToggle button").forEach(b=>{
@@ -4800,6 +5440,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     // Mode (scan / manual) + docket workspaces.
     applyMode(safeGet(MODE_KEY) || "scan", false);
     applyHideJobInfo(safeGet(HIDEJOBINFO_KEY) === "1", false);
+    loadRunSheets();
     loadDockets();
     // Adopt whatever is currently on screen as the active docket if none is set.
     if(activeDocketId === null || !docketWorkspaces.some(d=>d.id===activeDocketId)){
@@ -4807,6 +5448,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     }else{
       renderDocketChips();
     }
+    renderRunSheetUI();
     // Restore Complete Job button visibility for any already-computed results.
     ["roll","sheeter","folder"].forEach(updateCompleteJobBtn);
     // Restore anilox stock context from the (persisted) Stock Info field.
@@ -4825,7 +5467,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     document.addEventListener("input",()=>{
       if(editingShiftId !== null) return;      // don't capture while editing a saved job
       clearTimeout(docketSyncTimer);
-      docketSyncTimer = setTimeout(syncActiveDocket, 600);
+      docketSyncTimer = setTimeout(()=>{ syncActiveDocket(); updateRunSheetFromScreen(); }, 600);
     });
     // Restore the active tab last.
     switchTab(safeGet(TAB_KEY) || "roll");
