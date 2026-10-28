@@ -169,6 +169,44 @@ button{
 body.hide-jobinfo #jobInfoCard{ display:none !important; }
 /* Digital Run Sheet */
 .runsheet-card{ border:1.5px solid var(--text); }
+.rs-plain-h{ margin:0 0 4px; }
+/* Even Rolls planner */
+.er-source{ font-size:12px; font-weight:600; color:var(--muted); line-height:1.4; margin-top:4px; }
+.er-plan{ margin-top:12px; border-radius:14px; background:var(--black); color:#fff; padding:14px; }
+.er-plan-kicker{ font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; opacity:.7; }
+.er-plan-head{ font-size:21px; font-weight:900; letter-spacing:-.02em; line-height:1.2; margin-top:3px; }
+.er-plan-sub{ font-size:13px; font-weight:600; opacity:.8; margin-top:4px; line-height:1.4; }
+.er-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+.er-cell{ background:var(--field); border-radius:10px; padding:8px 11px; min-width:0; }
+.er-cell span{ display:block; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); }
+.er-cell b{ display:block; font-size:17px; font-weight:800; margin-top:2px; }
+.er-cell.full{ grid-column:1/-1; }
+.er-note{ margin-top:10px; font-size:13px; font-weight:600; line-height:1.4; border-radius:10px; padding:9px 11px; background:var(--field); }
+.er-table{ width:100%; border-collapse:collapse; margin-top:12px; font-size:13px; }
+.er-table th{ text-align:left; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); padding:6px 4px; border-bottom:1px solid var(--line); }
+.er-table td{ padding:8px 4px; border-bottom:1px solid var(--line); font-weight:700; }
+.er-table tr.rec td{ background:rgba(31,157,85,.10); }
+.er-table tr.rec td:first-child{ box-shadow:inset 3px 0 0 #1f9d55; }
+
+/* Good impressions = green, wastage % = red, everywhere */
+#rollGood,#sheeterGood,#folderGood,#stGood,
+.sl-cell.good .sl-cell-value,.sl-pv.good b,.rs-cell.good b{ color:#1f9d55 !important; }
+#rollWastePct,#sheeterWastePct,#folderWastePct,#stWastePct,
+.sl-cell.wpct .sl-cell-value,.sl-pv.wpct b,.rs-cell.wpct b{ color:var(--danger) !important; }
+/* Open Dockets collapse */
+.docket-bar-toggle{ display:inline-flex; align-items:center; gap:6px; background:none; border:none; padding:0; cursor:pointer;
+  font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+.docket-bar-toggle .dbt-chev{ display:inline-block; font-size:16px; line-height:1; transition:transform .18s ease; transform:rotate(90deg); }
+.docket-bar.collapsed .dbt-chev{ transform:rotate(0deg); }
+.docket-bar.collapsed .docket-chips,.docket-bar.collapsed #docketBarHint{ display:none; }
+.docket-bar.collapsed .docket-bar-head{ margin-bottom:0; }
+.rc-toast{ position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px);
+  width:min(92vw, 460px); box-sizing:border-box; background:var(--black); color:#fff; border-radius:14px; padding:12px 14px;
+  font-size:14px; font-weight:600; line-height:1.4; box-shadow:0 8px 24px rgba(0,0,0,.25); z-index:50;
+  opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease; }
+.rc-toast.show{ opacity:1; transform:translate(-50%, 0); pointer-events:auto; }
+.rc-toast b{ font-weight:900; }
+.rc-toast .rc-toast-link{ display:inline-block; margin-top:6px; font-weight:800; text-decoration:underline; cursor:pointer; }
 .rs-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
 .rs-title{ font-size:20px; font-weight:900; letter-spacing:-.02em; }
 .rs-sub{ font-size:13px; font-weight:600; color:var(--muted); margin-top:2px; overflow-wrap:anywhere; }
@@ -313,6 +351,8 @@ body.manual-mode .scan-hide{ display:none !important; }
 .sl-roll-row{ display:flex; align-items:center; gap:10px; }
 .sl-roll-num{ flex:0 0 64px; font-size:13px; font-weight:700; color:var(--muted); }
 .sl-roll-input{ flex:1 1 auto; min-width:0; border:1px solid var(--line); border-radius:8px; padding:9px 11px; font-size:16px; font-weight:700; background:var(--field); text-align:right; }
+.sl-roll-card{ border:1px solid var(--line); border-radius:10px; padding:9px 10px 2px; }
+.sl-roll-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
 .sl-roll-empty{ font-size:13px; color:var(--muted); padding:8px 0; }
 .sl-add-roll{ width:100%; background:var(--field); border:1px dashed var(--line); border-radius:10px; padding:10px; font-size:14px; font-weight:700; color:var(--text); cursor:pointer; margin-bottom:10px; }
 .sl-add-roll:active{ transform:scale(.99); }
@@ -548,12 +588,15 @@ input[type=file]{
 }
 .tab-bar button{
   flex:1 1 0;
-  padding:13px 6px;
+  min-width:0;
+  padding:12px 2px;
+  white-space:nowrap;
+  letter-spacing:-.01em;
   border:none;
   border-radius:10px;
   background:transparent;
   color:#3e4048;
-  font-size:15px;
+  font-size:clamp(11.5px, 3.3vw, 15px);
   font-weight:800;
 }
 .tab-bar button.active{ background:var(--black); color:var(--bg); }
@@ -626,6 +669,23 @@ input[type=file]{
 .tally-del:hover{ background:#ffe1e1; color:var(--danger); }
 .tally-del:active{ transform:scale(.9); }
 .tally-empty{ padding:14px; color:#7a7d85; text-align:center; font-size:14px; }
+.add-roll-box{ border:1px solid var(--line); border-radius:12px; padding:12px; margin:8px 0 10px; }
+.add-roll-title{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin-bottom:6px; }
+.roll-extra-toggle{ margin-top:8px; background:none; border:none; padding:0; font-size:13px; font-weight:800; color:var(--text); text-decoration:underline; cursor:pointer; }
+.roll-extra-row{ display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; margin-top:8px; }
+.roll-extra-row .tally-input{ margin:0; }
+.tally-row.roll-row{ align-items:flex-start; cursor:pointer; }
+.roll-main{ flex:1 1 auto; min-width:0; text-align:right; }
+.roll-labels{ font-weight:800; font-size:16px; }
+.roll-sub{ font-size:12px; font-weight:600; color:var(--muted); margin-top:2px; line-height:1.35; }
+.roll-sub .derived{ font-style:italic; }
+.roll-edit{ flex-basis:100%; display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; cursor:default; }
+.roll-edit label{ display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:2px; }
+.roll-edit input,.roll-edit select{ width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:15px; font-weight:700; background:var(--field); color:var(--text); }
+.roll-edit .re-actions{ grid-column:1/-1; display:flex; gap:8px; }
+.roll-edit .re-actions button{ flex:1; border-radius:9px; padding:10px; font-size:14px; font-weight:800; cursor:pointer; }
+.roll-edit .re-save{ background:var(--black); color:#fff; border:none; }
+.roll-edit .re-cancel{ background:var(--card); color:var(--text); border:1px solid var(--line); }
 .running-total{
   display:flex; justify-content:space-between; align-items:center; gap:10px;
   background:var(--black); color:var(--bg);
@@ -1003,39 +1063,15 @@ body.dark .ecci-display{
       <button data-mode="manual" type="button">✏️ Manual Mode</button>
     </div>
     <p class="card-sub" id="modeHint" style="margin-top:8px;">Scan a docket to auto-fill the job. Switch to Manual Mode to type everything in yourself.</p>
-    <div class="docket-bar">
+    <div class="docket-bar" id="docketBar">
       <div class="docket-bar-head">
-        <label>Open Dockets</label>
+        <button id="docketBarToggle" class="docket-bar-toggle" type="button" aria-expanded="true">
+          <span class="dbt-chev">›</span><span id="docketBarLabel">Open Dockets</span>
+        </button>
         <button id="newDocketBtn" class="joblist-add" type="button">+ New docket</button>
       </div>
       <div class="docket-chips" id="docketChips"></div>
       <p class="card-sub" id="docketBarHint">Each docket keeps its own job info, tallies and counters. Tap one to switch.</p>
-    </div>
-  </section>
-
-  <!-- Digital Run Sheet for the current docket (shown once a docket has one) -->
-  <section class="card runsheet-card" id="runSheetCard" style="display:none;">
-    <input type="hidden" id="rsSessionId" value="">
-    <div class="rs-head">
-      <div>
-        <div class="rs-title">Run Sheet</div>
-        <div class="rs-sub" id="rsSub"></div>
-      </div>
-      <span class="rs-pill" id="rsPill">In progress</span>
-    </div>
-    <div id="rsNotice"></div>
-    <div class="rs-progress" id="rsProgressWrap" style="display:none;">
-      <div class="rs-progress-bar"><span id="rsProgressFill"></span></div>
-      <div class="rs-progress-txt" id="rsProgressTxt"></div>
-    </div>
-    <div class="rs-grid" id="rsGrid"></div>
-    <details class="rs-sessions">
-      <summary id="rsSessionsSummary">Shift history</summary>
-      <div id="rsSessionList"></div>
-    </details>
-    <div class="rs-actions">
-      <button id="rsCompleteBtn" class="rs-complete" type="button">✓ Mark Job Completed</button>
-      <button id="rsReopenBtn" class="rs-reopen" type="button" style="display:none;">Reopen Job</button>
     </div>
   </section>
 
@@ -1081,6 +1117,11 @@ body.dark .ecci-display{
         <label for="rollDirection">Roll Direction</label>
         <input id="rollDirection" placeholder="1" inputmode="text">
       </div>
+      <div>
+        <label for="gearTeeth">Gear Teeth</label>
+        <input id="gearTeeth" placeholder="e.g. 98" inputmode="numeric">
+      </div>
+      <div></div>
       <div class="full">
         <label for="stockInfo">Stock Info</label>
         <input id="stockInfo" placeholder="e.g. 2.4mil WH.BOPP TC AT20N 40#" inputmode="text" autocomplete="off">
@@ -1122,6 +1163,7 @@ body.dark .ecci-display{
     <button data-tab="sheeter" type="button">Sheeter</button>
     <button data-tab="folder" type="button">Folder</button>
     <button data-tab="myshift" type="button">My Shift</button>
+    <button data-tab="runsheet" type="button">Run Sheet</button>
   </div>
 
   <button class="reset-btn" id="resetShiftBtn" type="button">Reset / New Shift</button>
@@ -1191,6 +1233,32 @@ body.dark .ecci-display{
       <div>Total Labels: <strong id="ecciLabelsOut">—</strong></div>
     </div>
   </section>
+
+  <section class="card" id="evenRollsCard">
+    <h2>Even Rolls</h2>
+    <p class="card-sub">Plans equal press rolls that each hold a whole number of finished rolls per lane, as close to the max diameter as possible without going over. Blank fields use the job's values (shown in grey).</p>
+    <div class="two-col">
+      <div><label for="erQty">Total labels</label><input id="erQty" inputmode="decimal"></div>
+      <div><label for="erFinished">Labels / finished roll</label><input id="erFinished" inputmode="decimal"></div>
+    </div>
+    <div class="two-col">
+      <div><label for="erCount"># finished rolls</label><input id="erCount" inputmode="decimal"></div>
+      <div><label for="erThickness">Thickness (in)</label><input id="erThickness" inputmode="decimal"></div>
+    </div>
+    <div class="two-col">
+      <div><label for="erRepeat">Repeat</label><input id="erRepeat" inputmode="decimal"></div>
+      <div><label for="erAcross">Across</label><input id="erAcross" inputmode="decimal"></div>
+    </div>
+    <div class="two-col">
+      <div><label for="erMaxDia">Max diameter (in)</label><input id="erMaxDia" inputmode="decimal" placeholder="23" value="23"></div>
+      <div><label for="erCore">Core OD (in)</label><input id="erCore" inputmode="decimal" placeholder="3" value="3"></div>
+      <input type="hidden" id="erTouched" value="">
+    </div>
+    <div class="er-source" id="erSource"></div>
+    <div id="erError" class="error"></div>
+    <div id="erResult"></div>
+  </section>
+
 
   <section class="card">
     <h2>Impressions</h2>
@@ -1290,12 +1358,24 @@ body.dark .ecci-display{
       <div><label for="rollAcross">Across</label><input id="rollAcross" placeholder="2" inputmode="decimal"></div>
     </div>
 
-    <label for="rollTallyInput">Add Roll — total labels on the roll</label>
-    <input id="rollTallyInput" class="tally-input" placeholder="e.g. 12000" inputmode="decimal">
-    <div class="tally-actions">
-      <label class="btn-scan" for="rollTallyCam">📷 Scan</label>
-      <input id="rollTallyCam" type="file" accept="image/*" capture="environment" data-numtarget="rollTallyInput" data-status="roll" style="display:none">
-      <button id="rollAddBtn" class="btn-add" type="button">Add</button>
+    <div class="add-roll-box">
+      <div class="add-roll-title">Add Roll</div>
+      <div class="two-col">
+        <div><label for="rollTallyInput">Labels on roll</label>
+          <input id="rollTallyInput" class="tally-input" placeholder="e.g. 12000" inputmode="decimal"></div>
+        <div><label for="rollImpInput">Impressions on roll</label>
+          <input id="rollImpInput" class="tally-input" placeholder="counter" inputmode="decimal"></div>
+      </div>
+      <button id="rollExtraToggle" class="roll-extra-toggle" type="button">+ Extra on this roll</button>
+      <div id="rollExtraRow" class="roll-extra-row" style="display:none;">
+        <input id="rollRowExtra" class="tally-input" placeholder="Extra amount" inputmode="decimal">
+        <div class="seg-toggle small" id="rollRowExtraUnit">
+          <button data-unit="labels" class="active" type="button">Labels</button>
+          <button data-unit="impressions" type="button">Impressions</button>
+        </div>
+      </div>
+      <p class="card-sub" style="margin:6px 0 0;">Enter labels, impressions, or both. If you only enter one, the other is worked out from Repeat and Across.</p>
+      <button id="rollAddBtn" class="btn-add" type="button" style="width:100%;margin-top:10px;">Add Roll</button>
     </div>
 
     <div class="tally-list" id="rollTallyList"></div>
@@ -1390,8 +1470,6 @@ body.dark .ecci-display{
         <label for="sheeterTotalBoxes">Total Boxes Completed</label>
         <div class="field-cam">
           <input id="sheeterTotalBoxes" placeholder="e.g. 47" inputmode="decimal" style="font-size:22px;font-weight:800;">
-          <label class="tally-cam" for="sheeterBoxCam">📷</label>
-          <input id="sheeterBoxCam" type="file" accept="image/*" capture="environment" data-numtarget="sheeterTotalBoxes" data-status="sheeter" style="display:none">
         </div>
         <label for="sheeterLabelsPerCarton">Labels per Box</label>
         <input id="sheeterLabelsPerCarton" placeholder="e.g. 5000" inputmode="decimal">
@@ -1459,8 +1537,6 @@ body.dark .ecci-display{
         <label for="folderTotalBoxes">Total Boxes Completed</label>
         <div class="field-cam">
           <input id="folderTotalBoxes" placeholder="e.g. 32" inputmode="decimal" style="font-size:22px;font-weight:800;">
-          <label class="tally-cam" for="folderBoxCam">📷</label>
-          <input id="folderBoxCam" type="file" accept="image/*" capture="environment" data-numtarget="folderTotalBoxes" data-status="folder" style="display:none">
         </div>
         <label for="folderLabelsPerCarton">Labels per Box</label>
         <input id="folderLabelsPerCarton" placeholder="e.g. 2500" inputmode="decimal">
@@ -1547,15 +1623,50 @@ body.dark .ecci-display{
 
     <button id="clearShiftLogBtn" class="danger-outline" type="button" style="width:100%;margin-top:4px;">Clear Shift Log</button>
 
-    <section class="card" id="runSheetLibCard" style="margin-top:16px;">
+
+  </div><!-- /panel-myshift -->
+  <!-- ===== RUN SHEET TAB ===== -->
+  <div class="tab-panel" id="panel-runsheet">
+    <section class="card" id="runSheetEmpty">
+      <h2 class="rs-plain-h">Run Sheet</h2>
+      <p class="card-sub">No run sheet for the docket on screen yet. Scan a docket or type its number in Job Info — it starts one automatically. Earlier dockets are listed below.</p>
+    </section>
+  <!-- Digital Run Sheet for the current docket (shown once a docket has one) -->
+    <section class="card runsheet-card" id="runSheetCard" style="display:none;">
+    <input type="hidden" id="rsSessionId" value="">
+    <div class="rs-head">
+      <div>
+        <div class="rs-title">Run Sheet</div>
+        <div class="rs-sub" id="rsSub"></div>
+      </div>
+      <span class="rs-pill" id="rsPill">In progress</span>
+    </div>
+    <div id="rsNotice"></div>
+    <div class="rs-progress" id="rsProgressWrap" style="display:none;">
+      <div class="rs-progress-bar"><span id="rsProgressFill"></span></div>
+      <div class="rs-progress-txt" id="rsProgressTxt"></div>
+    </div>
+    <div class="rs-grid" id="rsGrid"></div>
+    <details class="rs-sessions">
+      <summary id="rsSessionsSummary">Shift history</summary>
+      <div id="rsSessionList"></div>
+    </details>
+    <div class="rs-actions">
+      <button id="rsCompleteBtn" class="rs-complete" type="button">✓ Mark Job Completed</button>
+      <button id="rsReopenBtn" class="rs-reopen" type="button" style="display:none;">Reopen Job</button>
+    </div>
+  </section>
+
+    <section class="card" id="runSheetLibCard">
       <h2>Run Sheets</h2>
       <p class="card-sub">Every docket worked on this phone. Tap one to recall it — or just type its docket number in Job Info.</p>
       <input id="rsLibSearch" type="search" placeholder="Search docket # or customer" autocomplete="off" style="margin-bottom:10px;">
       <div id="rsLibList"></div>
     </section>
+  </div><!-- /panel-runsheet -->
 
-  </div><!-- /panel-myshift -->
 </main>
+<div class="rc-toast" id="rcToast" role="status" aria-live="polite"></div>
 
 <script>
 const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
@@ -1887,6 +1998,7 @@ function applyThickness(valueInInches, level, sourceLabel){
   safeSet("ROLL_CALC_MATERIAL_THICKNESS", String(Number(valueInInches.toFixed(5))));
   updateThicknessBadge(level, sourceLabel);
   calculateAndRenderECCI();
+  if(typeof fillEvenRolls === "function") fillEvenRolls(false);
 }
 
 // Apply the waterfall and surface it. Returns true if a value was set.
@@ -2558,6 +2670,7 @@ Required JSON schema:
   "productionOrder": string | null,
   "docketNumber": string | null,
   "customer": string | null,
+  "gearTeeth": number | null,
   "crossPerfTPI": string | null,
   "labelColor": string | null,
   "colors": string[] | null,
@@ -2587,6 +2700,7 @@ Strict rules:
    - This is the grand total, not the per-roll amount.
 4. finishedRollQuantity is the labels PER finished roll (the put-up / roll size).
    - Look for "Per Roll", "Roll Qty", "/ roll", "Labels per Roll", "Rewind Qty", "M/Roll", "5000/ roll" -> 5000.
+   - The unit code after Sales quantity also gives it: "Sales quantity: 105 RL5000" -> 5000. "RL2500" -> 2500.
    - Strip commas.
 5. salesQuantity is the "Sales quantity" value (the number of rolls), e.g. "Sales quantity: 105 RL5000" -> 105.
    - Return only the leading count number, not the "RL5000" part.
@@ -2636,6 +2750,9 @@ Strict rules:
 7e-ii. labelsPerFoldSheet is the number of labels on one fold sheet, e.g. "# of labels per fold sheet is 4" -> 4. If absent, return null.
 7e-iii. labelsPerPack is the labels per pack/bag, e.g. "poly bag in 2,000's" or "packs of 2,000" -> 2000. If absent, return null.
 7e-iv. group is the "Group:" value exactly as printed, e.g. "DLabel-F", "DLabel-R", "DLabel-N". If absent, return null.
+7e-vii. gearTeeth is the print cylinder gear tooth count, used on printed (colour) jobs. Look on the Prepress line or near the repeat:
+   - "12.25\" repeat & 98 teeth" -> 98. "8 across x 1 around - 88T - 11\"" -> 88. "96T" -> 96. "Gear: 104" -> 104.
+   - It is a whole number, usually 60-160. Do not use a die number, perf TPI, or a quantity. If absent or the job is Plain, return null.
 7e-v. customer is the customer / client / bill-to company name (often near "Customer", "Sold to", "Ship to", "Account", or at the top of the docket). Return the company name only, no address or account number. If absent, return null.
 7e-vi. labelSheetSize is the SHEET depth in inches for sheeted/sheeter jobs. Look for "Label Sheet size", "Carrier Sheet size", "Sheet size", or "Sheeted @".
    - Take the DEPTH value, not the width. e.g. "Label Sheet size: 8.5\" wide x 11\" depth" -> 11. e.g. "Carrier Sheet size: 8.5\" wide x 11\" depth" -> 11.
@@ -2824,6 +2941,7 @@ Rules:
       showSuccess(successId, "Docket scan complete." + (bits.length ? " Found " + bits.join(", ") + "." : "") + foldNote);
       if(typeof syncActiveDocket === "function") syncActiveDocket();
       if(typeof runSheetAfterScan === "function") runSheetAfterScan();
+      if(typeof fillEvenRolls === "function") fillEvenRolls(true);
     }else{
       const docketData = {
         repeatLength: normalizeNumber(parsed.repeatLength ?? parsed.repeat_length ?? fields.repeat),
@@ -2977,6 +3095,7 @@ Rules:
       showSuccess(successId,"Docket scan complete. Job values populated. " + specMsg + thicknessNote);
       if(typeof syncActiveDocket === "function") syncActiveDocket();
       if(typeof runSheetAfterScan === "function") runSheetAfterScan();
+      if(typeof fillEvenRolls === "function") fillEvenRolls(true);
     }
     }
   }catch(err){
@@ -3182,6 +3301,7 @@ function applyWorkspace(ws){
   saveAllInputs();
   ["roll","sheeter","folder"].forEach(updateCompleteJobBtn);
   if(typeof renderRunSheetUI === "function") renderRunSheetUI();
+  if(typeof fillEvenRolls === "function") fillEvenRolls(false);
 }
 
 function docketLabelNow(){
@@ -3260,7 +3380,17 @@ function closeDocket(id){
   renderDocketChips();
 }
 
+const DOCKETBAR_KEY = "RC_DOCKETBAR_COLLAPSED_V1";
+function applyDocketBarCollapsed(c, persist){
+  const bar = document.getElementById("docketBar");
+  if(bar) bar.classList.toggle("collapsed", !!c);
+  const btn = document.getElementById("docketBarToggle");
+  if(btn) btn.setAttribute("aria-expanded", c ? "false" : "true");
+  if(persist) safeSet(DOCKETBAR_KEY, c ? "1" : "0");
+}
 function renderDocketChips(){
+  const lbl = document.getElementById("docketBarLabel");
+  if(lbl) lbl.textContent = "Open Dockets" + (docketWorkspaces.length ? " (" + docketWorkspaces.length + ")" : "");
   const wrap = document.getElementById("docketChips");
   if(!wrap) return;
   if(!docketWorkspaces.length){
@@ -3291,6 +3421,21 @@ const RS_COUNT_IDS = ["rollMasterStart","rollMasterEnd","rollTallyInput","extraA
   "folderStartBox","folderEndBox","folderTotalBoxes","folderMasterStart","folderMasterEnd","rsSessionId"];
 const RS_PROGRESS_IDS = ["rollMasterEnd","sheeterMasterEnd","folderMasterEnd","sheeterTotalBoxes","folderTotalBoxes","sheeterEndBox","folderEndBox"];
 
+let toastTimer = null;
+function showToast(html, ms){
+  const t = document.getElementById("rcToast");
+  if(!t) return;
+  t.innerHTML = html;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), ms || 6000);
+}
+function toastRunSheetNotice(){
+  if(!rsNotice || safeGet(TAB_KEY) === "runsheet") return;
+  const plain = rsNotice.html.replace(/<div class="rs-notice-btns">[\s\S]*$/, "");
+  showToast(plain + '<br><span class="rc-toast-link" data-opentab="runsheet">Open Run Sheet \u203A</span>',
+            rsNotice.kind === "warn" ? 12000 : 6000);
+}
 function loadRunSheets(){
   try{ const o = JSON.parse(safeGet(RUNSHEET_KEY) || "{}"); runSheets = (o && typeof o === "object") ? o : {}; }
   catch(e){ runSheets = {}; }
@@ -3376,7 +3521,7 @@ function sessionFromScreen(prefix, results){
     labels: r.labels || 0, good: r.good || 0, gross: r.gross || 0, waste: r.waste || 0, wastePct: r.wastePct || "—",
     counterStart: inputs.start, counterEnd: inputs.end, inputs };
   if(prefix === "roll"){
-    sess.rolls = (inputs.tally || []).slice();
+    sess.rolls = (inputs.tally || []).filter(x=>!rollIsEmpty(x)).map(normRoll);
   }else{
     sess.startBox = gn(prefix + "StartBox");
     sess.endBox = gn(prefix + "EndBox");
@@ -3492,6 +3637,7 @@ function loadRunSheet(key){
   ["roll","sheeter","folder"].forEach(p=>{ lastSavedSig[p] = null; });
   if(typeof syncActiveDocket === "function") syncActiveDocket();
   renderRunSheetUI();
+  toastRunSheetNotice();
   return true;
 }
 
@@ -3539,6 +3685,7 @@ function runSheetAfterScan(){
     setScreenSessionId(null);
   }
   updateRunSheetFromScreen({ create:true });
+  if(rec) toastRunSheetNotice();
 }
 
 // Typing a docket number (then leaving the field) recalls it if this phone has seen it.
@@ -3614,6 +3761,8 @@ function deleteRunSheet(key){
 function renderRunSheetUI(){
   const rec = currentRunSheet();
   const card = document.getElementById("runSheetCard");
+  const emptyCard = document.getElementById("runSheetEmpty");
+  if(emptyCard) emptyCard.style.display = rec ? "none" : "block";
   if(card){
     if(!rec){ card.style.display = "none"; }
     else{
@@ -3648,8 +3797,8 @@ function renderRunSheetUI(){
       g += isRoll ? cell("Rolls done", t.rolls ? "1–" + t.rolls : "—")
                   : cell("Boxes done", t.lastBox ? "1–" + formatNumber(t.lastBox) : (t.boxes ? formatNumber(t.boxes) : "—"));
       g += cell("Total labels", fmt(t.labels), "full");
-      g += cell("Good impressions", fmt(t.good)) + cell("Gross impressions", fmt(t.gross));
-      g += cell("Wasted", fmt(t.waste), "waste") + cell("Wastage %", escHtml(t.wastePct));
+      g += cell("Good impressions", fmt(t.good), "good") + cell("Gross impressions", fmt(t.gross));
+      g += cell("Wasted", fmt(t.waste), "waste") + cell("Wastage %", escHtml(t.wastePct), "wpct");
       g += cell("Picks up at", escHtml(done ? "Completed" : (continuationText(rec) || "Start")), "full");
       const grid = document.getElementById("rsGrid"); if(grid) grid.innerHTML = g;
       const list = document.getElementById("rsSessionList");
@@ -3772,7 +3921,7 @@ function computeJobResults(jobType, inp){
   const start  = snapNum(inp.start),  end    = snapNum(inp.end);
   let totalLabels = 0, rolls = null;
   if(jobType === "roll"){
-    const tally = (inp.tally || []).map(snapNum).filter(n=>n!==null);
+    const tally = (inp.tally || []).filter(x=>!rollIsEmpty(x)).map(x=>rollCalc(x, repeat, across).total);
     rolls = tally.length;
     // Extras mirror computeExtraLabels(): amount x scope, converted if entered as impressions.
     let extra = 0;
@@ -3812,7 +3961,7 @@ function snapshotInputs(prefix, results){
   const gn = id => snapNum((document.getElementById(id)||{}).value);
   const gv = (id,dflt) => ((document.getElementById(id)||{}).value || dflt);
   if(prefix === "roll"){
-    const rawTally = (tallyState.roll || []).slice();
+    const rawTally = (tallyState.roll || []).map(normRoll);
     const extraOn = gv("rollExtraOn","no") === "yes";
     return { tally: rawTally,
       extraOn,
@@ -3897,10 +4046,10 @@ function renderShiftLog(){
       +'</div>'
       +'<div class="sl-body"><div class="sl-grid">'
       +'<div class="sl-cell full"><div class="sl-cell-label">Total Labels</div><div class="sl-cell-value">'+fmt(e.labels)+'</div></div>'
-      +'<div class="sl-cell"><div class="sl-cell-label">Good Impressions</div><div class="sl-cell-value">'+fmt(e.good)+'</div></div>'
+      +'<div class="sl-cell good"><div class="sl-cell-label">Good Impressions</div><div class="sl-cell-value">'+fmt(e.good)+'</div></div>'
       +'<div class="sl-cell"><div class="sl-cell-label">Gross Impressions</div><div class="sl-cell-value">'+fmt(e.gross)+'</div></div>'
       +'<div class="sl-cell waste"><div class="sl-cell-label">Wasted Impressions</div><div class="sl-cell-value">'+fmt(e.waste)+'</div></div>'
-      +'<div class="sl-cell"><div class="sl-cell-label">Wastage %</div><div class="sl-cell-value">'+escHtml(e.wastePct||"—")+'</div></div>'
+      +'<div class="sl-cell wpct"><div class="sl-cell-label">Wastage %</div><div class="sl-cell-value">'+escHtml(e.wastePct||"—")+'</div></div>'
       +'</div>'
       +'<div class="sl-actions">'
       +'<button class="sl-edit" data-sledit="'+e.id+'" type="button">Edit</button>'
@@ -3951,12 +4100,20 @@ function renderShiftEditForm(e){
   let body = '<div class="sl-edit-row"><label>Docket #</label><input type="text" data-ef="docket" value="'+escAttr(e.docket)+'"></div>';
 
   if(e.jobType === "roll"){
-    const rows = (inp.tally||[]).map((val,i)=>
-      '<div class="sl-roll-row">'
-      +'<span class="sl-roll-num">Roll '+(i+1)+'</span>'
-      +'<input class="sl-roll-input" type="number" inputmode="decimal" data-eroll="'+i+'" value="'+v(val)+'" placeholder="labels">'
-      +'<button class="tally-del" data-erollremove="'+i+'" type="button" aria-label="Remove roll">\u2715</button>'
-      +'</div>').join("");
+    const rows = (inp.tally||[]).map((val,i)=>{
+      const r = normRoll(val);
+      return '<div class="sl-roll-card" data-erow="'+i+'">'
+        +'<div class="sl-roll-head"><span class="sl-roll-num">Roll '+(i+1)+'</span>'
+        +'<button class="tally-del" data-erollremove="'+i+'" type="button" aria-label="Remove roll">\u2715</button></div>'
+        +'<div class="sl-edit-two">'
+        +'<div><label>Labels</label><input type="number" inputmode="decimal" data-rf="labels" value="'+v(r.labels)+'"></div>'
+        +'<div><label>Impressions</label><input type="number" inputmode="decimal" data-rf="imp" value="'+v(r.imp)+'"></div>'
+        +'<div><label>Extra</label><input type="number" inputmode="decimal" data-rf="extra" placeholder="0" value="'+v(r.extra)+'"></div>'
+        +'<div><label>Extra as</label><select data-rf="extraUnit">'
+        +'<option value="labels"'+(r.extraUnit!=="impressions"?" selected":"")+'>Labels</option>'
+        +'<option value="impressions"'+(r.extraUnit==="impressions"?" selected":"")+'>Impressions</option></select></div>'
+        +'</div></div>';
+    }).join("");
     body += '<div class="sl-roll-list">'+(rows || '<div class="sl-roll-empty">No rolls yet — add one.</div>')+'</div>'
       +'<button class="sl-add-roll" data-erolladd="1" type="button">+ Add roll</button>'
       +'<div class="sl-extra-block">'
@@ -4003,10 +4160,10 @@ function renderShiftEditForm(e){
   const r = computeJobResults(e.jobType, inp);
   body += '<div class="sl-preview">'
     +'<div class="sl-pv full"><span>Total Labels</span><b>'+fmt(r.labels)+'</b></div>'
-    +'<div class="sl-pv"><span>Good</span><b>'+fmt(r.good)+'</b></div>'
+    +'<div class="sl-pv good"><span>Good</span><b>'+fmt(r.good)+'</b></div>'
     +'<div class="sl-pv"><span>Gross</span><b>'+fmt(r.gross)+'</b></div>'
     +'<div class="sl-pv waste"><span>Wasted</span><b>'+fmt(r.waste)+'</b></div>'
-    +'<div class="sl-pv"><span>Wastage %</span><b>'+escHtml(r.wastePct||"—")+'</b></div>'
+    +'<div class="sl-pv wpct"><span>Wastage %</span><b>'+escHtml(r.wastePct||"—")+'</b></div>'
     +'</div>';
 
   body += '<div class="sl-edit-actions">'
@@ -4026,8 +4183,11 @@ function syncEditWorkingFromForm(card){
   const e = shiftLog.find(x=>x.id===editingShiftId);
   if(!e) return;
   if(e.jobType === "roll"){
-    const rollInputs = card.querySelectorAll('[data-eroll]');
-    editWorking.tally = Array.from(rollInputs).map(el => snapNum(el.value));
+    editWorking.tally = Array.from(card.querySelectorAll('[data-erow]')).map(row=>{
+      const g = k => { const el = row.querySelector('[data-rf="'+k+'"]'); return el ? el.value : ""; };
+      return { labels: rnum(g("labels")), imp: rnum(g("imp")), extra: rnum(g("extra")),
+               extraUnit: g("extraUnit") === "impressions" ? "impressions" : "labels" };
+    });
     editWorking.extraAmount = snapNum(get("extraAmount"));
     editWorking.extraUnit   = get("extraUnit") || "labels";
     editWorking.extraScope  = get("extraScope") || "total";
@@ -4081,7 +4241,7 @@ function syncEditToRunSheet(entry){
     sess.waste = entry.waste; sess.wastePct = entry.wastePct;
     sess.counterStart = snapNum(inp.start); sess.counterEnd = snapNum(inp.end);
     sess.inputs = JSON.parse(JSON.stringify(inp));
-    if(entry.jobType === "roll") sess.rolls = (inp.tally || []).map(snapNum).filter(n=>n!==null);
+    if(entry.jobType === "roll") sess.rolls = (inp.tally || []).filter(x=>!rollIsEmpty(x)).map(normRoll);
     else{
       sess.totalBoxes = snapNum(inp.totalBoxes); sess.labelsPerBox = snapNum(inp.labelsPerBox);
       if(sess.startBox && sess.totalBoxes) sess.endBox = sess.startBox + sess.totalBoxes - 1;
@@ -4096,7 +4256,9 @@ function syncEditToRunSheet(entry){
 function addEditRoll(){
   if(!editWorking) return;
   if(!Array.isArray(editWorking.tally)) editWorking.tally = [];
-  editWorking.tally.push(null);
+  const card = document.querySelector('.sl-card.editing[data-slid="'+editingShiftId+'"]');
+  if(card) syncEditWorkingFromForm(card);   // keep what was typed
+  editWorking.tally.push({ labels:null, imp:null, extra:null, extraUnit:"labels" });
   renderShiftLog();
 }
 function removeEditRoll(idx){
@@ -4125,7 +4287,7 @@ function setText(id, value){
 
 /* ---- Tab switching (persisted) ---- */
 function switchTab(name){
-  const ALL_TABS = [...TABS, "myshift"];
+  const ALL_TABS = [...TABS, "myshift", "runsheet"];
   if(!ALL_TABS.includes(name)) name = "roll";
   ALL_TABS.forEach(t=>{
     const panel = document.getElementById("panel-" + t);
@@ -4149,7 +4311,41 @@ function loadTallyState(){
   }catch(err){}
 }
 function saveTallyState(){ safeSet(TALLY_KEY, JSON.stringify(tallyState)); }
-function tallyTotal(prefix){ return tallyState[prefix].reduce((a,b)=>a + (Number(b)||0), 0); }
+/* ---- Roll entries: {labels, imp, extra, extraUnit}. Old saves stored a plain label number — still read fine. ---- */
+function rnum(v){ const n = parseFloat(String(v === null || v === undefined ? "" : v).replace(/,/g,"")); return Number.isFinite(n) ? n : null; }
+function normRoll(e){
+  if(e && typeof e === "object"){
+    return { labels: rnum(e.labels), imp: rnum(e.imp), extra: rnum(e.extra),
+             extraUnit: e.extraUnit === "impressions" ? "impressions" : "labels" };
+  }
+  return { labels: rnum(e), imp:null, extra:null, extraUnit:"labels" };
+}
+function rollIsEmpty(e){ const r = normRoll(e); return !(r.labels > 0) && !(r.imp > 0) && !(r.extra > 0); }
+// Labels <-> impressions use the same rule as the rest of the app: labels = imp x 10 x across / repeat.
+function rollCalc(e, repeat, across){
+  const r = normRoll(e);
+  const conv = repeat > 0 && across > 0;
+  let base = 0, labelsDerived = false, imps = null, impDerived = false;
+  if(r.labels > 0) base = r.labels;
+  else if(r.imp > 0 && conv){ base = r.imp * 10 * across / repeat; labelsDerived = true; }
+  if(r.imp > 0) imps = r.imp;
+  else if(r.labels > 0 && conv){ imps = r.labels * repeat / 10 / across; impDerived = true; }
+  let extraLabels = 0;
+  if(r.extra > 0) extraLabels = r.extraUnit === "impressions" ? (conv ? r.extra * 10 * across / repeat : 0) : r.extra;
+  return { r, base, labelsDerived, imps, impDerived, extraLabels, total: base + extraLabels };
+}
+function tallyTotal(prefix){
+  if(prefix === "roll"){
+    const rp = getRollRepeat(), ac = getRollAcross();
+    return tallyState.roll.reduce((a,e)=>a + rollCalc(e, rp, ac).total, 0);
+  }
+  return tallyState[prefix].reduce((a,b)=>a + (Number(b)||0), 0);
+}
+function rollImpTotal(){
+  const rp = getRollRepeat(), ac = getRollAcross();
+  return tallyState.roll.reduce((a,e)=>a + (rollCalc(e, rp, ac).imps || 0), 0);
+}
+let rollEditIdx = null;   // which roll row is open for editing in the live list
 
 function renderTally(prefix){
   const list = document.getElementById(prefix + "TallyList");
@@ -4158,23 +4354,93 @@ function renderTally(prefix){
     if(!arr.length){
       list.innerHTML = '<div class="tally-empty">No ' + TALLY_UNIT[prefix].toLowerCase() + 's added yet.</div>';
     }else{
-      list.innerHTML = arr.map((n,i)=>
-        '<div class="tally-row"><span>' + TALLY_UNIT[prefix] + ' ' + ((prefix === "roll" && typeof rollNumOffset === "function" ? rollNumOffset() : 0) + i + 1) + '</span>' +
-        '<span class="tally-amt">' + formatNumber(n) + '</span>' +
-        '<button class="tally-del" data-prefix="' + prefix + '" data-idx="' + i + '" type="button" aria-label="Remove">\u2715</button></div>'
-      ).join("");
+      if(prefix === "roll"){
+        const rp = getRollRepeat(), ac = getRollAcross();
+        const off = typeof rollNumOffset === "function" ? rollNumOffset() : 0;
+        list.innerHTML = arr.map((e,i)=>{
+          const c = rollCalc(e, rp, ac);
+          const sub = [];
+          if(c.imps !== null) sub.push(c.impDerived
+            ? '<span class="derived">\u2248 ' + formatNumber(Math.round(c.imps)) + ' imp</span>'
+            : formatNumber(Math.round(c.imps)) + ' imp');
+          if(c.r.extra > 0) sub.push('+' + formatNumber(c.r.extra) + ' ' + (c.r.extraUnit === "impressions" ? "imp" : "labels") + ' extra');
+          if(c.labelsDerived) sub.push('<span class="derived">labels from impressions</span>');
+          let edit = "";
+          if(rollEditIdx === i){
+            const v = x => (x === null || x === undefined) ? "" : x;
+            edit = '<div class="roll-edit" data-rolledit="' + i + '">' +
+              '<div><label>Labels</label><input data-re="labels" inputmode="decimal" value="' + v(c.r.labels) + '"></div>' +
+              '<div><label>Impressions</label><input data-re="imp" inputmode="decimal" value="' + v(c.r.imp) + '"></div>' +
+              '<div><label>Extra</label><input data-re="extra" inputmode="decimal" placeholder="0" value="' + v(c.r.extra) + '"></div>' +
+              '<div><label>Extra counted as</label><select data-re="extraUnit">' +
+                '<option value="labels"' + (c.r.extraUnit !== "impressions" ? " selected" : "") + '>Labels</option>' +
+                '<option value="impressions"' + (c.r.extraUnit === "impressions" ? " selected" : "") + '>Impressions</option></select></div>' +
+              '<div class="re-actions"><button class="re-save" data-resave="' + i + '" type="button">Save roll</button>' +
+              '<button class="re-cancel" data-recancel="1" type="button">Cancel</button></div></div>';
+          }
+          return '<div class="tally-row roll-row" data-rollrow="' + i + '"><span>Roll ' + (off + i + 1) + '</span>' +
+            '<div class="roll-main"><div class="roll-labels">' + formatNumber(Math.round(c.total)) + ' labels</div>' +
+            (sub.length ? '<div class="roll-sub">' + sub.join(" · ") + '</div>' : '') + '</div>' +
+            '<button class="tally-del" data-prefix="roll" data-idx="' + i + '" type="button" aria-label="Remove">\u2715</button>' +
+            edit + '</div>';
+        }).join("");
+      }else{
+        list.innerHTML = arr.map((n,i)=>
+          '<div class="tally-row"><span>' + TALLY_UNIT[prefix] + ' ' + (i + 1) + '</span>' +
+          '<span class="tally-amt">' + formatNumber(n) + '</span>' +
+          '<button class="tally-del" data-prefix="' + prefix + '" data-idx="' + i + '" type="button" aria-label="Remove">\u2715</button></div>'
+        ).join("");
+      }
     }
   }
   setText(prefix + "RunningTotal", formatNumber(tallyTotal(prefix)));
   if(prefix === "roll"){
     const arr = tallyState["roll"];
     const countEl = document.getElementById("rollCount");
-    if(countEl) countEl.textContent = arr.length + (arr.length === 1 ? " roll entered" : " rolls entered");
+    const impT = rollImpTotal();
+    if(countEl) countEl.textContent = arr.length + (arr.length === 1 ? " roll entered" : " rolls entered") +
+      (impT > 0 ? " \u00b7 " + formatNumber(Math.round(impT)) + " impressions" : "");
     if(document.getElementById("extraStdTotal")) updateExtraViews();
   }
 }
 
+function addRollEntry(){
+  const errEl = document.getElementById("rollShiftError");
+  if(errEl) errEl.textContent = "";
+  const labels = cleanNumber("rollTallyInput"), imp = cleanNumber("rollImpInput"), extra = cleanNumber("rollRowExtra");
+  const hasL = Number.isFinite(labels) && labels > 0, hasI = Number.isFinite(imp) && imp > 0;
+  if(!hasL && !hasI){
+    if(errEl) errEl.textContent = "Enter the labels or the impressions on this roll.";
+    return;
+  }
+  const unitBtn = document.querySelector("#rollRowExtraUnit button.active");
+  tallyState.roll.push({ labels: hasL ? labels : null, imp: hasI ? imp : null,
+    extra: Number.isFinite(extra) && extra > 0 ? extra : null,
+    extraUnit: unitBtn ? unitBtn.dataset.unit : "labels" });
+  ["rollTallyInput","rollImpInput","rollRowExtra"].forEach(id=>{ const el = document.getElementById(id); if(el) el.value = ""; });
+  const row = document.getElementById("rollExtraRow"); if(row) row.style.display = "none";
+  rollEditIdx = null;
+  saveTallyState();
+  renderTally("roll");
+  recomputeShift("roll", true);
+  saveAllInputs();
+  const inp = document.getElementById("rollTallyInput");
+  if(inp){ inp.focus(); }
+}
+function saveRollEdit(idx){
+  const box = document.querySelector('[data-rolledit="' + idx + '"]');
+  if(!box || !tallyState.roll[idx]) return;
+  const g = k => { const el = box.querySelector('[data-re="' + k + '"]'); return el ? el.value : ""; };
+  const r = { labels: rnum(g("labels")), imp: rnum(g("imp")), extra: rnum(g("extra")),
+              extraUnit: g("extraUnit") === "impressions" ? "impressions" : "labels" };
+  if(!(r.labels > 0) && !(r.imp > 0)){ alert("A roll needs labels or impressions."); return; }
+  tallyState.roll[idx] = r;
+  rollEditIdx = null;
+  saveTallyState(); renderTally("roll"); recomputeShift("roll", true); saveAllInputs();
+}
+
 function addTally(prefix){
+  if(prefix === "roll") return addRollEntry();
   const v = cleanNumber(prefix + "TallyInput");
   const errEl = document.getElementById(prefix + "ShiftError");
   if(errEl) errEl.textContent = "";
@@ -4194,6 +4460,7 @@ function addTally(prefix){
 }
 
 function deleteTally(prefix, idx){
+  if(prefix === "roll") rollEditIdx = null;
   tallyState[prefix].splice(idx, 1);
   saveTallyState();
   renderTally(prefix);
@@ -4242,6 +4509,153 @@ async function scanNumberInto(targetId, file, statusPrefix){
 }
 
 /* ---- Total boxes from Start Box # / End Box # (sheeter & folder) ---- */
+/* ================================================================
+   EVEN ROLLS — equal press rolls, whole finished rolls per lane, <= max diameter.
+   Same geometry as ECCI: length = pi(D^2 - d^2) / (4t), counter = length / 10.
+   ================================================================ */
+function erAutoValues(){
+  const n = id => { const v = rnum((document.getElementById(id)||{}).value); return v > 0 ? v : null; };
+  let thick = null, thickSrc = "";
+  try{
+    const r = resolveFinalMaterialThickness();
+    if(r && r.thickness > 0){ thick = r.thickness; thickSrc = r.source; }
+  }catch(e){}
+  if(!thick){
+    const stock = ((document.getElementById("stockInfo")||{}).value || (typeof lastMaterialDescription === "string" ? lastMaterialDescription : "") || "").trim();
+    const est = estimateThicknessFallback(stock, "");
+    thick = est.mils * MILS_TO_IN;
+    thickSrc = stock ? ("estimated from stock — " + est.label) : est.label;
+  }
+  const qty = n("jobQuantity");
+  let finished = n("frRoll"), count = n("salesQuantity");
+  if(!finished && qty && count && qty % count === 0) finished = qty / count;   // 525,000 / 105 rolls = 5,000 per roll
+  if(!count && qty && finished) count = Math.ceil(qty / finished);
+  return {
+    qty,
+    finished,
+    count,
+    repeat:   n("rollRepeat") || n("ecciRepeat") || n("frRepeat") || n("impRepeat"),
+    across:   n("rollAcross") || n("ecciAcross") || n("frAcross") || n("impAcross"),
+    thickness: thick, thickSrc,
+    maxDia: 23, core: ECCI_CORE_OUTER_DIAMETER
+  };
+}
+const ER_MAP = { erQty:"qty", erFinished:"finished", erCount:"count", erThickness:"thickness",
+                 erRepeat:"repeat", erAcross:"across", erMaxDia:"maxDia", erCore:"core" };
+function erTouched(){
+  const v = ((document.getElementById("erTouched")||{}).value || "").split(",").filter(Boolean);
+  return new Set(v);
+}
+function setErTouched(set){ const el = document.getElementById("erTouched"); if(el) el.value = [...set].join(","); }
+function erFmt(key, a){
+  if(!(a > 0)) return "";
+  if(key === "thickness") return Number(a).toFixed(5);
+  return String(+Number(a).toFixed(4));
+}
+// Write the job's values into the Even Rolls fields. force=true (new docket scanned/recalled) also
+// replaces anything the operator typed; otherwise their typed fields are left alone.
+function fillEvenRolls(force){
+  let touched = erTouched();
+  if(force){ touched = new Set(); setErTouched(touched); }
+  const auto = erAutoValues();
+  Object.keys(ER_MAP).forEach(id=>{
+    if(touched.has(id)) return;
+    const el = document.getElementById(id);
+    if(!el) return;
+    const val = erFmt(ER_MAP[id], auto[ER_MAP[id]]);
+    if(val !== "") el.value = val;
+    else if(force) el.value = "";
+  });
+  calcEvenRolls();
+}
+function erDiameterFor(lengthIn, t, core){ return Math.sqrt(4 * t * lengthIn / Math.PI + core * core); }
+
+function calcEvenRolls(){
+  const out = document.getElementById("erResult"), err = document.getElementById("erError");
+  if(!out) return;
+  const auto = erAutoValues();
+  const map = ER_MAP, touched = erTouched();
+  const v = {}, fromAuto = {};
+  Object.keys(map).forEach(id=>{
+    const el = document.getElementById(id);
+    const typed = el ? rnum(el.value) : null;
+    const a = auto[map[id]];
+    if(el) el.placeholder = erFmt(map[id], a);
+    v[map[id]] = typed > 0 ? typed : a;
+    fromAuto[map[id]] = !touched.has(id);
+  });
+  // A thickness typed in mils (e.g. 5.4) -> inches.
+  if(v.thickness > 0.05 && v.thickness < 50 && !fromAuto.thickness) v.thickness = v.thickness / 1000;
+  const src = document.getElementById("erSource");
+  if(src) src.textContent = "Thickness " + (v.thickness ? (v.thickness*1000).toFixed(2) + " mil" : "—") +
+    (fromAuto.thickness ? " (" + auto.thickSrc + ")" : " (typed)") + ".";
+  const fail = (msg)=>{ if(err){ err.textContent = msg; err.style.display = msg ? "block" : "none"; } if(msg) out.innerHTML = ""; };
+
+  const fq = v.finished, rp = v.repeat, ac = Math.round(v.across || 0), t = v.thickness, Dmax = v.maxDia, d = v.core;
+  if(!(fq > 0)) return fail("Enter labels per finished roll (e.g. 5000).");
+  if(!(rp > 0)) return fail("Enter the repeat.");
+  if(!(ac > 0)) return fail("Enter the number across.");
+  if(!(t > 0)) return fail("Enter the material thickness.");
+  if(!(Dmax > d)) return fail("Max diameter must be bigger than the core.");
+  fail("");
+
+  const lenPerFinished = fq * rp;                                   // inches of web per finished roll, per lane
+  const maxLen = Math.PI * (Dmax * Dmax - d * d) / (4 * t);
+  const kmax = Math.floor(maxLen / lenPerFinished);
+  if(kmax < 1){
+    const one = erDiameterFor(lenPerFinished, t, d);
+    return fail("One finished roll per lane already needs a " + one.toFixed(2) + "″ roll — over the " + Dmax + "″ max.");
+  }
+  const N = v.count > 0 ? Math.round(v.count) : (v.qty > 0 ? Math.ceil(v.qty / fq) : null);
+  const fmtD = x => x.toFixed(2) + "″";
+  const counterFor = k => Math.round(k * lenPerFinished / ECCI_COUNTER_LENGTH_DIVISOR);
+  const diaFor = k => erDiameterFor(k * lenPerFinished, t, d);
+  const cell = (l, val, cls) => '<div class="er-cell' + (cls ? " " + cls : "") + '"><span>' + l + '</span><b>' + val + '</b></div>';
+
+  if(!N){
+    out.innerHTML = '<div class="er-plan"><div class="er-plan-kicker">Biggest roll under ' + Dmax + '″</div>' +
+      '<div class="er-plan-head">' + kmax + ' finished rolls per lane</div>' +
+      '<div class="er-plan-sub">' + fmtD(diaFor(kmax)) + ' diameter · counter ' + formatNumber(counterFor(kmax)) + '</div></div>' +
+      '<div class="er-note">Enter the total labels or # of finished rolls to work out how many press rolls to run.</div>';
+    return;
+  }
+
+  const R = Math.ceil(N / (ac * kmax));                 // fewest press rolls that stay under the max
+  const k = Math.ceil(N / (ac * R));                    // spread evenly across those rolls (k <= kmax)
+  const made = R * ac * k, over = made - N;
+  const dia = diaFor(k);
+  let html = '<div class="er-plan"><div class="er-plan-kicker">Recommended — all rolls equal</div>' +
+    '<div class="er-plan-head">' + R + ' press roll' + (R === 1 ? "" : "s") + ' × ' + k + ' finished per lane</div>' +
+    '<div class="er-plan-sub">' + (ac * k) + ' finished rolls per press roll · ' + fmtD(dia) + ' diameter (max ' + Dmax + '″)' +
+    (k < kmax ? '<br>Biggest that fits: ' + kmax + ' per lane at ' + fmtD(diaFor(kmax)) + ' — but that still takes ' + R +
+      ' rolls and makes ' + (R * ac * kmax - N) + ' extra finished rolls, so the rolls are evened out instead.' : '') + '</div></div>';
+  html += '<div class="er-grid">' +
+    cell("Counter per roll", formatNumber(counterFor(k))) +
+    cell("Diameter", fmtD(dia)) +
+    cell("Labels per press roll", formatNumber(ac * k * fq)) +
+    cell("Labels per lane", formatNumber(k * fq)) +
+    cell("Finished rolls made", formatNumber(made) + " of " + formatNumber(N), "full") + '</div>';
+  if(over > 0){
+    const remaining = N - (R - 1) * ac * k;
+    const lastK = Math.ceil(remaining / ac);
+    html += '<div class="er-note">Equal rolls make <b>' + over + '</b> extra finished roll' + (over === 1 ? "" : "s") + '. ' +
+      (R > 1 && lastK < k
+        ? 'To finish exact, run the last roll to <b>' + lastK + ' per lane</b> (counter ' + formatNumber(counterFor(lastK)) + ', ' + fmtD(diaFor(lastK)) + ').'
+        : 'Short the last lane(s) at the rewinder.') + '</div>';
+  }else{
+    html += '<div class="er-note">Comes out exact — no extra finished rolls.</div>';
+  }
+  const rows = [];
+  for(let kk = kmax; kk >= Math.max(1, k - 3); kk--){
+    const rr = Math.ceil(N / (ac * kk));
+    rows.push('<tr' + (kk === k ? ' class="rec"' : '') + '><td>' + kk + '</td><td>' + fmtD(diaFor(kk)) + '</td><td>' +
+      formatNumber(counterFor(kk)) + '</td><td>' + rr + '</td><td>' + (rr * ac * kk - N) + '</td></tr>');
+  }
+  html += '<table class="er-table"><thead><tr><th>Per lane</th><th>Dia</th><th>Counter</th><th>Press rolls</th><th>Extra</th></tr></thead><tbody>' +
+    rows.join("") + '</tbody></table>';
+  out.innerHTML = html;
+}
+
 /* ---- Sheeter: sheet depth drives Repeat; Across is always 1 ---- */
 function syncSheeterSheet(){
   const sizeEl = document.getElementById("sheeterSheetSize");
@@ -4341,7 +4755,7 @@ function updateFolderGear(fillInput){
 /* ---- Collapsible tool cards: title shows, body toggles open/closed ---- */
 function setupCollapsibles(){
   document.querySelectorAll(".tab-panel section.card, #jobInfoCard").forEach(card=>{
-    if(card.classList.contains("collapsible")) return;
+    if(card.classList.contains("collapsible") || card.closest("#panel-runsheet")) return;
     const h2 = card.querySelector(":scope > h2");
     if(!h2) return;
     const keepOpen = false; // All sections start collapsed; operator expands as needed.
@@ -4692,6 +5106,17 @@ function detectJobType(parsed){
 }
 
 // Fill the shared Job Info (used for every job type).
+function gearTeethFromText(blob){
+  const s = String(blob||"");
+  const pats = [/\b(\d{2,3})\s*teeth\b/i, /\b(\d{2,3})\s*T\b(?![a-z])/, /\bgear\s*(?:size|teeth)?\s*[:#]?\s*(\d{2,3})\b/i];
+  for(const p of pats){ const m = s.match(p); if(m){ const n = +m[1]; if(n >= 40 && n <= 200) return n; } }
+  return null;
+}
+function isColorJob(colors){
+  const arr = (Array.isArray(colors) ? colors : String(colors||"").split(/,|&|\+|\n/))
+    .map(x=>String(x).trim()).filter(Boolean);
+  return arr.length > 0 && !arr.every(c => /^plain$|^none$|^0\s*\/\s*0$|^no print/i.test(c));
+}
 function acrossFromText(blob){
   const s = String(blob||"");
   const pats = [/\brun\s+(\d{1,2})\s*(?:-\s*)?across/i, /\b(\d{1,2})\s*(?:-\s*)?across\s*x\s*\d+\s*around/i,
@@ -4731,6 +5156,14 @@ function fillJobInfo(parsed, fields){
   setIf("rollDirection", parsed.rollDirection ?? parsed.roll_direction ?? null);
   setJobListFromScan("dies", parsed.dies ?? parsed.die ?? parsed.dieCodes);
   setJobListFromScan("colors", parsed.colors ?? parsed.colours ?? parsed.labelColor ?? parsed.label_color);
+  // Gear teeth: only on printed jobs (a Plain job has no print cylinder).
+  if(isColorJob(parsed.colors ?? parsed.colours ?? parsed.labelColor ?? parsed.label_color)){
+    let teeth = normalizeNumber(parsed.gearTeeth ?? parsed.gear_teeth ?? parsed.teeth);
+    if(!teeth) teeth = gearTeethFromText([
+      Array.isArray(parsed.notes) ? parsed.notes.join(" \n ") : parsed.notes, parsed.materialDescription,
+      parsed.labelColor, parsed.prepress].map(x=>String(x||"")).join(" \n "));
+    if(teeth) setIf("gearTeeth", Math.round(teeth));
+  }
   // After a scan, ask the model for a real per-color anilox (numbers), considering the stock.
   recommendAniloxForAll();
   setNotesFromScan(parsed.notes ?? parsed.instructions ?? parsed.specialInstructions);
@@ -4990,6 +5423,8 @@ function resetShift(){
   });
   // restore defaults
   const lv = document.getElementById("frLevels"); if(lv) lv.value = "50";
+  const erc = document.getElementById("erCore"); if(erc) erc.value = "3";
+  const erm = document.getElementById("erMaxDia"); if(erm) erm.value = "23";
   const rad = document.getElementById("ecciRadius"); if(rad) rad.value = "11.5";
   const radS = document.getElementById("ecciRadiusSlider"); if(radS) radS.value = "11.5";
 
@@ -5018,6 +5453,7 @@ function resetShift(){
   recalculateAll();
   saveAllInputs();
   renderRunSheetUI();
+  fillEvenRolls(true);
 }
 
 
@@ -5155,6 +5591,35 @@ document.addEventListener("DOMContentLoaded",()=>{
         bind(p + suffix,"input",()=>recomputeShift(p,true));
       });
     });
+
+    /* ---- Roll: impressions / per-roll extra / tap-to-edit ---- */
+    ["rollImpInput","rollRowExtra"].forEach(id=>
+      bind(id,"keydown",(e)=>{ if(e.key === "Enter"){ e.preventDefault(); addRollEntry(); } }));
+    bind("rollExtraToggle","click",()=>{
+      const row = document.getElementById("rollExtraRow");
+      if(row) row.style.display = row.style.display === "none" ? "grid" : "none";
+    });
+    document.querySelectorAll("#rollRowExtraUnit button").forEach(b=>{
+      b.addEventListener("click",()=>{
+        document.querySelectorAll("#rollRowExtraUnit button").forEach(x=>x.classList.toggle("active", x === b));
+      });
+    });
+    // Roll numbers/impressions depend on repeat & across — refresh the list when they change.
+    ["rollRepeat","rollAcross"].forEach(id=>bind(id,"input",()=>renderTally("roll")));
+    document.addEventListener("click",(e)=>{
+      const t = e.target;
+      if(!t || !t.closest) return;
+      const save = t.closest("[data-resave]");
+      if(save){ saveRollEdit(Number(save.dataset.resave)); return; }
+      if(t.closest("[data-recancel]")){ rollEditIdx = null; renderTally("roll"); return; }
+      if(t.closest(".roll-edit") || t.closest(".tally-del")) return;
+      const row = t.closest("[data-rollrow]");
+      if(row){
+        const i = Number(row.dataset.rollrow);
+        rollEditIdx = rollEditIdx === i ? null : i;
+        renderTally("roll");
+      }
+    });
     // Standalone Impressions calculators on Sheeter & Folder
     ["sheeter","folder"].forEach(p=>{
       ["ImpLabels","ImpRepeat","ImpAcross"].forEach(suffix=>{
@@ -5271,6 +5736,20 @@ document.addEventListener("DOMContentLoaded",()=>{
       });
     });
 
+    /* ---- Even Rolls: recalc on its own inputs and on anything it borrows ---- */
+    Object.keys(ER_MAP).forEach(id=>bind(id,"input",(e)=>{
+      const t = erTouched();
+      if(String(e.target.value).trim() === "") t.delete(id); else t.add(id);
+      setErTouched(t);
+      if(t.has(id)) calcEvenRolls(); else fillEvenRolls(false);
+    }));
+    ["jobQuantity","frRoll","salesQuantity","rollRepeat","ecciRepeat","frRepeat","impRepeat",
+     "rollAcross","ecciAcross","frAcross","impAcross","ecciThickness","stockInfo"].forEach(id=>bind(id,"input",()=>fillEvenRolls(false)));
+    document.addEventListener("click",(e)=>{
+      const h = e.target.closest && e.target.closest("#evenRollsCard h2");
+      if(h) setTimeout(()=>fillEvenRolls(false), 0);
+    });
+
     /* ---- Sheeter: sheet depth -> repeat, across always 1 ---- */
     bind("sheeterSheetSize","input",syncSheeterSheet);
 
@@ -5303,6 +5782,10 @@ document.addEventListener("DOMContentLoaded",()=>{
     bind("hideJobInfoChk","change",(e)=>applyHideJobInfo(e.target.checked, true));
 
     /* ---- Digital Run Sheet ---- */
+    document.addEventListener("click",(e)=>{
+      const l = e.target.closest && e.target.closest("[data-opentab]");
+      if(l){ switchTab(l.dataset.opentab); const t = document.getElementById("rcToast"); if(t) t.classList.remove("show"); }
+    });
     bind("docketNumber","change",onDocketNumberCommitted);
     bind("rsCompleteBtn","click",markRunSheetCompleted);
     bind("rsReopenBtn","click",reopenRunSheet);
@@ -5339,6 +5822,11 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     /* ---- Multi-docket workspaces ---- */
     bind("newDocketBtn","click",newDocket);
+    bind("docketBarToggle","click",()=>{
+      const bar = document.getElementById("docketBar");
+      applyDocketBarCollapsed(!(bar && bar.classList.contains("collapsed")), true);
+    });
+    applyDocketBarCollapsed(safeGet(DOCKETBAR_KEY) === "1", false);
     document.addEventListener("click",(e)=>{
       const close = e.target.closest && e.target.closest("[data-docketclose]");
       if(close){
@@ -5391,7 +5879,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     const editFormRecalc = (e)=>{
       if(editingShiftId === null) return;
       const t = e.target;
-      if(!t || !(t.matches("[data-ef]") || t.matches("[data-eroll]"))) return;
+      if(!t || !(t.matches("[data-ef]") || t.matches("[data-eroll]") || t.matches("[data-rf]"))) return;
       const card = t.closest(".sl-card.editing");
       if(card) syncEditWorkingFromForm(card);
     };
@@ -5432,6 +5920,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       if(ss && String(ss.value).trim() === "") ss.value = 11;
       syncSheeterSheet();
     })();
+    fillEvenRolls(false);
     syncExtraUI();
     loadJobLists();
     renderAllJobLists();
@@ -5488,7 +5977,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
     // Inject into every card that has user inputs and doesn't already have a clear button.
     document.querySelectorAll("section.card").forEach(card=>{
-      if(card.id==="settingsPanel") return;
+      if(card.id==="settingsPanel" || card.closest("#panel-runsheet")) return;
       if(card.querySelector(".section-clear,.clear-mini")) return;
       if(!card.querySelector("input:not([type=file]):not([type=hidden]):not([type=range]),textarea")) return;
       const btn=document.createElement("button");
