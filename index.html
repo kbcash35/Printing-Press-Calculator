@@ -170,6 +170,18 @@ body.hide-jobinfo #jobInfoCard{ display:none !important; }
 /* Digital Run Sheet */
 .runsheet-card{ border:1.5px solid var(--text); }
 .rs-plain-h{ margin:0 0 4px; }
+/* Roll feet -> impressions */
+.feet-block{ margin-top:14px; padding-top:12px; border-top:1px dashed var(--line); }
+.feet-head{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin-bottom:6px; }
+.feet-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+.feet-grid:empty{ display:none; }
+.feet-cell{ background:var(--field); border-radius:10px; padding:8px 11px; min-width:0; }
+.feet-cell.full{ grid-column:1/-1; background:var(--black); color:#fff; }
+.feet-cell span{ display:block; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); }
+.feet-cell.full span{ color:rgba(255,255,255,.7); }
+.feet-cell b{ display:block; font-size:18px; font-weight:800; margin-top:2px; overflow-wrap:anywhere; }
+.feet-cell.full b{ font-size:26px; font-weight:900; letter-spacing:-.02em; }
+.feet-rule{ font-size:11.5px; font-weight:600; color:var(--muted); margin-top:8px; line-height:1.35; }
 /* Even Rolls planner */
 .er-source{ font-size:12px; font-weight:600; color:var(--muted); line-height:1.4; margin-top:4px; }
 .er-plan{ margin-top:12px; border-radius:14px; background:var(--black); color:#fff; padding:14px; }
@@ -1293,6 +1305,15 @@ body.dark .ecci-display{
       <div class="answer-label">Total Impressions</div>
       <div id="impAnswer" class="answer">—</div>
     </div>
+    <div class="feet-block">
+      <div class="feet-head">From roll length</div>
+      <div class="two-col">
+        <div><label for="impFeet">Roll feet</label><input id="impFeet" placeholder="e.g. 15000" inputmode="decimal"></div>
+        <div><label for="impFeetRolls">Number of rolls</label><input id="impFeetRolls" placeholder="1" inputmode="numeric"></div>
+      </div>
+      <div class="feet-grid" id="impFeetOut"></div>
+      <div class="feet-rule">Counter = feet × 12 ÷ 10 (1 count per 10″ of web). Labels use this card's Repeat and Across.</div>
+    </div>
   </section>
 
   <section class="card">
@@ -1475,6 +1496,15 @@ body.dark .ecci-display{
         <div class="answer-card">
           <div id="sheeterImpAnswer" class="answer">—</div>
         </div>
+        <div class="feet-block">
+          <div class="feet-head">From roll length</div>
+          <div class="two-col">
+            <div><label for="sheeterImpFeet">Roll feet</label><input id="sheeterImpFeet" placeholder="e.g. 15000" inputmode="decimal"></div>
+            <div><label for="sheeterImpFeetRolls">Number of rolls</label><input id="sheeterImpFeetRolls" placeholder="1" inputmode="numeric"></div>
+          </div>
+          <div class="feet-grid" id="sheeterImpFeetOut"></div>
+          <div class="feet-rule">Counter = feet × 12 ÷ 10 (1 count per 10″ of web). Labels use this card's Repeat and Across.</div>
+        </div>
       </section>
 
       <section class="card">
@@ -1541,6 +1571,15 @@ body.dark .ecci-display{
         </div>
         <div class="answer-card">
           <div id="folderImpAnswer" class="answer">—</div>
+        </div>
+        <div class="feet-block">
+          <div class="feet-head">From roll length</div>
+          <div class="two-col">
+            <div><label for="folderImpFeet">Roll feet</label><input id="folderImpFeet" placeholder="e.g. 15000" inputmode="decimal"></div>
+            <div><label for="folderImpFeetRolls">Number of rolls</label><input id="folderImpFeetRolls" placeholder="1" inputmode="numeric"></div>
+          </div>
+          <div class="feet-grid" id="folderImpFeetOut"></div>
+          <div class="feet-rule">Counter = feet × 12 ÷ 10 (1 count per 10″ of web). Labels use this card's Repeat and Across.</div>
         </div>
       </section>
 
@@ -4584,7 +4623,7 @@ function fillEvenRolls(force){
     if(val !== "") el.value = val;
     else if(force) el.value = "";
   });
-  calcEvenRolls();
+  calcEvenRolls();  FEET_CARDS.forEach(calcFeetFor);   // roll-feet boxes use the same repeat/across
 }
 function erDiameterFor(lengthIn, t, core){ return Math.sqrt(4 * t * lengthIn / Math.PI + core * core); }
 
@@ -5377,6 +5416,32 @@ function calcShift(prefix, mode){
 }
 
 // Standalone Impressions calculator (sheeter/folder): Labels x Repeat / Across / 10.
+/* ---- Roll feet -> press counter (your press: 1 count per 10 inches of web) ---- */
+const FEET_CARDS = ["imp","sheeterImp","folderImp"];
+function calcFeetFor(pfx){
+  const out = document.getElementById(pfx + "FeetOut");
+  if(!out) return;
+  const feet = rnum((document.getElementById(pfx + "Feet")||{}).value);
+  if(!(feet > 0)){ out.innerHTML = ""; return; }
+  const rollsRaw = rnum((document.getElementById(pfx + "FeetRolls")||{}).value);
+  const rolls = rollsRaw > 0 ? Math.round(rollsRaw) : 1;
+  const repeat = rnum((document.getElementById(pfx + "Repeat")||{}).value);
+  const across = rnum((document.getElementById(pfx + "Across")||{}).value);
+  const inches = feet * 12;
+  const perRoll = inches / ECCI_COUNTER_LENGTH_DIVISOR;
+  const cell = (l, v, cls) => '<div class="feet-cell' + (cls ? " " + cls : "") + '"><span>' + l + '</span><b>' + v + '</b></div>';
+  let html = cell(rolls > 1 ? "Total impressions (" + rolls + " rolls)" : "Total impressions", formatNumber(Math.round(perRoll * rolls)), "full");
+  if(rolls > 1) html += cell("Per roll", formatNumber(Math.round(perRoll))) + cell("Total feet", formatNumber(Math.round(feet * rolls)));
+  if(repeat > 0 && across > 0){
+    const lab = inches / repeat * across;
+    html += cell("Labels per roll", formatNumber(Math.round(lab)));
+    html += rolls > 1 ? cell("Total labels", formatNumber(Math.round(lab * rolls))) : cell("Repeats per roll", formatNumber(Math.round(inches / repeat)));
+  }else{
+    html += '<div class="feet-cell full" style="background:var(--field);color:var(--muted)"><span style="color:var(--muted)">Labels</span><b style="font-size:13px;font-weight:700">Enter Repeat and Across above to see labels.</b></div>';
+  }
+  out.innerHTML = html;
+}
+
 function calcImprFor(prefix){
   const labels = cleanNumber(prefix + "ImpLabels");
   const repeat = cleanNumber(prefix + "ImpRepeat");
@@ -5763,6 +5828,12 @@ document.addEventListener("DOMContentLoaded",()=>{
         scanNumberInto(inp.dataset.numtarget, f, inp.dataset.status || "roll");
         e.target.value = "";
       });
+    });
+
+    /* ---- Roll feet -> impressions (Roll, Sheeter, Folder Impressions cards) ---- */
+    FEET_CARDS.forEach(pfx=>{
+      ["Feet","FeetRolls","Repeat","Across"].forEach(suf=>bind(pfx + suf,"input",()=>calcFeetFor(pfx)));
+      calcFeetFor(pfx);
     });
 
     /* ---- Even Rolls: recalc on its own inputs and on anything it borrows ---- */
