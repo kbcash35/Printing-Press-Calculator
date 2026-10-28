@@ -185,6 +185,16 @@ body.hide-jobinfo #jobInfoCard{ display:none !important; }
 .er-table{ width:100%; border-collapse:collapse; margin-top:12px; font-size:13px; }
 .er-table th{ text-align:left; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); padding:6px 4px; border-bottom:1px solid var(--line); }
 .er-table td{ padding:8px 4px; border-bottom:1px solid var(--line); font-weight:700; }
+.er-extra{ background:#fff4d6; color:#6b4600; }
+body.dark .er-extra{ background:rgba(245,197,24,.15); color:#f5d77a; }
+.er-plan-bad{ background:var(--danger); }
+.er-warn{ background:#ffe1e1; color:#8a1c1c; }
+body.dark .er-warn{ background:rgba(224,36,36,.18); color:#ffb3b3; }
+.er-cell.bad b{ color:var(--danger); }
+.er-rolls-input{ font-weight:900 !important; border-color:var(--text) !important; }
+.er-table-cap{ margin-top:12px; font-size:12px; font-weight:700; color:var(--muted); }
+.er-table tbody tr{ cursor:pointer; }
+.er-table tr.over td{ color:var(--danger); }
 .er-table tr.rec td{ background:rgba(31,157,85,.10); }
 .er-table tr.rec td:first-child{ box-shadow:inset 3px 0 0 #1f9d55; }
 
@@ -1236,14 +1246,14 @@ body.dark .ecci-display{
 
   <section class="card" id="evenRollsCard">
     <h2>Even Rolls</h2>
-    <p class="card-sub">Plans equal press rolls that each hold a whole number of finished rolls per lane, as close to the max diameter as possible without going over. Blank fields use the job's values (shown in grey).</p>
+    <p class="card-sub">Plans even press rolls under the max diameter. Each press roll is a level from the Finished Roll table, so its labels divide evenly by the finished roll. Any overrun is counted as extra labels. Fills in from the docket; type over any value.</p>
     <div class="two-col">
-      <div><label for="erQty">Total labels</label><input id="erQty" inputmode="decimal"></div>
-      <div><label for="erFinished">Labels / finished roll</label><input id="erFinished" inputmode="decimal"></div>
+      <div><label for="erQty">Job total labels</label><input id="erQty" inputmode="decimal"></div>
+      <div><label for="erFinished">Finished roll (labels)</label><input id="erFinished" inputmode="decimal"></div>
     </div>
     <div class="two-col">
-      <div><label for="erCount"># finished rolls</label><input id="erCount" inputmode="decimal"></div>
       <div><label for="erThickness">Thickness (in)</label><input id="erThickness" inputmode="decimal"></div>
+      <div><label for="erRolls">Press rolls</label><input id="erRolls" inputmode="numeric" class="er-rolls-input"></div>
     </div>
     <div class="two-col">
       <div><label for="erRepeat">Repeat</label><input id="erRepeat" inputmode="decimal"></div>
@@ -4510,7 +4520,7 @@ async function scanNumberInto(targetId, file, statusPrefix){
 
 /* ---- Total boxes from Start Box # / End Box # (sheeter & folder) ---- */
 /* ================================================================
-   EVEN ROLLS — equal press rolls, whole finished rolls per lane, <= max diameter.
+   EVEN ROLLS — even press rolls at Finished Roll table levels (labels divisible by the finished roll), <= max diameter.
    Same geometry as ECCI: length = pi(D^2 - d^2) / (4t), counter = length / 10.
    ================================================================ */
 function erAutoValues(){
@@ -4540,7 +4550,7 @@ function erAutoValues(){
     maxDia: 23, core: ECCI_CORE_OUTER_DIAMETER
   };
 }
-const ER_MAP = { erQty:"qty", erFinished:"finished", erCount:"count", erThickness:"thickness",
+const ER_MAP = { erQty:"qty", erFinished:"finished", erThickness:"thickness",
                  erRepeat:"repeat", erAcross:"across", erMaxDia:"maxDia", erCore:"core" };
 function erTouched(){
   const v = ((document.getElementById("erTouched")||{}).value || "").split(",").filter(Boolean);
@@ -4592,66 +4602,76 @@ function calcEvenRolls(){
   const fail = (msg)=>{ if(err){ err.textContent = msg; err.style.display = msg ? "block" : "none"; } if(msg) out.innerHTML = ""; };
 
   const fq = v.finished, rp = v.repeat, ac = Math.round(v.across || 0), t = v.thickness, Dmax = v.maxDia, d = v.core;
-  if(!(fq > 0)) return fail("Enter labels per finished roll (e.g. 5000).");
+  if(!(fq > 0)) return fail("Enter the finished roll size in labels (e.g. 5000).");
   if(!(rp > 0)) return fail("Enter the repeat.");
   if(!(ac > 0)) return fail("Enter the number across.");
   if(!(t > 0)) return fail("Enter the material thickness.");
   if(!(Dmax > d)) return fail("Max diameter must be bigger than the core.");
   fail("");
 
-  const lenPerFinished = fq * rp;                                   // inches of web per finished roll, per lane
+  // Finished Roll table: one level = finished roll x across labels. Every level divides evenly by the finished roll.
+  const step = fq * ac;                                             // "Increase Per Level"
+  const lenPerLevel = fq * rp;                                      // web length per level (= step / across x repeat)
   const maxLen = Math.PI * (Dmax * Dmax - d * d) / (4 * t);
-  const kmax = Math.floor(maxLen / lenPerFinished);
+  const kmax = Math.floor(maxLen / lenPerLevel);                    // highest table level under the max diameter
   if(kmax < 1){
-    const one = erDiameterFor(lenPerFinished, t, d);
-    return fail("One finished roll per lane already needs a " + one.toFixed(2) + "″ roll — over the " + Dmax + "″ max.");
+    const one = erDiameterFor(lenPerLevel, t, d);
+    return fail("Level 1 of the Finished Roll table (" + formatNumber(step) + " labels) already needs a " + one.toFixed(2) + "″ roll — over the " + Dmax + "″ max.");
   }
-  const N = v.count > 0 ? Math.round(v.count) : (v.qty > 0 ? Math.ceil(v.qty / fq) : null);
+  const Q = v.qty > 0 ? Math.round(v.qty) : (v.count > 0 ? Math.round(v.count * fq) : null);
   const fmtD = x => x.toFixed(2) + "″";
-  const counterFor = k => Math.round(k * lenPerFinished / ECCI_COUNTER_LENGTH_DIVISOR);
-  const diaFor = k => erDiameterFor(k * lenPerFinished, t, d);
+  const counterFor = k => Math.round(k * lenPerLevel / ECCI_COUNTER_LENGTH_DIVISOR);   // = labels x repeat / across / 10
+  const diaFor = k => erDiameterFor(k * lenPerLevel, t, d);
   const cell = (l, val, cls) => '<div class="er-cell' + (cls ? " " + cls : "") + '"><span>' + l + '</span><b>' + val + '</b></div>';
 
-  if(!N){
-    out.innerHTML = '<div class="er-plan"><div class="er-plan-kicker">Biggest roll under ' + Dmax + '″</div>' +
-      '<div class="er-plan-head">' + kmax + ' finished rolls per lane</div>' +
-      '<div class="er-plan-sub">' + fmtD(diaFor(kmax)) + ' diameter · counter ' + formatNumber(counterFor(kmax)) + '</div></div>' +
-      '<div class="er-note">Enter the total labels or # of finished rolls to work out how many press rolls to run.</div>';
+  if(!Q){
+    out.innerHTML = '<div class="er-plan"><div class="er-plan-kicker">Biggest press roll under ' + Dmax + '″</div>' +
+      '<div class="er-plan-head">' + formatNumber(kmax * step) + ' labels</div>' +
+      '<div class="er-plan-sub">Finished Roll table level ' + kmax + ' · counter ' + formatNumber(counterFor(kmax)) + ' · ' + fmtD(diaFor(kmax)) + '</div></div>' +
+      '<div class="er-note">Enter the job\'s total labels to work out how many even press rolls to run.</div>';
     return;
   }
 
-  const R = Math.ceil(N / (ac * kmax));                 // fewest press rolls that stay under the max
-  const k = Math.ceil(N / (ac * R));                    // spread evenly across those rolls (k <= kmax)
-  const made = R * ac * k, over = made - N;
-  const dia = diaFor(k);
-  let html = '<div class="er-plan"><div class="er-plan-kicker">Recommended — all rolls equal</div>' +
-    '<div class="er-plan-head">' + R + ' press roll' + (R === 1 ? "" : "s") + ' × ' + k + ' finished per lane</div>' +
-    '<div class="er-plan-sub">' + (ac * k) + ' finished rolls per press roll · ' + fmtD(dia) + ' diameter (max ' + Dmax + '″)' +
-    (k < kmax ? '<br>Biggest that fits: ' + kmax + ' per lane at ' + fmtD(diaFor(kmax)) + ' — but that still takes ' + R +
-      ' rolls and makes ' + (R * ac * kmax - N) + ' extra finished rolls, so the rolls are evened out instead.' : '') + '</div></div>';
+  const Rmin = Math.ceil(Q / (kmax * step));      // fewest press rolls that stay under the max diameter
+  // Press rolls: the operator's number if they typed one, otherwise the fewest that fit.
+  const rollsEl = document.getElementById("erRolls");
+  const typedR = touched.has("erRolls") ? Math.round(rnum(rollsEl && rollsEl.value) || 0) : 0;
+  const R = typedR > 0 ? typedR : Rmin;
+  if(rollsEl && !(typedR > 0)) rollsEl.value = String(Rmin);
+  const k = Math.ceil(Q / (R * step));             // smallest table level that covers the job with R rolls
+  const L = k * step;                              // labels per press roll (divisible by the finished roll)
+  const extra = R * L - Q;
+  const tooBig = k > kmax;
+  let html = '<div class="er-plan' + (tooBig ? ' er-plan-bad' : '') + '"><div class="er-plan-kicker">' +
+    (tooBig ? 'Too big — over ' + Dmax + '″' : (typedR > 0 && R !== Rmin ? 'Your plan — ' + R + ' even press rolls' : 'Recommended — even press rolls')) + '</div>' +
+    '<div class="er-plan-head">' + R + ' press roll' + (R === 1 ? "" : "s") + ' × ' + formatNumber(L) + ' labels</div>' +
+    '<div class="er-plan-sub">Finished Roll table level ' + k + ' · counter ' + formatNumber(counterFor(k)) + ' · ' + fmtD(diaFor(k)) + ' (max ' + Dmax + '″)</div></div>';
+  if(tooBig){
+    html += '<div class="er-note er-warn">' + R + ' press roll' + (R === 1 ? "" : "s") + ' would need ' + fmtD(diaFor(k)) +
+      ' rolls. Use at least <b>' + Rmin + '</b> press rolls to stay under ' + Dmax + '″.</div>';
+  }
   html += '<div class="er-grid">' +
     cell("Counter per roll", formatNumber(counterFor(k))) +
-    cell("Diameter", fmtD(dia)) +
-    cell("Labels per press roll", formatNumber(ac * k * fq)) +
-    cell("Labels per lane", formatNumber(k * fq)) +
-    cell("Finished rolls made", formatNumber(made) + " of " + formatNumber(N), "full") + '</div>';
-  if(over > 0){
-    const remaining = N - (R - 1) * ac * k;
-    const lastK = Math.ceil(remaining / ac);
-    html += '<div class="er-note">Equal rolls make <b>' + over + '</b> extra finished roll' + (over === 1 ? "" : "s") + '. ' +
-      (R > 1 && lastK < k
-        ? 'To finish exact, run the last roll to <b>' + lastK + ' per lane</b> (counter ' + formatNumber(counterFor(lastK)) + ', ' + fmtD(diaFor(lastK)) + ').'
-        : 'Short the last lane(s) at the rewinder.') + '</div>';
-  }else{
-    html += '<div class="er-note">Comes out exact — no extra finished rolls.</div>';
-  }
+    cell("Diameter", fmtD(diaFor(k)), tooBig ? "bad" : "") +
+    cell("Labels per press roll", formatNumber(L)) +
+    cell("÷ finished roll", formatNumber(L / fq) + " × " + formatNumber(fq)) +
+    cell("Total labels run", formatNumber(R * L) + " of " + formatNumber(Q), "full") + '</div>';
+  html += extra > 0
+    ? '<div class="er-note er-extra">Extra labels: <b>' + formatNumber(extra) + '</b> (' + (extra / Q * 100).toFixed(2) +
+      '% over the order) — added so every press roll divides evenly by ' + formatNumber(fq) + '.</div>'
+    : '<div class="er-note">No extra labels — the order splits into even press rolls exactly.</div>';
+  // Options by number of press rolls — tap one to use it.
   const rows = [];
-  for(let kk = kmax; kk >= Math.max(1, k - 3); kk--){
-    const rr = Math.ceil(N / (ac * kk));
-    rows.push('<tr' + (kk === k ? ' class="rec"' : '') + '><td>' + kk + '</td><td>' + fmtD(diaFor(kk)) + '</td><td>' +
-      formatNumber(counterFor(kk)) + '</td><td>' + rr + '</td><td>' + (rr * ac * kk - N) + '</td></tr>');
+  const from = Math.max(1, Math.min(R, Rmin) - 1), to = Math.max(R, Rmin) + 4;
+  for(let rr = from; rr <= to; rr++){
+    const kk = Math.ceil(Q / (rr * step));
+    const over = kk > kmax;
+    rows.push('<tr data-errolls="' + rr + '" class="' + (rr === R ? 'rec' : '') + (over ? ' over' : '') + '"><td>' + rr + '</td><td>' +
+      formatNumber(kk * step) + '</td><td>' + fmtD(diaFor(kk)) + '</td><td>' + formatNumber(counterFor(kk)) + '</td><td>' +
+      formatNumber(rr * kk * step - Q) + '</td></tr>');
   }
-  html += '<table class="er-table"><thead><tr><th>Per lane</th><th>Dia</th><th>Counter</th><th>Press rolls</th><th>Extra</th></tr></thead><tbody>' +
+  html += '<div class="er-table-cap">Tap a row to use that many press rolls.</div>' +
+    '<table class="er-table"><thead><tr><th>Rolls</th><th>Labels / roll</th><th>Dia</th><th>Counter</th><th>Extra labels</th></tr></thead><tbody>' +
     rows.join("") + '</tbody></table>';
   out.innerHTML = html;
 }
@@ -5737,6 +5757,18 @@ document.addEventListener("DOMContentLoaded",()=>{
     });
 
     /* ---- Even Rolls: recalc on its own inputs and on anything it borrows ---- */
+    bind("erRolls","input",(e)=>{
+      const t = erTouched();
+      if(String(e.target.value).trim() === "" || !(rnum(e.target.value) > 0)) t.delete("erRolls"); else t.add("erRolls");
+      setErTouched(t);
+      calcEvenRolls();
+    });
+    document.addEventListener("click",(e)=>{
+      const row = e.target.closest && e.target.closest("[data-errolls]");
+      if(!row) return;
+      const el = document.getElementById("erRolls");
+      if(el){ el.value = row.dataset.errolls; el.dispatchEvent(new Event("input",{bubbles:true})); }
+    });
     Object.keys(ER_MAP).forEach(id=>bind(id,"input",(e)=>{
       const t = erTouched();
       if(String(e.target.value).trim() === "") t.delete(id); else t.add(id);
