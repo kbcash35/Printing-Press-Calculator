@@ -182,9 +182,17 @@ body.hide-jobinfo #jobInfoCard{ display:none !important; }
 .er-cell b{ display:block; font-size:17px; font-weight:800; margin-top:2px; }
 .er-cell.full{ grid-column:1/-1; }
 .er-note{ margin-top:10px; font-size:13px; font-weight:600; line-height:1.4; border-radius:10px; padding:9px 11px; background:var(--field); }
-.er-table{ width:100%; border-collapse:collapse; margin-top:12px; font-size:13px; }
-.er-table th{ text-align:left; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); padding:6px 4px; border-bottom:1px solid var(--line); }
-.er-table td{ padding:8px 4px; border-bottom:1px solid var(--line); font-weight:700; }
+.er-table-wrap{ margin-top:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line); border-radius:12px; }
+.er-table{ width:100%; table-layout:fixed; border-collapse:collapse; margin:0; }
+.er-table col.c1{ width:15%; } .er-table col.c2{ width:22%; } .er-table col.c3{ width:20%; }
+.er-table col.c4{ width:20%; } .er-table col.c5{ width:23%; }
+.er-table th,.er-table td{ width:auto !important; padding:9px 4px; white-space:nowrap; overflow:hidden;
+  font-size:clamp(11.5px, 3.4vw, 13.5px); font-variant-numeric:tabular-nums; text-align:right; border-bottom:1px solid var(--line); }
+.er-table th{ font-size:clamp(9px, 2.6vw, 10.5px); font-weight:800; letter-spacing:0; text-transform:uppercase; color:var(--muted); background:var(--soft); overflow:visible; }
+.er-table td{ font-weight:700; }
+.er-table th:first-child,.er-table td:first-child{ text-align:left; padding-left:9px; }
+.er-table th:last-child,.er-table td:last-child{ padding-right:9px; }
+.er-table tbody tr:last-child td{ border-bottom:0; }
 .er-extra{ background:#fff4d6; color:#6b4600; }
 body.dark .er-extra{ background:rgba(245,197,24,.15); color:#f5d77a; }
 .er-plan-bad{ background:var(--danger); }
@@ -4671,8 +4679,9 @@ function calcEvenRolls(){
       formatNumber(rr * kk * step - Q) + '</td></tr>');
   }
   html += '<div class="er-table-cap">Tap a row to use that many press rolls.</div>' +
-    '<table class="er-table"><thead><tr><th>Rolls</th><th>Labels / roll</th><th>Dia</th><th>Counter</th><th>Extra labels</th></tr></thead><tbody>' +
-    rows.join("") + '</tbody></table>';
+    '<div class="er-table-wrap"><table class="er-table"><colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"></colgroup>' +
+    '<thead><tr><th>Rolls</th><th>Labels</th><th>Dia</th><th>Counter</th><th>Extra</th></tr></thead><tbody>' +
+    rows.join("") + '</tbody></table></div>';
   out.innerHTML = html;
 }
 
