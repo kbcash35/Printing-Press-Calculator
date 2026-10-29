@@ -4923,6 +4923,7 @@ function fillEvenRolls(force){
     if(touched.has(id)) return;
     const el = document.getElementById(id);
     if(!el) return;
+    if(!force && document.activeElement === el) return;   // let the operator clear it and type a new number
     const val = erFmt(ER_MAP[id], auto[ER_MAP[id]]);
     if(val !== "") el.value = val;
     else if(force) el.value = "";
@@ -4994,7 +4995,7 @@ function calcEvenRolls(){
   const rollsEl = document.getElementById("erRolls");
   const rollsTyped = touched.has("erRolls");
   let R = rollsTyped ? Math.max(0, Math.round(rnum(rollsEl && rollsEl.value) || 0)) : Rmin;
-  if(rollsEl && !rollsTyped) rollsEl.value = String(Rmin);
+  if(rollsEl && !rollsTyped && document.activeElement !== rollsEl) rollsEl.value = String(Rmin);
 
   let html;
   if(R <= 0){
@@ -6204,6 +6205,13 @@ document.addEventListener("DOMContentLoaded",()=>{
     qeSetType(jobTypeNow() || "roll", false);
 
     /* ---- Even Rolls: recalc on its own inputs and on anything it borrows ---- */
+    // Leaving an Even Rolls box empty hands it back to the job (or the recommended press rolls).
+    Object.keys(ER_MAP).concat(["erRolls"]).forEach(id=>bind(id,"blur",(e)=>{
+      if(String(e.target.value).trim() === ""){
+        const t = erTouched(); t.delete(id); setErTouched(t);
+        fillEvenRolls(false);
+      }
+    }));
     bind("erRolls","input",(e)=>{
       const t = erTouched();
       if(String(e.target.value).trim() === "" || rnum(e.target.value) === null) t.delete("erRolls"); else t.add("erRolls");
