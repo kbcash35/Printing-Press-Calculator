@@ -214,7 +214,10 @@ body.hide-jobinfo #jobInfoCard{ display:none !important; }
 .er-cell b{ display:block; font-size:17px; font-weight:800; margin-top:2px; }
 .er-cell.full{ grid-column:1/-1; }
 .er-note{ margin-top:10px; font-size:13px; font-weight:600; line-height:1.4; border-radius:10px; padding:9px 11px; background:var(--field); }
-.er-options{ margin-top:12px; border:1px solid var(--line); border-radius:12px; padding:0 10px 8px; }
+.er-suggest{ margin-top:12px; }
+.er-suggest-cap{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:0 0 6px 2px; }
+.er-table-wrap.er-top{ max-height:none; overflow:visible; }
+.er-options{ margin-top:10px; border:1px solid var(--line); border-radius:12px; padding:0 10px 8px; }
 .er-options > summary{ list-style:none; cursor:pointer; padding:11px 2px; font-size:14px; font-weight:800; color:var(--text); }
 .er-options > summary::-webkit-details-marker{ display:none; }
 .er-options > summary::before{ content:"\203A"; display:inline-block; margin-right:8px; transition:transform .18s ease; color:var(--muted); }
@@ -1167,7 +1170,7 @@ body.dark .ecci-display{
   <!-- Quick Entry: type the handful of numbers that drive every calculation -->
   <section class="card" id="quickEntryCard">
     <h2>Quick Entry</h2>
-    <p class="card-sub">Type the few numbers off the docket — everything else in the app fills in from them. Tap Next on the keyboard to move down. Shortcuts: <b>105 RL5000</b>, <b>1725 CT500</b>, <b>3.125 x 1.625</b>.</p>
+    <p class="card-sub">Type the few numbers off the docket — everything else in the app fills in from them. Tap Next on the keyboard to move down. Shortcuts: <b>525k</b> for 525,000, and <b>3.125 x 1.625</b> in Repeat fills the carrier width too.</p>
     <div class="qe-type" id="qeType">
       <button data-qetype="roll" type="button">Roll</button>
       <button data-qetype="sheeter" type="button">Sheeter</button>
@@ -1177,10 +1180,10 @@ body.dark .ecci-display{
       <div class="qe-f full"><label for="qeDocket">Docket #</label><input id="qeDocket" inputmode="numeric" enterkeyhint="next" placeholder="e.g. 1411978" autocomplete="off"></div>
       <div class="qe-f full"><label for="qeCustomer">Customer <span class="qe-opt">optional</span></label><input id="qeCustomer" enterkeyhint="next" placeholder="e.g. Shoppers Drug Mart" autocomplete="off" autocapitalize="characters"></div>
       <div class="qe-f"><label for="qeQty">Total quantity</label><input id="qeQty" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 525000"></div>
-      <div class="qe-f"><label for="qeSales">Sales quantity</label><input id="qeSales" enterkeyhint="next" placeholder="e.g. 105 RL5000" autocomplete="off" autocapitalize="characters"></div>
-      <div class="qe-f" data-qefor="roll folder"><label for="qeRepeat">Repeat</label><input id="qeRepeat" inputmode="decimal" enterkeyhint="next" placeholder="1.625 or 3.125 x 1.625"></div>
+      <div class="qe-f" data-qefor="roll"><label for="qeFinished">Finished roll</label><input id="qeFinished" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 5000"></div>
+      <div class="qe-f" data-qefor="roll folder"><label for="qeRepeat">Repeat</label><input id="qeRepeat" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 1.625"></div>
       <div class="qe-f" data-qefor="roll folder"><label for="qeAcross">Across</label><input id="qeAcross" inputmode="numeric" enterkeyhint="next" placeholder="e.g. 4"></div>
-      <div class="qe-f" data-qefor="roll"><label for="qeFinished">Finished roll (labels)</label><input id="qeFinished" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 5000"></div>
+      <div class="qe-f" data-qefor="roll"><label for="qeCarrier">Carrier width (in)</label><input id="qeCarrier" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 3.125"></div>
       <div class="qe-f" data-qefor="sheeter"><label for="qeSheet">Sheet depth (in)</label><input id="qeSheet" inputmode="decimal" enterkeyhint="next" placeholder="11"></div>
       <div class="qe-f" data-qefor="sheeter"><label for="qeSheeterBox">Labels per box</label><input id="qeSheeterBox" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 500"></div>
       <div class="qe-f" data-qefor="folder"><label for="qeFanfold">Fanfold size (in)</label><input id="qeFanfold" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 12.25"></div>
@@ -4677,8 +4680,9 @@ const QE = {
   qeDocket:     { all:["docketNumber"] },
   qeCustomer:   { all:["customerName"] },
   qeQty:        { all:["jobQuantity"], roll:["impLabels"], sheeter:["sheeterImpLabels"], folder:["folderImpLabels"] },
-  qeRepeat:     { roll:["rollRepeat","ecciRepeat","impRepeat","frRepeat"], folder:["folderRepeat","folderImpRepeat"] },
-  qeAcross:     { roll:["rollAcross","ecciAcross","impAcross","frAcross","coreAcross"], folder:["folderAcross","folderImpAcross"] },
+  qeRepeat:     { roll:["rollRepeat","ecciRepeat","impRepeat","pcRepeat","frRepeat"], folder:["folderRepeat","folderImpRepeat"] },
+  qeAcross:     { roll:["rollAcross","ecciAcross","impAcross","pcAcross","frAcross","coreAcross"], folder:["folderAcross","folderImpAcross"] },
+  qeCarrier:    { roll:["coreCarrierWidth"] },
   qeFinished:   { roll:["frRoll"] },
   qeSheet:      { sheeter:["sheeterSheetSize"] },
   qeSheeterBox: { sheeter:["sheeterLabelsPerCarton"] },
@@ -4722,21 +4726,6 @@ function qeApply(id){
   const raw = String(el.value || "").trim();
   const type = qeTypeSel;
 
-  if(id === "qeSales"){
-    // "105 RL5000" / "1725 CT500" / "2970 BX4000"  -> count + per-unit size
-    const m = raw.toUpperCase().replace(/,/g, "").match(/^(\d+(?:\.\d+)?)\s*(?:([A-Z]{1,3})\s*(\d+(?:\.\d+)?))?$/);
-    if(!raw){ qeWrite("salesQuantity", ""); return; }
-    if(!m){ qeShowHint("Sales quantity: type a number, or a count and unit like 105 RL5000."); return; }
-    qeWrite("salesQuantity", m[1]);
-    if(m[2] && m[3]){
-      const per = m[3], unit = m[2];
-      if(type === "roll"){ qeWrite("frRoll", per); const f = document.getElementById("qeFinished"); if(f) f.value = per; }
-      else if(type === "sheeter"){ qeWrite("sheeterLabelsPerCarton", per); const f = document.getElementById("qeSheeterBox"); if(f) f.value = per; }
-      else { qeWrite("folderLabelsPerCarton", per); const f = document.getElementById("qeFolderBox"); if(f) f.value = per; }
-      qeShowHint(m[1] + " " + unit + " → " + formatNumber(+m[1]) + " " + (type === "roll" ? "rolls of " : "boxes of ") + formatNumber(+per) + ".");
-    }
-    return;
-  }
   if(id === "qeRepeat"){
     // "3.125 x 1.625" -> carrier width 3.125, repeat (depth) 1.625
     const m = raw.replace(/["″]/g, "").match(/^(\d*\.?\d+)\s*[x×*]\s*(\d*\.?\d+)$/i);
@@ -4744,6 +4733,7 @@ function qeApply(id){
       qeTargets(id, type).forEach(t=>qeWrite(t, m[2]));
       qeWrite("coreCarrierWidth", m[1]);
       el.value = m[2];
+      const cw = document.getElementById("qeCarrier"); if(cw) cw.value = m[1];
       qeShowHint("Carrier " + m[1] + "″ wide × " + m[2] + "″ → repeat " + m[2] + "″.");
       return;
     }
@@ -4825,10 +4815,6 @@ function qeRefresh(){
     const src = qeTargets(id).map(x=>document.getElementById(x)).find(x=>x && String(x.value).trim() !== "");
     el.value = src ? src.value : "";
   });
-  const sales = document.getElementById("qeSales");
-  if(sales && document.activeElement !== sales){
-    sales.value = ((document.getElementById("salesQuantity") || {}).value || "");
-  }
   const colors = document.getElementById("qeColors");
   if(colors && document.activeElement !== colors) colors.value = (jobListsState.colors || []).join(", ");
   qeUpdateGear();
@@ -4836,11 +4822,11 @@ function qeRefresh(){
 }
 
 function qeProgress(){
-  const need = { roll:["qeDocket","qeQty","qeRepeat","qeAcross","qeFinished"],
+  const need = { roll:["qeDocket","qeQty","qeRepeat","qeAcross","qeFinished","qeCarrier"],
                  sheeter:["qeDocket","qeQty","qeSheet","qeSheeterBox"],
                  folder:["qeDocket","qeQty","qeRepeat","qeAcross","qeFanfold","qeFolderBox"] }[qeTypeSel];
   let filled = 0;
-  Object.keys(QE).concat(["qeSales","qeColors"]).forEach(id=>{
+  Object.keys(QE).concat(["qeColors"]).forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.classList.toggle("qe-filled", String(el.value).trim() !== "");
   });
@@ -5033,23 +5019,31 @@ function calcEvenRolls(){
   }
   html += estNote;
 
-  // Options: the current plan on top, then other roll counts (10 rows). Tap one to use it.
-  const counts = [];
-  if(R >= 1) counts.push(R);
-  for(let rr = Math.max(1, Rmin - 1); counts.length < 10; rr++){ if(rr !== R) counts.push(rr); }
-  const rows = counts.map(rr=>{
+  // Suggested row(s) stay visible: your plan (green) and, if different, the ★ fewest-rolls suggestion.
+  // Everything else sits in the "More roll counts" dropdown. Tap any row to use it.
+  const rowFor = rr=>{
     const kk = Math.ceil(Q / (rr * step));
     const over = kk > kmax;
     const cls = [rr === R ? "rec" : "", over ? "over" : ""].filter(Boolean).join(" ");
     return '<tr data-errolls="' + rr + '"' + (cls ? ' class="' + cls + '"' : '') + '><td>' + rr + (rr === Rmin ? ' <span class="er-star">★</span>' : '') + '</td><td>' +
       formatNumber(kk * step) + '</td><td>' + fmtD(diaFor(kk)) + '</td><td>≈ ' + formatNumber(counterFor(kk)) + '</td><td class="er-x">' +
       formatNumber(rr * kk * step - Q) + '</td></tr>';
-  });
+  };
+  const shown = [];
+  if(R >= 1) shown.push(R);
+  if(Rmin !== R) shown.push(Rmin);
+  const more = [];
+  for(let rr = Math.max(1, Rmin - 1); more.length < 9; rr++){ if(!shown.includes(rr)) more.push(rr); }
+  const tableOf = (list, head) => '<table class="er-table"><colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"></colgroup>' +
+    (head ? '<thead><tr><th>Rolls</th><th>Labels</th><th>Dia</th><th>Counter*</th><th>Extra</th></tr></thead>' : '') +
+    '<tbody>' + list.map(rowFor).join("") + '</tbody></table>';
+  html += '<div class="er-suggest">' +
+    '<div class="er-suggest-cap">' + (R === Rmin ? 'Suggested press rolls' : 'Your plan · ★ suggested') + '</div>' +
+    '<div class="er-table-wrap er-top">' + tableOf(shown, true) + '</div></div>';
   html += '<details class="er-options" id="erOptions"' + (erOptionsOpen ? ' open' : '') + '>' +
-    '<summary>Other roll counts <span class="er-sum-hint">★ = fewest under ' + Dmax + '″ · tap a row to use it</span></summary>' +
-    '<div class="er-table-wrap"><table class="er-table"><colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"></colgroup>' +
-    '<thead><tr><th>Rolls</th><th>Labels</th><th>Dia</th><th>Counter*</th><th>Extra</th></tr></thead><tbody>' +
-    rows.join("") + '</tbody></table></div><div class="er-est">* Counter is estimated.</div></details>';
+    '<summary>More roll counts <span class="er-sum-hint">★ = fewest under ' + Dmax + '″ · tap a row to use it</span></summary>' +
+    '<div class="er-table-wrap">' + tableOf(more, true) + '</div></details>' +
+    '<div class="er-est">* Counter is estimated.</div>';
   out.innerHTML = html;
 }
 
@@ -5550,8 +5544,8 @@ function fillJobInfo(parsed, fields){
       Array.isArray(parsed.dies) ? parsed.dies.join(" ") : parsed.dies,
       Array.isArray(parsed.notes) ? parsed.notes.join(" ") : parsed.notes].map(x=>String(x||"")).join(" \n "));
   }
-  if(scanRepeat){ ["roll","sheeter","folder"].forEach(t=>setIf(t+"Repeat", scanRepeat)); setIf("ecciRepeat", scanRepeat); setIf("impRepeat", scanRepeat); }
-  if(scanAcross){ ["roll","sheeter","folder"].forEach(t=>setIf(t+"Across", scanAcross)); setIf("ecciAcross", scanAcross); setIf("impAcross", scanAcross); }
+  if(scanRepeat){ ["roll","sheeter","folder"].forEach(t=>setIf(t+"Repeat", scanRepeat)); setIf("ecciRepeat", scanRepeat); setIf("impRepeat", scanRepeat); setIf("pcRepeat", scanRepeat); }
+  if(scanAcross){ ["roll","sheeter","folder"].forEach(t=>setIf(t+"Across", scanAcross)); setIf("ecciAcross", scanAcross); setIf("impAcross", scanAcross); setIf("pcAcross", scanAcross); }
   setIf("jobQuantity", normalizeNumber(parsed.totalQuantity ?? parsed.total_quantity ?? parsed.quantity));
   setIf("salesQuantity", normalizeNumber(parsed.salesQuantity ?? parsed.sales_quantity));
   setIf("crossPerfTPI", parsed.crossPerfTPI ?? parsed.cross_perf_tpi ?? null);
@@ -6171,12 +6165,56 @@ document.addEventListener("DOMContentLoaded",()=>{
       calcFeetFor(pfx);
     });
 
+    /* ---- Linked Repeat / Across boxes ----
+       Typing a repeat (or across) in any card updates the matching boxes in the other cards,
+       as long as they were blank or still showed the old number. A box you've set to something
+       different on purpose is left alone. */
+    (function(){
+      const GROUPS = [
+        ["rollRepeat","ecciRepeat","impRepeat","pcRepeat","frRepeat"],
+        ["rollAcross","ecciAcross","impAcross","pcAcross","frAcross","coreAcross"],
+        ["sheeterRepeat","sheeterImpRepeat"],
+        ["sheeterAcross","sheeterImpAcross"],
+        ["folderRepeat","folderImpRepeat"],
+        ["folderAcross","folderImpAcross"]
+      ];
+      let syncing = false;
+      GROUPS.forEach(group=>{
+        group.forEach(id=>{
+          const el = document.getElementById(id);
+          if(!el) return;
+          el._last = el.value;
+          el.addEventListener("focus", ()=>{ el._last = el.value; });
+          el.addEventListener("input", ()=>{
+            const before = el._last === undefined ? "" : String(el._last).trim();
+            const now = String(el.value).trim();
+            el._last = el.value;
+            if(syncing) return;
+            syncing = true;
+            try{
+              group.forEach(other=>{
+                if(other === id) return;
+                const o = document.getElementById(other);
+                if(!o) return;
+                const ov = String(o.value).trim();
+                if(ov === "" || ov === before){
+                  o.value = now;
+                  o._last = o.value;
+                  o.dispatchEvent(new Event("input", { bubbles:true }));
+                }
+              });
+            }finally{ syncing = false; }
+          });
+        });
+      });
+    })();
+
     /* ---- Quick Entry ---- */
-    Object.keys(QE).concat(["qeSales"]).forEach(id=>{
+    Object.keys(QE).forEach(id=>{
       const el = document.getElementById(id);
       if(!el) return;
       // Docket #, sales shorthand and repeat shorthand apply when you leave the box; plain numbers apply as you type.
-      const onLeave = ["qeDocket","qeSales","qeRepeat"].includes(id);
+      const onLeave = ["qeDocket","qeRepeat"].includes(id);
       if(!onLeave) el.addEventListener("input", ()=>{ qeApply(id); qeProgress(); });
       el.addEventListener("change", ()=>{
         qeApply(id); qeProgress();
