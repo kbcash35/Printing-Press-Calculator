@@ -176,15 +176,35 @@ body.hide-jobinfo #jobInfoCard{ display:none !important; }
 .feet-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
 .feet-grid:empty{ display:none; }
 .feet-cell{ background:var(--field); border-radius:10px; padding:8px 11px; min-width:0; }
-.feet-cell.full{ grid-column:1/-1; background:var(--black); color:#fff; }
+.feet-cell.full{ grid-column:1/-1; background:var(--black); color:var(--bg); }
 .feet-cell span{ display:block; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); }
-.feet-cell.full span{ color:rgba(255,255,255,.7); }
+.feet-cell.full span{ color:var(--bg); opacity:.7; }
 .feet-cell b{ display:block; font-size:18px; font-weight:800; margin-top:2px; overflow-wrap:anywhere; }
 .feet-cell.full b{ font-size:26px; font-weight:900; letter-spacing:-.02em; }
+.feet-cell.feet-hint{ grid-column:1/-1; }
+.feet-cell.feet-hint b{ font-size:13px; font-weight:700; color:var(--muted); }
 .feet-rule{ font-size:11.5px; font-weight:600; color:var(--muted); margin-top:8px; line-height:1.35; }
+/* Quick Entry */
+#quickEntryCard{ border:1.5px solid var(--text); }
+.qe-type{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; background:var(--field); border-radius:12px; padding:4px; margin:4px 0 12px; }
+.qe-type button{ border:none; background:none; border-radius:9px; padding:10px 6px; font-size:14px; font-weight:800; color:var(--muted); cursor:pointer; }
+.qe-type button.active{ background:var(--card); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.10); }
+.qe-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 10px; }
+.qe-f{ min-width:0; }
+.qe-f.full{ grid-column:1/-1; }
+.qe-f.qe-hide{ display:none; }
+.qe-f label{ display:block; margin:0 0 4px; font-size:13px; }
+.qe-f input{ width:100%; box-sizing:border-box; margin:0; font-size:18px; font-weight:800; }
+.qe-f input.qe-filled{ border-color:#1f9d55; }
+.qe-opt{ font-weight:600; color:var(--muted); font-size:11.5px; }
+.qe-hint{ font-size:12.5px; font-weight:700; color:#1f9d55; line-height:1.4; margin-top:10px; min-height:0; }
+.qe-hint:empty{ display:none; }
+.qe-foot{ margin-top:12px; }
+.qe-progress{ font-size:12.5px; font-weight:700; color:var(--muted); margin-bottom:8px; }
+.qe-done{ display:block; width:100%; box-sizing:border-box; background:var(--black); color:var(--bg); border:none; border-radius:12px; padding:14px 16px; font-size:15px; font-weight:800; cursor:pointer; }
 /* Even Rolls planner */
 .er-source{ font-size:12px; font-weight:600; color:var(--muted); line-height:1.4; margin-top:4px; }
-.er-plan{ margin-top:12px; border-radius:14px; background:var(--black); color:#fff; padding:14px; }
+.er-plan{ margin-top:12px; border-radius:14px; background:var(--black); color:var(--bg); padding:14px; }
 .er-plan-kicker{ font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; opacity:.7; }
 .er-plan-head{ font-size:21px; font-weight:900; letter-spacing:-.02em; line-height:1.2; margin-top:3px; }
 .er-plan-sub{ font-size:13px; font-weight:600; opacity:.8; margin-top:4px; line-height:1.4; }
@@ -194,7 +214,21 @@ body.hide-jobinfo #jobInfoCard{ display:none !important; }
 .er-cell b{ display:block; font-size:17px; font-weight:800; margin-top:2px; }
 .er-cell.full{ grid-column:1/-1; }
 .er-note{ margin-top:10px; font-size:13px; font-weight:600; line-height:1.4; border-radius:10px; padding:9px 11px; background:var(--field); }
-.er-table-wrap{ margin-top:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line); border-radius:12px; }
+.er-options{ margin-top:12px; border:1px solid var(--line); border-radius:12px; padding:0 10px 8px; }
+.er-options > summary{ list-style:none; cursor:pointer; padding:11px 2px; font-size:14px; font-weight:800; color:var(--text); }
+.er-options > summary::-webkit-details-marker{ display:none; }
+.er-options > summary::before{ content:"\203A"; display:inline-block; margin-right:8px; transition:transform .18s ease; color:var(--muted); }
+.er-options[open] > summary::before{ transform:rotate(90deg); }
+.er-sum-hint{ display:block; font-size:11.5px; font-weight:600; color:var(--muted); margin:2px 0 0 16px; }
+.er-table-wrap{ margin-top:2px; overflow:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line); border-radius:12px;
+  max-height:228px; /* header + about 5 rows; scroll for the rest */ }
+.er-table thead th{ position:sticky; top:0; z-index:1; }
+.er-star{ color:#1f9d55; font-size:11px; }
+.er-table td.er-x{ color:var(--accent, #1763ff); }
+body.dark .er-table td.er-x{ color:#6ea0ff; }
+.er-table tr.over td, .er-table tr.over td.er-x{ color:var(--danger); }
+.er-cell.bad b, .er-cell.bad span{ color:var(--danger); }
+.er-est{ margin-top:8px; font-size:11.5px; font-weight:600; color:var(--muted); line-height:1.4; }
 .er-table{ width:100%; table-layout:fixed; border-collapse:collapse; margin:0; }
 .er-table col.c1{ width:15%; } .er-table col.c2{ width:22%; } .er-table col.c3{ width:20%; }
 .er-table col.c4{ width:20%; } .er-table col.c5{ width:23%; }
@@ -205,14 +239,14 @@ body.hide-jobinfo #jobInfoCard{ display:none !important; }
 .er-table th:first-child,.er-table td:first-child{ text-align:left; padding-left:9px; }
 .er-table th:last-child,.er-table td:last-child{ padding-right:9px; }
 .er-table tbody tr:last-child td{ border-bottom:0; }
-.er-extra{ background:#fff4d6; color:#6b4600; }
-body.dark .er-extra{ background:rgba(245,197,24,.15); color:#f5d77a; }
-.er-plan-bad{ background:var(--danger); }
+.er-extra{ background:rgba(23,99,255,.08); color:var(--accent, #1763ff); }
+body.dark .er-extra{ background:rgba(110,160,255,.14); color:#6ea0ff; }
+.er-plan-bad{ background:var(--danger); color:#fff; }
 .er-warn{ background:#ffe1e1; color:#8a1c1c; }
 body.dark .er-warn{ background:rgba(224,36,36,.18); color:#ffb3b3; }
 .er-cell.bad b{ color:var(--danger); }
 .er-rolls-input{ font-weight:900 !important; border-color:var(--text) !important; }
-.er-table-cap{ margin-top:12px; font-size:12px; font-weight:700; color:var(--muted); }
+
 .er-table tbody tr{ cursor:pointer; }
 .er-table tr.over td{ color:var(--danger); }
 .er-table tr.rec td{ background:rgba(31,157,85,.10); }
@@ -231,7 +265,7 @@ body.dark .er-warn{ background:rgba(224,36,36,.18); color:#ffb3b3; }
 .docket-bar.collapsed .docket-chips,.docket-bar.collapsed #docketBarHint{ display:none; }
 .docket-bar.collapsed .docket-bar-head{ margin-bottom:0; }
 .rc-toast{ position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px);
-  width:min(92vw, 460px); box-sizing:border-box; background:var(--black); color:#fff; border-radius:14px; padding:12px 14px;
+  width:min(92vw, 460px); box-sizing:border-box; background:var(--black); color:var(--bg); border-radius:14px; padding:12px 14px;
   font-size:14px; font-weight:600; line-height:1.4; box-shadow:0 8px 24px rgba(0,0,0,.25); z-index:50;
   opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease; }
 .rc-toast.show{ opacity:1; transform:translate(-50%, 0); pointer-events:auto; }
@@ -248,7 +282,7 @@ body.dark .er-warn{ background:rgba(224,36,36,.18); color:#ffb3b3; }
 .rs-notice.ok{ background:rgba(31,157,85,.10); color:#14663a; }
 .rs-notice-btns{ display:flex; flex-wrap:wrap; gap:8px; margin-top:9px; }
 .rs-notice-btns button{ border:none; border-radius:9px; padding:9px 12px; font-size:13px; font-weight:800; cursor:pointer;
-  background:var(--black); color:#fff; }
+  background:var(--black); color:var(--bg); }
 .rs-notice-btns button.ghost{ background:var(--card); color:var(--text); border:1px solid var(--line); }
 .rs-progress{ margin-top:12px; }
 .rs-progress-bar{ height:8px; border-radius:999px; background:var(--field); overflow:hidden; }
@@ -300,14 +334,14 @@ body.dark .rs-notice.ok{ color:#7fd6a4; }
   border:1px solid var(--line); background:var(--field); color:var(--text);
   border-radius:999px; padding:8px 12px; font-size:13px; font-weight:700; cursor:pointer;
 }
-.docket-chip.active{ background:var(--black); color:#fff; border-color:var(--black); }
+.docket-chip.active{ background:var(--black); color:var(--bg); border-color:var(--black); }
 .docket-chip .dc-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:150px; }
 .docket-chip .dc-close{
   display:inline-flex; align-items:center; justify-content:center;
   width:18px; height:18px; border-radius:50%; border:none; cursor:pointer;
   background:rgba(0,0,0,.10); color:inherit; font-size:11px; line-height:1; font-weight:800; padding:0;
 }
-.docket-chip.active .dc-close{ background:rgba(255,255,255,.25); }
+.docket-chip.active .dc-close{ background:rgba(127,127,127,.30); }
 .docket-chip .dc-close:hover{ background:#ffb3b3; color:var(--danger); }
 .docket-chips-empty{ font-size:13px; color:var(--muted); }
 /* Manual mode hides every scan / camera affordance */
@@ -328,7 +362,7 @@ body.manual-mode .scan-hide{ display:none !important; }
 .bb-value{ font-size:20px; font-weight:800; margin-top:3px; }
 .complete-job-btn{
   width:100%; margin-top:14px; padding:16px;
-  background:var(--black); color:#fff; border:none; border-radius:14px;
+  background:var(--black); color:var(--bg); border:none; border-radius:14px;
   font-size:16px; font-weight:800; letter-spacing:-.01em;
   cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
   transition: opacity .15s;
@@ -373,7 +407,7 @@ body.manual-mode .scan-hide{ display:none !important; }
   font-size:16px; font-weight:700; background:var(--field);
 }
 .sl-edit-actions{ display:flex; gap:10px; margin-top:14px; }
-.sl-save{ flex:1; background:var(--black); color:#fff; border:none; border-radius:10px; padding:12px; font-size:15px; font-weight:800; cursor:pointer; }
+.sl-save{ flex:1; background:var(--black); color:var(--bg); border:none; border-radius:10px; padding:12px; font-size:15px; font-weight:800; cursor:pointer; }
 .sl-cancel{ flex:0 0 auto; background:var(--field); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:12px 18px; font-size:15px; font-weight:700; cursor:pointer; }
 .sl-card.editing{ border-color:var(--text); }
 /* Edit form: roll-by-roll rows */
@@ -396,6 +430,7 @@ body.manual-mode .scan-hide{ display:none !important; }
   -webkit-appearance:none; appearance:none;
 }
 .sl-extra-block{ border:1px solid var(--line); border-radius:10px; padding:10px 11px; margin:4px 0 10px; }
+.sl-extra-head{ color:var(--accent, #1763ff) !important; }
 .sl-extra-head{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); margin-bottom:8px; }
 .sl-extra-block .sl-edit-two:last-child{ margin-bottom:0; }
 /* Edit form: live preview */
@@ -702,19 +737,22 @@ input[type=file]{
 .add-roll-box{ border:1px solid var(--line); border-radius:12px; padding:12px; margin:8px 0 10px; }
 .add-roll-title{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin-bottom:6px; }
 .roll-extra-toggle{ margin-top:8px; background:none; border:none; padding:0; font-size:13px; font-weight:800; color:var(--text); text-decoration:underline; cursor:pointer; }
-.roll-extra-row{ display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; margin-top:8px; }
+.roll-extra-row{ display:grid; grid-template-columns:1fr; gap:8px; margin-top:8px; }
+.roll-extra-row .seg-toggle button{ white-space:nowrap; font-size:14px; }
 .roll-extra-row .tally-input{ margin:0; }
 .tally-row.roll-row{ align-items:flex-start; cursor:pointer; }
 .roll-main{ flex:1 1 auto; min-width:0; text-align:right; }
 .roll-labels{ font-weight:800; font-size:16px; }
 .roll-sub{ font-size:12px; font-weight:600; color:var(--muted); margin-top:2px; line-height:1.35; }
+.roll-sub span{ font-size:inherit !important; font-weight:inherit; color:inherit; }
 .roll-sub .derived{ font-style:italic; }
+.roll-sub .x-extra{ font-weight:800; }
 .roll-edit{ flex-basis:100%; display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; cursor:default; }
 .roll-edit label{ display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:2px; }
 .roll-edit input,.roll-edit select{ width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:15px; font-weight:700; background:var(--field); color:var(--text); }
 .roll-edit .re-actions{ grid-column:1/-1; display:flex; gap:8px; }
 .roll-edit .re-actions button{ flex:1; border-radius:9px; padding:10px; font-size:14px; font-weight:800; cursor:pointer; }
-.roll-edit .re-save{ background:var(--black); color:#fff; border:none; }
+.roll-edit .re-save{ background:var(--black); color:var(--bg); border:none; }
 .roll-edit .re-cancel{ background:var(--card); color:var(--text); border:1px solid var(--line); }
 .running-total{
   display:flex; justify-content:space-between; align-items:center; gap:10px;
@@ -736,12 +774,15 @@ input[type=file]{
 .seg-toggle{ display:flex; gap:6px; background:var(--field); border:1px solid var(--line); border-radius:10px; padding:5px; }
 .seg-toggle button{ flex:1 1 0; min-width:0; padding:11px 6px; border:none; border-radius:8px; background:transparent; color:#3e4048; font-size:15px; font-weight:800; }
 .seg-toggle button.active{ background:var(--black); color:var(--bg); }
-.seg-toggle.small button{ padding:9px 6px; font-size:14px; }
+.seg-toggle.small button{ padding:9px 6px; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .extra-summary{ margin-top:12px; border-top:1px solid var(--line); padding-top:10px; }
 .extra-line{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 2px; }
 .extra-line span:first-child{ color:#7a7d85; font-size:13px; text-transform:uppercase; letter-spacing:.03em; }
 .extra-line span:last-child{ font-weight:800; font-size:18px; }
 .extra-line-accent span:last-child{ color:var(--accent, #1763ff); }
+/* Anything "extra" is shown in the same blue */
+.x-extra{ color:var(--accent, #1763ff) !important; font-weight:800; }
+body.dark .x-extra{ color:#6ea0ff !important; }
 .dual-btns{ display:flex; gap:8px; }
 .dual-btns > *{ flex:1 1 0; min-width:0; }
 .secondary-btn{ padding:14px 8px; border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--text); font-size:15px; font-weight:800; }
@@ -812,9 +853,12 @@ input[type=file]{
   margin-top:14px;
   border:1px solid var(--line);
   border-radius:15px;
-  overflow:hidden;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  max-height:440px; /* header + about 10 rows; scroll for the rest */
   background:var(--card);
 }
+.table-wrap thead th{ position:sticky; top:0; z-index:1; }
 table{
   width:100%;
   min-width:0;
@@ -1120,6 +1164,40 @@ body.dark .ecci-display{
     <div id="docketScanSuccess" class="success">No docket photo selected.</div>
   </section>
 
+  <!-- Quick Entry: type the handful of numbers that drive every calculation -->
+  <section class="card" id="quickEntryCard">
+    <h2>Quick Entry</h2>
+    <p class="card-sub">Type the few numbers off the docket — everything else in the app fills in from them. Tap Next on the keyboard to move down. Shortcuts: <b>105 RL5000</b>, <b>1725 CT500</b>, <b>3.125 x 1.625</b>.</p>
+    <div class="qe-type" id="qeType">
+      <button data-qetype="roll" type="button">Roll</button>
+      <button data-qetype="sheeter" type="button">Sheeter</button>
+      <button data-qetype="folder" type="button">Folder</button>
+    </div>
+    <div class="qe-grid">
+      <div class="qe-f full"><label for="qeDocket">Docket #</label><input id="qeDocket" inputmode="numeric" enterkeyhint="next" placeholder="e.g. 1411978" autocomplete="off"></div>
+      <div class="qe-f full"><label for="qeCustomer">Customer <span class="qe-opt">optional</span></label><input id="qeCustomer" enterkeyhint="next" placeholder="e.g. Shoppers Drug Mart" autocomplete="off" autocapitalize="characters"></div>
+      <div class="qe-f"><label for="qeQty">Total quantity</label><input id="qeQty" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 525000"></div>
+      <div class="qe-f"><label for="qeSales">Sales quantity</label><input id="qeSales" enterkeyhint="next" placeholder="e.g. 105 RL5000" autocomplete="off" autocapitalize="characters"></div>
+      <div class="qe-f" data-qefor="roll folder"><label for="qeRepeat">Repeat</label><input id="qeRepeat" inputmode="decimal" enterkeyhint="next" placeholder="1.625 or 3.125 x 1.625"></div>
+      <div class="qe-f" data-qefor="roll folder"><label for="qeAcross">Across</label><input id="qeAcross" inputmode="numeric" enterkeyhint="next" placeholder="e.g. 4"></div>
+      <div class="qe-f" data-qefor="roll"><label for="qeFinished">Finished roll (labels)</label><input id="qeFinished" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 5000"></div>
+      <div class="qe-f" data-qefor="sheeter"><label for="qeSheet">Sheet depth (in)</label><input id="qeSheet" inputmode="decimal" enterkeyhint="next" placeholder="11"></div>
+      <div class="qe-f" data-qefor="sheeter"><label for="qeSheeterBox">Labels per box</label><input id="qeSheeterBox" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 500"></div>
+      <div class="qe-f" data-qefor="folder"><label for="qeFanfold">Fanfold size (in)</label><input id="qeFanfold" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 12.25"></div>
+      <div class="qe-f" data-qefor="folder"><label for="qeFolderBox">Labels per box</label><input id="qeFolderBox" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 4000"></div>
+      <div class="qe-f" data-qefor="folder"><label for="qeFoldSheet">Labels per fold sheet</label><input id="qeFoldSheet" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 4"></div>
+      <div class="qe-f" data-qefor="folder"><label for="qePack">Labels per pack</label><input id="qePack" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 2000"></div>
+      <div class="qe-f full"><label for="qeStock">Stock <span class="qe-opt">optional</span></label><input id="qeStock" enterkeyhint="next" placeholder="e.g. 3mil DT BOPP AT2550 40#" autocomplete="off"></div>
+      <div class="qe-f full"><label for="qeColors">Colours <span class="qe-opt">optional — commas between, or Plain</span></label><input id="qeColors" enterkeyhint="next" placeholder="e.g. PMS 417 Grey, Black" autocomplete="off"></div>
+      <div class="qe-f" id="qeGearWrap"><label for="qeGear">Gear teeth</label><input id="qeGear" inputmode="numeric" enterkeyhint="done" placeholder="e.g. 98"></div>
+    </div>
+    <div class="qe-hint" id="qeHint"></div>
+    <div class="qe-foot">
+      <div class="qe-progress" id="qeProgress"></div>
+      <button id="qeDoneBtn" class="qe-done" type="button">Done — open job ›</button>
+    </div>
+  </section>
+
   <section class="card" id="jobInfoCard">
     <h2>Job Info</h2>
     <div class="compact-grid">
@@ -1269,7 +1347,7 @@ body.dark .ecci-display{
     <p class="card-sub">Plans even press rolls under the max diameter. Each press roll is a level from the Finished Roll table, so its labels divide evenly by the finished roll. Any overrun is counted as extra labels. Fills in from the docket; type over any value.</p>
     <div class="two-col">
       <div><label for="erQty">Job total labels</label><input id="erQty" inputmode="decimal"></div>
-      <div><label for="erFinished">Finished roll (labels)</label><input id="erFinished" inputmode="decimal"></div>
+      <div><label for="erFinished">Finished roll</label><input id="erFinished" inputmode="decimal"></div>
     </div>
     <div class="two-col">
       <div><label for="erThickness">Thickness (in)</label><input id="erThickness" inputmode="decimal"></div>
@@ -1402,12 +1480,12 @@ body.dark .ecci-display{
       <div class="two-col">
         <div><label for="rollTallyInput">Labels on roll</label>
           <input id="rollTallyInput" class="tally-input" placeholder="e.g. 12000" inputmode="decimal"></div>
-        <div><label for="rollImpInput">Impressions on roll</label>
+        <div><label for="rollImpInput">Impressions</label>
           <input id="rollImpInput" class="tally-input" placeholder="counter" inputmode="decimal"></div>
       </div>
       <button id="rollExtraToggle" class="roll-extra-toggle" type="button">+ Extra on this roll</button>
       <div id="rollExtraRow" class="roll-extra-row" style="display:none;">
-        <input id="rollRowExtra" class="tally-input" placeholder="Extra amount" inputmode="decimal">
+        <input id="rollRowExtra" class="tally-input" placeholder="Extra on this roll" inputmode="decimal">
         <div class="seg-toggle small" id="rollRowExtraUnit">
           <button data-unit="labels" class="active" type="button">Labels</button>
           <button data-unit="impressions" type="button">Impressions</button>
@@ -1768,11 +1846,30 @@ function applyDisplayMode(n){
   if(currentDecimalMode === "nearest") return Math.round(n);
   return n;
 }
+const DECIMAL_MODE_KEY = "RC_DECIMAL_MODE_V1";
+const UNITS_KEY = "RC_UNITS_V1";
 function setDecimalModeFromButton(btn){
   document.querySelectorAll("#decimalControls button").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
   currentDecimalMode = btn.dataset.mode;
+  safeSet(DECIMAL_MODE_KEY, currentDecimalMode);
   recalculateAll();
+}
+// Put back the Decimal Display and Decimal/Fraction choices from last time.
+function restoreDisplayPrefs(){
+  const mode = safeGet(DECIMAL_MODE_KEY);
+  const btn = mode && document.querySelector('#decimalControls button[data-mode="' + mode + '"]');
+  if(btn){
+    document.querySelectorAll("#decimalControls button").forEach(b=>b.classList.toggle("active", b === btn));
+    currentDecimalMode = mode;
+  }
+  let units = {};
+  try{ units = JSON.parse(safeGet(UNITS_KEY) || "{}") || {}; }catch(e){}
+  Object.keys(units).forEach(section=>{
+    if(!(section in sectionUnits) || !["decimal","fraction"].includes(units[section])) return;
+    sectionUnits[section] = units[section];
+    document.querySelectorAll('.unit-toggle[data-section="' + section + '"] button').forEach(b=>b.classList.toggle("active", b.dataset.unit === units[section]));
+  });
 }
 function formatNumber(n){
   if(!Number.isFinite(n)) return "—";
@@ -1801,7 +1898,8 @@ function toFraction(value, denom=32){
 function renderMeasure(value, section){
   if(!Number.isFinite(value)) return "—";
   if(sectionUnits[section] === "fraction") return toFraction(value);
-  return formatNumber(value);
+  // A measurement is shown exactly — Decimal Display rounding (up/down/nearest) is for counts, not sizes.
+  return new Intl.NumberFormat("en-US",{ maximumFractionDigits:5 }).format(value) + "\u2033";
 }
 function showError(id,msg){
   const el=document.getElementById(id);
@@ -3317,6 +3415,8 @@ function applyMode(mode, persist){
       ? "Manual Mode: camera and scan buttons are hidden. Enter Repeat, Across and counters yourself — everything else still calculates automatically."
       : "Scan a docket to auto-fill the job. Switch to Manual Mode to type everything in yourself.";
   }
+  const qe = document.getElementById("quickEntryCard");
+  if(qe) qe.classList.toggle("open", appMode === "manual");
   if(persist) safeSet(MODE_KEY, appMode);
 }
 
@@ -4420,7 +4520,8 @@ function renderTally(prefix){
           if(c.imps !== null) sub.push(c.impDerived
             ? '<span class="derived">\u2248 ' + formatNumber(Math.round(c.imps)) + ' imp</span>'
             : formatNumber(Math.round(c.imps)) + ' imp');
-          if(c.r.extra > 0) sub.push('+' + formatNumber(c.r.extra) + ' ' + (c.r.extraUnit === "impressions" ? "imp" : "labels") + ' extra');
+          if(c.r.extra > 0) sub.push('<span class="x-extra">+' + formatNumber(c.r.extra) + ' ' +
+            (c.r.extraUnit === "impressions" ? "imp extra = " + formatNumber(Math.round(c.extraLabels)) + " labels" : "labels extra") + '</span>');
           if(c.labelsDerived) sub.push('<span class="derived">labels from impressions</span>');
           let edit = "";
           if(rollEditIdx === i){
@@ -4567,6 +4668,209 @@ async function scanNumberInto(targetId, file, statusPrefix){
 
 /* ---- Total boxes from Start Box # / End Box # (sheeter & folder) ---- */
 /* ================================================================
+   QUICK ENTRY — a few typed numbers drive the whole app (no camera needed).
+   Each box writes into the app's real fields and fires their normal input events,
+   so every calculation updates exactly as it would after a scan.
+   ================================================================ */
+// box id -> { to: target ids (by job type or all), read: where to read it back from }
+const QE = {
+  qeDocket:     { all:["docketNumber"] },
+  qeCustomer:   { all:["customerName"] },
+  qeQty:        { all:["jobQuantity"], roll:["impLabels"], sheeter:["sheeterImpLabels"], folder:["folderImpLabels"] },
+  qeRepeat:     { roll:["rollRepeat","ecciRepeat","impRepeat","frRepeat"], folder:["folderRepeat","folderImpRepeat"] },
+  qeAcross:     { roll:["rollAcross","ecciAcross","impAcross","frAcross","coreAcross"], folder:["folderAcross","folderImpAcross"] },
+  qeFinished:   { roll:["frRoll"] },
+  qeSheet:      { sheeter:["sheeterSheetSize"] },
+  qeSheeterBox: { sheeter:["sheeterLabelsPerCarton"] },
+  qeFanfold:    { folder:["folderFoldSize"] },
+  qeFolderBox:  { folder:["folderLabelsPerCarton"] },
+  qeFoldSheet:  { folder:["bbLabelsPerFold"] },
+  qePack:       { folder:["bbPackSize"] },
+  qeStock:      { all:["stockInfo"] },
+  qeGear:       { all:["gearTeeth"] }
+};
+let qeTypeSel = "roll";
+let qeHintTimer = null;
+
+function qeTargets(id, type){ const m = QE[id] || {}; return [...(m.all || []), ...(m[type || qeTypeSel] || [])]; }
+function qeWrite(targetId, value){
+  const el = document.getElementById(targetId);
+  if(!el) return;
+  if(String(el.value) === String(value)) return;
+  el.value = value;
+  el.dispatchEvent(new Event("input", { bubbles:true }));
+}
+function qeShowHint(msg){
+  const h = document.getElementById("qeHint");
+  if(!h) return;
+  h.textContent = msg || "";
+  clearTimeout(qeHintTimer);
+  if(msg) qeHintTimer = setTimeout(()=>{ h.textContent = ""; }, 6000);
+}
+// "525,000" / "525k" -> 525000 (M is avoided on purpose: on dockets 5M often means 5,000).
+function qeNum(v){
+  const t = String(v || "").trim().toLowerCase().replace(/,/g, "");
+  const m = t.match(/^(\d+(?:\.\d+)?)\s*k$/);
+  if(m) return Math.round(parseFloat(m[1]) * 1000);
+  const n = parseFloat(t);
+  return Number.isFinite(n) ? n : null;
+}
+
+function qeApply(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const raw = String(el.value || "").trim();
+  const type = qeTypeSel;
+
+  if(id === "qeSales"){
+    // "105 RL5000" / "1725 CT500" / "2970 BX4000"  -> count + per-unit size
+    const m = raw.toUpperCase().replace(/,/g, "").match(/^(\d+(?:\.\d+)?)\s*(?:([A-Z]{1,3})\s*(\d+(?:\.\d+)?))?$/);
+    if(!raw){ qeWrite("salesQuantity", ""); return; }
+    if(!m){ qeShowHint("Sales quantity: type a number, or a count and unit like 105 RL5000."); return; }
+    qeWrite("salesQuantity", m[1]);
+    if(m[2] && m[3]){
+      const per = m[3], unit = m[2];
+      if(type === "roll"){ qeWrite("frRoll", per); const f = document.getElementById("qeFinished"); if(f) f.value = per; }
+      else if(type === "sheeter"){ qeWrite("sheeterLabelsPerCarton", per); const f = document.getElementById("qeSheeterBox"); if(f) f.value = per; }
+      else { qeWrite("folderLabelsPerCarton", per); const f = document.getElementById("qeFolderBox"); if(f) f.value = per; }
+      qeShowHint(m[1] + " " + unit + " → " + formatNumber(+m[1]) + " " + (type === "roll" ? "rolls of " : "boxes of ") + formatNumber(+per) + ".");
+    }
+    return;
+  }
+  if(id === "qeRepeat"){
+    // "3.125 x 1.625" -> carrier width 3.125, repeat (depth) 1.625
+    const m = raw.replace(/["″]/g, "").match(/^(\d*\.?\d+)\s*[x×*]\s*(\d*\.?\d+)$/i);
+    if(m){
+      qeTargets(id, type).forEach(t=>qeWrite(t, m[2]));
+      qeWrite("coreCarrierWidth", m[1]);
+      el.value = m[2];
+      qeShowHint("Carrier " + m[1] + "″ wide × " + m[2] + "″ → repeat " + m[2] + "″.");
+      return;
+    }
+  }
+  if(id === "qeDocket"){
+    const cur = ((document.getElementById("docketNumber") || {}).value || "").trim();
+    if(raw && cur && normDocketKey(raw) !== normDocketKey(cur)){
+      // A different docket: park the current one in its own chip (like scanning does) and start clean.
+      const unsaved = ["roll","sheeter","folder"].filter(hasUnsavedJob);
+      if(unsaved.length && !confirm("Start docket " + raw + "?\n\nThe results for " + cur + " haven't been saved to My Shift. They stay in its Open Dockets chip.")){
+        el.value = cur; return;
+      }
+      const keepFocus = document.activeElement;
+      newDocket();
+      switchTab(type);
+      qeSetType(type, false);
+      if(keepFocus && keepFocus !== document.body && keepFocus.focus) keepFocus.focus();
+    }
+    qeWrite("docketNumber", raw);
+    return;
+  }
+  if(id === "qeCustomer" || id === "qeStock"){
+    qeTargets(id, type).forEach(t=>qeWrite(t, raw));
+    return;
+  }
+  const n = raw === "" ? "" : qeNum(raw);
+  if(raw !== "" && n === null) return;
+  qeTargets(id, type).forEach(t=>qeWrite(t, n === "" ? "" : String(n)));
+}
+
+function qeApplyColors(){
+  const el = document.getElementById("qeColors");
+  if(!el) return;
+  const list = String(el.value || "").split(/[,\n]/).map(x=>x.trim()).filter(Boolean);
+  jobListsState.colors = list;
+  saveJobLists(); renderJobList("colors");
+  if(typeof reconcileAnilox === "function") reconcileAnilox();   // no API call — the 🔍 button does that
+  qeUpdateGear();
+}
+function qeUpdateGear(){
+  const wrap = document.getElementById("qeGearWrap");
+  const colors = (jobListsState.colors || []);
+  if(wrap) wrap.classList.toggle("qe-hide", !(typeof isColorJob === "function" && isColorJob(colors)));
+}
+
+function qeSetType(type, fromUser){
+  qeTypeSel = ["roll","sheeter","folder"].includes(type) ? type : "roll";
+  document.querySelectorAll("#qeType button").forEach(b=>b.classList.toggle("active", b.dataset.qetype === qeTypeSel));
+  document.querySelectorAll("#quickEntryCard [data-qefor]").forEach(f=>{
+    f.classList.toggle("qe-hide", !f.dataset.qefor.split(" ").includes(qeTypeSel));
+  });
+  if(fromUser){
+    switchTab(qeTypeSel);
+    // carry what's already typed into the new job type's fields
+    ["qeQty","qeRepeat","qeAcross"].forEach(id=>{ const el = document.getElementById(id); if(el && el.value.trim()) qeApply(id); });
+  }
+  if(qeTypeSel === "sheeter"){
+    // Sheeter jobs are always an 11" sheet, 1 across.
+    const s = document.getElementById("sheeterSheetSize");
+    if(s && !String(s.value).trim()){ s.value = 11; if(typeof syncSheeterSheet === "function") syncSheeterSheet(); }
+  }
+  qeRefresh();
+}
+
+// Read the app's current values back into the boxes (after a scan, a recall, or a tab switch).
+let qeLastDocket = null;
+function qeRefresh(){
+  const dNow = ((document.getElementById("docketNumber") || {}).value || "").trim();
+  if(dNow !== qeLastDocket){ qeLastDocket = dNow; qeShowHint(""); }   // a hint belongs to the docket it was typed on
+  const t = (typeof jobTypeNow === "function" && jobTypeNow()) || qeTypeSel;
+  if(t !== qeTypeSel){
+    qeTypeSel = t;
+    document.querySelectorAll("#qeType button").forEach(b=>b.classList.toggle("active", b.dataset.qetype === qeTypeSel));
+    document.querySelectorAll("#quickEntryCard [data-qefor]").forEach(f=>f.classList.toggle("qe-hide", !f.dataset.qefor.split(" ").includes(qeTypeSel)));
+  }
+  Object.keys(QE).forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el || document.activeElement === el) return;
+    const src = qeTargets(id).map(x=>document.getElementById(x)).find(x=>x && String(x.value).trim() !== "");
+    el.value = src ? src.value : "";
+  });
+  const sales = document.getElementById("qeSales");
+  if(sales && document.activeElement !== sales){
+    sales.value = ((document.getElementById("salesQuantity") || {}).value || "");
+  }
+  const colors = document.getElementById("qeColors");
+  if(colors && document.activeElement !== colors) colors.value = (jobListsState.colors || []).join(", ");
+  qeUpdateGear();
+  qeProgress();
+}
+
+function qeProgress(){
+  const need = { roll:["qeDocket","qeQty","qeRepeat","qeAcross","qeFinished"],
+                 sheeter:["qeDocket","qeQty","qeSheet","qeSheeterBox"],
+                 folder:["qeDocket","qeQty","qeRepeat","qeAcross","qeFanfold","qeFolderBox"] }[qeTypeSel];
+  let filled = 0;
+  Object.keys(QE).concat(["qeSales","qeColors"]).forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.toggle("qe-filled", String(el.value).trim() !== "");
+  });
+  need.forEach(id=>{ const el = document.getElementById(id); if(el && String(el.value).trim() !== "") filled++; });
+  const p = document.getElementById("qeProgress");
+  if(p) p.textContent = filled === need.length ? "✓ All key fields in" : (filled + " of " + need.length + " key fields");
+}
+
+// Keyboard "Next" walks down the visible boxes.
+function qeNext(fromEl){
+  const boxes = [...document.querySelectorAll("#quickEntryCard .qe-f:not(.qe-hide) input")];
+  const i = boxes.indexOf(fromEl);
+  if(i >= 0 && i < boxes.length - 1){ boxes[i + 1].focus(); boxes[i + 1].select && boxes[i + 1].select(); }
+  else fromEl.blur();
+}
+
+function qeDone(){
+  document.activeElement && document.activeElement.blur && document.activeElement.blur();
+  switchTab(qeTypeSel);
+  const card = document.getElementById("quickEntryCard");
+  if(card) card.classList.remove("open");
+  const bar = document.getElementById("tabBar");
+  if(bar) bar.scrollIntoView({ behavior:"smooth", block:"start" });
+  if(typeof showToast === "function"){
+    const d = ((document.getElementById("docketNumber") || {}).value || "").trim();
+    showToast("Job " + (d ? "<b>" + escHtml(d) + "</b> " : "") + "is set up on the " + rsTypeLabel(qeTypeSel) + " tab.", 4000);
+  }
+}
+
+/* ================================================================
    EVEN ROLLS — even press rolls at Finished Roll table levels (labels divisible by the finished roll), <= max diameter.
    Same geometry as ECCI: length = pi(D^2 - d^2) / (4t), counter = length / 10.
    ================================================================ */
@@ -4623,8 +4927,12 @@ function fillEvenRolls(force){
     if(val !== "") el.value = val;
     else if(force) el.value = "";
   });
-  calcEvenRolls();  FEET_CARDS.forEach(calcFeetFor);   // roll-feet boxes use the same repeat/across
+  calcEvenRolls();
+  FEET_CARDS.forEach(calcFeetFor);   // roll-feet boxes use the same repeat/across
+  if(typeof qeRefresh === "function") qeRefresh();
 }
+let erOptionsOpen = false;
+document.addEventListener("toggle", (e)=>{ if(e.target && e.target.id === "erOptions") erOptionsOpen = e.target.open; }, true);
 function erDiameterFor(lengthIn, t, core){ return Math.sqrt(4 * t * lengthIn / Math.PI + core * core); }
 
 function calcEvenRolls(){
@@ -4638,7 +4946,7 @@ function calcEvenRolls(){
     const typed = el ? rnum(el.value) : null;
     const a = auto[map[id]];
     if(el) el.placeholder = erFmt(map[id], a);
-    v[map[id]] = typed > 0 ? typed : a;
+    v[map[id]] = touched.has(id) ? (typed === null ? 0 : typed) : (typed > 0 ? typed : a);
     fromAuto[map[id]] = !touched.has(id);
   });
   // A thickness typed in mils (e.g. 5.4) -> inches.
@@ -4665,62 +4973,82 @@ function calcEvenRolls(){
     const one = erDiameterFor(lenPerLevel, t, d);
     return fail("Level 1 of the Finished Roll table (" + formatNumber(step) + " labels) already needs a " + one.toFixed(2) + "″ roll — over the " + Dmax + "″ max.");
   }
-  const Q = v.qty > 0 ? Math.round(v.qty) : (v.count > 0 ? Math.round(v.count * fq) : null);
-  const fmtD = x => x.toFixed(2) + "″";
+  const qtyTyped = touched.has("erQty");
+  const Q = v.qty > 0 ? Math.round(v.qty) : (qtyTyped ? 0 : (v.count > 0 ? Math.round(v.count * fq) : null));
+  const fmtD = x => Number.isFinite(x) ? x.toFixed(2) + "″" : "—";
   const counterFor = k => Math.round(k * lenPerLevel / ECCI_COUNTER_LENGTH_DIVISOR);   // = labels x repeat / across / 10
   const diaFor = k => erDiameterFor(k * lenPerLevel, t, d);
   const cell = (l, val, cls) => '<div class="er-cell' + (cls ? " " + cls : "") + '"><span>' + l + '</span><b>' + val + '</b></div>';
+  const estNote = '<div class="er-est">Counters are <b>estimates</b> — they depend on the real material thickness. Watch the roll diameter on the press.</div>';
 
   if(!Q){
     out.innerHTML = '<div class="er-plan"><div class="er-plan-kicker">Biggest press roll under ' + Dmax + '″</div>' +
       '<div class="er-plan-head">' + formatNumber(kmax * step) + ' labels</div>' +
-      '<div class="er-plan-sub">Finished Roll table level ' + kmax + ' · counter ' + formatNumber(counterFor(kmax)) + ' · ' + fmtD(diaFor(kmax)) + '</div></div>' +
-      '<div class="er-note">Enter the job\'s total labels to work out how many even press rolls to run.</div>';
+      '<div class="er-plan-sub">Finished Roll table level ' + kmax + ' · counter ≈ ' + formatNumber(counterFor(kmax)) + ' (estimated) · ' + fmtD(diaFor(kmax)) + '</div></div>' +
+      '<div class="er-note">' + (Q === 0 ? 'Total labels is 0 — nothing to split into press rolls.' : 'Enter the job\'s total labels to work out how many even press rolls to run.') + '</div>' + estNote;
     return;
   }
 
   const Rmin = Math.ceil(Q / (kmax * step));      // fewest press rolls that stay under the max diameter
-  // Press rolls: the operator's number if they typed one, otherwise the fewest that fit.
+  // Press rolls: whatever the operator typed (even 0), otherwise the fewest that fit.
   const rollsEl = document.getElementById("erRolls");
-  const typedR = touched.has("erRolls") ? Math.round(rnum(rollsEl && rollsEl.value) || 0) : 0;
-  const R = typedR > 0 ? typedR : Rmin;
-  if(rollsEl && !(typedR > 0)) rollsEl.value = String(Rmin);
-  const k = Math.ceil(Q / (R * step));             // smallest table level that covers the job with R rolls
-  const L = k * step;                              // labels per press roll (divisible by the finished roll)
-  const extra = R * L - Q;
-  const tooBig = k > kmax;
-  let html = '<div class="er-plan' + (tooBig ? ' er-plan-bad' : '') + '"><div class="er-plan-kicker">' +
-    (tooBig ? 'Too big — over ' + Dmax + '″' : (typedR > 0 && R !== Rmin ? 'Your plan — ' + R + ' even press rolls' : 'Recommended — even press rolls')) + '</div>' +
-    '<div class="er-plan-head">' + R + ' press roll' + (R === 1 ? "" : "s") + ' × ' + formatNumber(L) + ' labels</div>' +
-    '<div class="er-plan-sub">Finished Roll table level ' + k + ' · counter ' + formatNumber(counterFor(k)) + ' · ' + fmtD(diaFor(k)) + ' (max ' + Dmax + '″)</div></div>';
-  if(tooBig){
-    html += '<div class="er-note er-warn">' + R + ' press roll' + (R === 1 ? "" : "s") + ' would need ' + fmtD(diaFor(k)) +
-      ' rolls. Use at least <b>' + Rmin + '</b> press rolls to stay under ' + Dmax + '″.</div>';
+  const rollsTyped = touched.has("erRolls");
+  let R = rollsTyped ? Math.max(0, Math.round(rnum(rollsEl && rollsEl.value) || 0)) : Rmin;
+  if(rollsEl && !rollsTyped) rollsEl.value = String(Rmin);
+
+  let html;
+  if(R <= 0){
+    const dash = "—";
+    html = '<div class="er-plan er-plan-bad"><div class="er-plan-kicker">Can\'t run on 0 rolls</div>' +
+      '<div class="er-plan-head">0 press rolls</div>' +
+      '<div class="er-plan-sub">' + formatNumber(Q) + ' labels need at least ' + Rmin + ' press roll' + (Rmin === 1 ? "" : "s") + ' under ' + Dmax + '″.</div></div>' +
+      '<div class="er-grid">' + cell("Counter per roll (est.)", dash, "bad") + cell("Diameter", dash, "bad") +
+      cell("Labels per press roll", dash, "bad") + cell("÷ finished roll", dash, "bad") +
+      cell("Total labels run", "0 of " + formatNumber(Q), "full bad") + '</div>';
+  }else{
+    const k = Math.ceil(Q / (R * step));             // smallest table level that covers the job with R rolls
+    const L = k * step;                              // labels per press roll (divisible by the finished roll)
+    const extra = R * L - Q;
+    const tooBig = k > kmax;
+    const bad = tooBig ? "bad" : "";
+    html = '<div class="er-plan' + (tooBig ? ' er-plan-bad' : '') + '"><div class="er-plan-kicker">' +
+      (tooBig ? 'Too big — over ' + Dmax + '″' : (rollsTyped && R !== Rmin ? 'Your plan — ' + R + ' even press rolls' : 'Recommended — even press rolls')) + '</div>' +
+      '<div class="er-plan-head">' + R + ' press roll' + (R === 1 ? "" : "s") + ' × ' + formatNumber(L) + ' labels</div>' +
+      '<div class="er-plan-sub">Finished Roll table level ' + k + ' · counter ≈ ' + formatNumber(counterFor(k)) + ' (estimated) · ' + fmtD(diaFor(k)) + ' (max ' + Dmax + '″)</div></div>';
+    if(tooBig){
+      html += '<div class="er-note er-warn">' + R + ' press roll' + (R === 1 ? "" : "s") + ' would need ' + fmtD(diaFor(k)) +
+        ' rolls. Use at least <b>' + Rmin + '</b> press rolls to stay under ' + Dmax + '″.</div>';
+    }
+    html += '<div class="er-grid">' +
+      cell("Counter per roll (est.)", "≈ " + formatNumber(counterFor(k)), bad) +
+      cell("Diameter", fmtD(diaFor(k)), bad) +
+      cell("Labels per press roll", formatNumber(L), bad) +
+      cell("÷ finished roll", formatNumber(L / fq) + " × " + formatNumber(fq), bad) +
+      cell("Total labels run", formatNumber(R * L) + " of " + formatNumber(Q), ("full " + bad).trim()) + '</div>';
+    html += extra > 0
+      ? '<div class="er-note er-extra">Extra labels: <b>' + formatNumber(extra) + '</b> (' + (extra / Q * 100).toFixed(2) +
+        '% over the order) — added so every press roll divides evenly by ' + formatNumber(fq) + '.</div>'
+      : '<div class="er-note">No extra labels — the order splits into even press rolls exactly.</div>';
   }
-  html += '<div class="er-grid">' +
-    cell("Counter per roll", formatNumber(counterFor(k))) +
-    cell("Diameter", fmtD(diaFor(k)), tooBig ? "bad" : "") +
-    cell("Labels per press roll", formatNumber(L)) +
-    cell("÷ finished roll", formatNumber(L / fq) + " × " + formatNumber(fq)) +
-    cell("Total labels run", formatNumber(R * L) + " of " + formatNumber(Q), "full") + '</div>';
-  html += extra > 0
-    ? '<div class="er-note er-extra">Extra labels: <b>' + formatNumber(extra) + '</b> (' + (extra / Q * 100).toFixed(2) +
-      '% over the order) — added so every press roll divides evenly by ' + formatNumber(fq) + '.</div>'
-    : '<div class="er-note">No extra labels — the order splits into even press rolls exactly.</div>';
-  // Options by number of press rolls — tap one to use it.
-  const rows = [];
-  const from = Math.max(1, Math.min(R, Rmin) - 1), to = Math.max(R, Rmin) + 4;
-  for(let rr = from; rr <= to; rr++){
+  html += estNote;
+
+  // Options: the current plan on top, then other roll counts (10 rows). Tap one to use it.
+  const counts = [];
+  if(R >= 1) counts.push(R);
+  for(let rr = Math.max(1, Rmin - 1); counts.length < 10; rr++){ if(rr !== R) counts.push(rr); }
+  const rows = counts.map(rr=>{
     const kk = Math.ceil(Q / (rr * step));
     const over = kk > kmax;
-    rows.push('<tr data-errolls="' + rr + '" class="' + (rr === R ? 'rec' : '') + (over ? ' over' : '') + '"><td>' + rr + '</td><td>' +
-      formatNumber(kk * step) + '</td><td>' + fmtD(diaFor(kk)) + '</td><td>' + formatNumber(counterFor(kk)) + '</td><td>' +
-      formatNumber(rr * kk * step - Q) + '</td></tr>');
-  }
-  html += '<div class="er-table-cap">Tap a row to use that many press rolls.</div>' +
+    const cls = [rr === R ? "rec" : "", over ? "over" : ""].filter(Boolean).join(" ");
+    return '<tr data-errolls="' + rr + '"' + (cls ? ' class="' + cls + '"' : '') + '><td>' + rr + (rr === Rmin ? ' <span class="er-star">★</span>' : '') + '</td><td>' +
+      formatNumber(kk * step) + '</td><td>' + fmtD(diaFor(kk)) + '</td><td>≈ ' + formatNumber(counterFor(kk)) + '</td><td class="er-x">' +
+      formatNumber(rr * kk * step - Q) + '</td></tr>';
+  });
+  html += '<details class="er-options" id="erOptions"' + (erOptionsOpen ? ' open' : '') + '>' +
+    '<summary>Other roll counts <span class="er-sum-hint">★ = fewest under ' + Dmax + '″ · tap a row to use it</span></summary>' +
     '<div class="er-table-wrap"><table class="er-table"><colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"></colgroup>' +
-    '<thead><tr><th>Rolls</th><th>Labels</th><th>Dia</th><th>Counter</th><th>Extra</th></tr></thead><tbody>' +
-    rows.join("") + '</tbody></table></div>';
+    '<thead><tr><th>Rolls</th><th>Labels</th><th>Dia</th><th>Counter*</th><th>Extra</th></tr></thead><tbody>' +
+    rows.join("") + '</tbody></table></div><div class="er-est">* Counter is estimated.</div></details>';
   out.innerHTML = html;
 }
 
@@ -4822,11 +5150,13 @@ function updateFolderGear(fillInput){
 
 /* ---- Collapsible tool cards: title shows, body toggles open/closed ---- */
 function setupCollapsibles(){
-  document.querySelectorAll(".tab-panel section.card, #jobInfoCard").forEach(card=>{
+  document.querySelectorAll(".tab-panel section.card, #jobInfoCard, #quickEntryCard, .scan-card").forEach(card=>{
     if(card.classList.contains("collapsible") || card.closest("#panel-runsheet")) return;
     const h2 = card.querySelector(":scope > h2");
     if(!h2) return;
-    const keepOpen = false; // All sections start collapsed; operator expands as needed.
+    // All sections start collapsed — except Docket Scan, which starts open and remembers your choice.
+    const isScan = card.classList.contains("scan-card");
+    const keepOpen = isScan ? safeGet("RC_SCAN_OPEN_V1") !== "0" : false;
     // Move everything after the h2 into a body wrapper.
     const body = document.createElement("div");
     body.className = "card-body";
@@ -4840,7 +5170,10 @@ function setupCollapsibles(){
     chev.textContent = "\u203A";
     h2.appendChild(chev);
     if(keepOpen) card.classList.add("open");
-    h2.addEventListener("click",()=>{ card.classList.toggle("open"); });
+    h2.addEventListener("click",()=>{
+      card.classList.toggle("open");
+      if(isScan) safeSet("RC_SCAN_OPEN_V1", card.classList.contains("open") ? "1" : "0");
+    });
   });
 }
 
@@ -5437,7 +5770,7 @@ function calcFeetFor(pfx){
     html += cell("Labels per roll", formatNumber(Math.round(lab)));
     html += rolls > 1 ? cell("Total labels", formatNumber(Math.round(lab * rolls))) : cell("Repeats per roll", formatNumber(Math.round(inches / repeat)));
   }else{
-    html += '<div class="feet-cell full" style="background:var(--field);color:var(--muted)"><span style="color:var(--muted)">Labels</span><b style="font-size:13px;font-weight:700">Enter Repeat and Across above to see labels.</b></div>';
+    html += '<div class="feet-cell feet-hint"><span>Labels</span><b>Enter Repeat and Across above to see labels.</b></div>';
   }
   out.innerHTML = html;
 }
@@ -5659,6 +5992,7 @@ document.addEventListener("DOMContentLoaded",()=>{
           group.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
           btn.classList.add("active");
           sectionUnits[section] = btn.dataset.unit;
+          safeSet(UNITS_KEY, JSON.stringify(sectionUnits));
           if(section === "core") calculateCoreSize();
           else if(section === "ecci") calculateAndRenderECCI();
         });
@@ -5836,10 +6170,43 @@ document.addEventListener("DOMContentLoaded",()=>{
       calcFeetFor(pfx);
     });
 
+    /* ---- Quick Entry ---- */
+    Object.keys(QE).concat(["qeSales"]).forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      // Docket #, sales shorthand and repeat shorthand apply when you leave the box; plain numbers apply as you type.
+      const onLeave = ["qeDocket","qeSales","qeRepeat"].includes(id);
+      if(!onLeave) el.addEventListener("input", ()=>{ qeApply(id); qeProgress(); });
+      el.addEventListener("change", ()=>{
+        qeApply(id); qeProgress();
+        if(id === "qeDocket"){
+          const dn = document.getElementById("docketNumber");
+          if(dn) dn.dispatchEvent(new Event("change", { bubbles:true }));   // recall a known docket / start its run sheet
+          setTimeout(qeRefresh, 0);
+        }
+      });
+      // Moving focus fires the browser's own change event, which applies the box.
+      el.addEventListener("keydown", (e)=>{ if(e.key === "Enter"){ e.preventDefault(); qeNext(el); } });
+    });
+    (function(){
+      const c = document.getElementById("qeColors");
+      if(!c) return;
+      c.addEventListener("change", ()=>{ qeApplyColors(); qeProgress(); });
+      c.addEventListener("keydown", (e)=>{ if(e.key === "Enter"){ e.preventDefault(); qeNext(c); } });
+    })();
+    document.querySelectorAll("#qeType button").forEach(b=>b.addEventListener("click", ()=>qeSetType(b.dataset.qetype, true)));
+    bind("qeDoneBtn","click",qeDone);
+    document.querySelectorAll("#tabBar button").forEach(b=>b.addEventListener("click", ()=>setTimeout(qeRefresh, 0)));
+    document.addEventListener("click",(e)=>{
+      const h = e.target.closest && e.target.closest("#quickEntryCard h2");
+      if(h) setTimeout(qeRefresh, 0);
+    });
+    qeSetType(jobTypeNow() || "roll", false);
+
     /* ---- Even Rolls: recalc on its own inputs and on anything it borrows ---- */
     bind("erRolls","input",(e)=>{
       const t = erTouched();
-      if(String(e.target.value).trim() === "" || !(rnum(e.target.value) > 0)) t.delete("erRolls"); else t.add("erRolls");
+      if(String(e.target.value).trim() === "" || rnum(e.target.value) === null) t.delete("erRolls"); else t.add("erRolls");
       setErTouched(t);
       calcEvenRolls();
     });
@@ -6007,6 +6374,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     });
 
     /* ---- Bulletproof persistence ---- */
+    restoreDisplayPrefs();
     loadTallyState();
     restoreAllInputs();
     TABS.forEach(renderTally);
@@ -6089,7 +6457,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
     // Inject into every card that has user inputs and doesn't already have a clear button.
     document.querySelectorAll("section.card").forEach(card=>{
-      if(card.id==="settingsPanel" || card.closest("#panel-runsheet")) return;
+      if(card.id==="settingsPanel" || card.id==="quickEntryCard" || card.closest("#panel-runsheet")) return;
       if(card.querySelector(".section-clear,.clear-mini")) return;
       if(!card.querySelector("input:not([type=file]):not([type=hidden]):not([type=range]),textarea")) return;
       const btn=document.createElement("button");
