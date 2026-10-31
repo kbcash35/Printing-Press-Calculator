@@ -7,6 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-title" content="RollCalc" />
 <title>Roll Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
 <style>
 :root{
   --bg:#ffffff;
@@ -196,6 +198,8 @@ body.hide-jobinfo #jobInfoCard{ display:none !important; }
 .qe-f label{ display:block; margin:0 0 4px; font-size:13px; }
 .qe-f input{ width:100%; box-sizing:border-box; margin:0; font-size:18px; font-weight:800; }
 .qe-f input.qe-filled{ border-color:#1f9d55; }
+.gear-note{ font-size:12px; font-weight:600; color:var(--muted); margin-top:-4px; line-height:1.4; }
+.gear-note:empty{ display:none; }
 .qe-opt{ font-weight:600; color:var(--muted); font-size:11.5px; }
 .qe-hint{ font-size:12.5px; font-weight:700; color:#1f9d55; line-height:1.4; margin-top:10px; min-height:0; }
 .qe-hint:empty{ display:none; }
@@ -213,6 +217,10 @@ body.hide-jobinfo #jobInfoCard{ display:none !important; }
 .er-cell span{ display:block; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); }
 .er-cell b{ display:block; font-size:17px; font-weight:800; margin-top:2px; }
 .er-cell.full{ grid-column:1/-1; }
+.er-cell small{ display:block; font-size:12px; font-weight:600; color:var(--muted); margin-top:3px; line-height:1.35; }
+.er-cell small.er-lvl{ font-size:11px; margin-top:1px; }
+.er-total b{ font-size:22px; }
+.er-cell small span{ display:inline; text-transform:none; letter-spacing:0; font-size:inherit; }
 .er-note{ margin-top:10px; font-size:13px; font-weight:600; line-height:1.4; border-radius:10px; padding:9px 11px; background:var(--field); }
 .er-suggest{ margin-top:12px; }
 .er-suggest-cap{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:0 0 6px 2px; }
@@ -739,6 +747,9 @@ input[type=file]{
 .tally-empty{ padding:14px; color:#7a7d85; text-align:center; font-size:14px; }
 .add-roll-box{ border:1px solid var(--line); border-radius:12px; padding:12px; margin:8px 0 10px; }
 .add-roll-title{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin-bottom:6px; }
+.roll-qty{ display:grid; grid-template-columns:52px 1fr 52px; gap:8px; align-items:stretch; margin-top:4px; }
+.roll-qty .nudge-input{ text-align:center; font-size:20px; font-weight:800; margin:0; min-width:0; }
+.roll-qty .nudge-btn{ font-size:22px; }
 .roll-extra-toggle{ margin-top:8px; background:none; border:none; padding:0; font-size:13px; font-weight:800; color:var(--text); text-decoration:underline; cursor:pointer; }
 .roll-extra-row{ display:grid; grid-template-columns:1fr; gap:8px; margin-top:8px; }
 .roll-extra-row .seg-toggle button{ white-space:nowrap; font-size:14px; }
@@ -1090,6 +1101,332 @@ body.dark .ecci-display{
 }
 .shift-report-header .sr-title{ font-size:13px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; opacity:.8; }
 .shift-report-header .sr-mode{ font-size:11px; opacity:.6; }
+/* =====================================================================
+   STAGE 1 — job-first shell: Jobs / Job / Shift / Settings + bottom nav
+   ===================================================================== */
+body{ font-family:'Barlow',-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; font-variant-numeric:tabular-nums; padding-bottom:calc(96px + env(safe-area-inset-bottom)); }
+:root{ --amber:#F2B705; --ink:#101317; }
+main.wrap > header{ display:none; }
+.view{ display:none; }
+body[data-view="jobs"] #viewJobs,
+body[data-view="job"] #viewJob,
+body[data-view="shift"] #viewShift,
+body[data-view="settings"] #viewSettings{ display:block; }
+#viewShift .tab-panel{ display:block !important; }
+.view-head{ padding:6px 2px 14px; }
+.view-kicker{ font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+.view-title{ margin:2px 0 0; font-family:'Barlow Semi Condensed','Barlow',sans-serif; font-size:34px; font-weight:700; letter-spacing:-.01em; line-height:1.05; }
+
+/* Bottom app nav */
+#appNav, #jobNav{ position:fixed; left:0; right:0; bottom:0; z-index:40; display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
+  background:var(--card); border-top:1px solid var(--line); padding:6px 8px calc(10px + env(safe-area-inset-bottom)); }
+#appNav button, #jobNav button{ border:none; background:none; display:flex; flex-direction:column; align-items:center; gap:4px; padding:6px 0;
+  font-family:inherit; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; }
+#appNav .nav-pill, #jobNav .nav-pill{ display:inline-flex; align-items:center; justify-content:center; width:58px; height:32px; border-radius:999px; }
+#appNav button.active, #jobNav button.active{ color:var(--text); font-weight:700; }
+#appNav button.active .nav-pill, #jobNav button.active .nav-pill{ background:var(--amber); }
+#appNav button.active .nav-pill svg, #jobNav button.active .nav-pill svg{ stroke:var(--ink); }
+#appNav svg, #jobNav svg{ stroke:var(--muted); }
+#jobNav{ grid-template-columns:repeat(4,minmax(0,1fr)); }
+#jobNav .nav-pill{ width:52px; }
+body[data-view="job"] #appNav{ display:none; }
+body:not([data-view="job"]) #jobNav{ display:none; }
+/* Stage 2: show only the cards for the current stage */
+#viewJob[data-stage]:not([data-stage="setup"]) [data-st="setup"],
+#viewJob[data-stage]:not([data-stage="run"]) [data-st="run"],
+#viewJob[data-stage]:not([data-stage="count"]) [data-st="count"]{ display:none !important; }
+#viewJob[data-stage="history"] .tab-panel:not(#panel-runsheet){ display:none !important; }
+#viewJob[data-stage="history"] #panel-runsheet{ display:block !important; }
+#viewJob:not([data-stage="history"]) #panel-runsheet{ display:none !important; }
+#stageHead{ margin:4px 2px 14px; }
+#stageHead h2{ margin:0; font-family:'Barlow Semi Condensed','Barlow',sans-serif; font-size:26px; font-weight:700; letter-spacing:-.01em; }
+#stageHead p{ margin:2px 0 0; font-size:14px; font-weight:500; color:var(--muted); }
+.stage-label{ font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:2px 2px 8px; }
+#runStrip{ background:#101317; color:#FFFFFF; border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:14px; }
+#runStrip .rs-kicker{ font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; opacity:.7; margin-bottom:10px; }
+#runStrip .rs-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+#runStrip .rs-chip{ background:rgba(127,127,127,.18); border-radius:12px; padding:9px 11px; min-width:0; }
+#runStrip .rs-chip.wide{ grid-column:1/-1; }
+#runStrip .rs-chip span{ display:block; font-size:12px; font-weight:700; opacity:.75; }
+#runStrip .rs-chip em{ font-style:normal; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:1px 5px; border-radius:4px; background:var(--amber); color:var(--ink); opacity:1; margin-left:4px; }
+#runStrip .rs-chip b{ display:block; font-size:20px; font-weight:700; margin-top:2px; overflow-wrap:anywhere; }
+#runStrip .rs-empty{ margin:0; font-size:15px; font-weight:500; }
+/* ===== Uniform sizes: one scale for every button =====
+   Large  48px · 16px  — the main action buttons (Calculate, Save, Clear …)
+   Small  40px · 14px  — toggles, segmented pickers, "+ Add" buttons
+   Steppers 48 × 48 */
+.action-btn, button{ font-family:inherit; }
+button.primary, button.section-clear, button.clear-mini, button.danger-outline, button.secondary-btn,
+button.btn-add, button.qe-done, button.reset-btn, .action-btn, button.btn-scan,
+#setThemeBtn, #rsCompleteBtn, #saveKeyBtn, #clearKeyBtn, #runSheetCard button, #panel-myshift button{
+  min-height:48px; height:auto; padding:10px 14px; font-size:16px; font-weight:700; letter-spacing:0;
+  border-radius:12px; line-height:1.2; box-sizing:border-box;
+}
+.action-btn{ display:flex; align-items:center; justify-content:center; }
+.segmented button, .tab-bar button, .mode-toggle button, .seg-toggle button, #qeType button,
+#decimalControls button, [data-unit], #extraNo, #extraYes, button.joblist-add{
+  min-height:40px; height:auto; padding:8px 10px; font-size:14px; font-weight:700; letter-spacing:0; line-height:1.2; box-sizing:border-box;
+}
+button.roll-extra-toggle{ min-height:40px; padding:0 2px; font-size:14px; font-weight:700; text-align:left; width:auto; }
+#radiusDown, #radiusUp, #rollQtyDown, #rollQtyUp{ width:48px; min-width:48px; height:48px; min-height:48px; padding:0; font-size:20px; font-weight:700; }
+.jh-back{ width:auto !important; }
+#viewJobs .jobs-actions button{ height:64px; flex-direction:row; align-items:center; justify-content:flex-start; gap:10px; padding:0 14px; font-size:16px; border-radius:14px; }
+#viewJobs .jobs-actions button svg{ width:24px; height:24px; flex:0 0 auto; }
+#decimalControls{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+[data-unit]{ white-space:nowrap; }
+button.plan-chip{ width:auto; min-height:40px; margin-top:8px; padding:8px 12px; border-radius:999px; border:1px solid var(--line);
+  background:var(--field); color:var(--text); font-size:14px; font-weight:600; }
+button.plan-chip b{ font-weight:700; }
+#lookupSpecBtn{ color:var(--text); border-color:var(--line); background:var(--card); }
+.press-row{ display:flex; align-items:stretch; gap:8px; margin-top:8px; }
+.press-row .press-pick{ flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:12px; text-align:left; min-height:56px; padding:10px 12px;
+  border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--text); }
+.press-row.on .press-pick{ border:2px solid var(--text); padding:9px 11px; }
+.press-dot{ flex:0 0 auto; width:20px; height:20px; border-radius:50%; border:2px solid var(--muted); box-sizing:border-box; }
+.press-row.on .press-dot{ border:6px solid var(--text); }
+.press-txt{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.press-txt b{ font-size:16px; font-weight:700; }
+.press-txt small{ font-size:13px; font-weight:500; color:var(--muted); line-height:1.3; }
+.press-row .press-editbtn{ flex:0 0 auto; width:auto; min-height:40px; align-self:center; padding:8px 14px; font-size:14px; font-weight:700;
+  border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--text); }
+.press-edit{ display:flex; flex-direction:column; gap:10px; margin-top:8px; padding:12px; border:2px solid var(--text); border-radius:12px; }
+.press-edit label{ display:flex; flex-direction:column; gap:4px; font-size:14px; font-weight:700; }
+.press-edit .btn-pair{ margin-top:2px; }
+.press-edit label, .press-edit input{ margin:0 !important; }
+.press-edit .two-col{ gap:10px; }
+/* First-run walkthrough */
+body.intro-open{ overflow:hidden; }
+#introOverlay{ position:fixed; inset:0; z-index:100; background:rgba(8,11,16,.55); display:flex; align-items:flex-end; justify-content:center;
+  padding:16px 16px calc(16px + env(safe-area-inset-bottom)); box-sizing:border-box; }
+.intro-card{ width:100%; max-width:440px; max-height:100%; overflow-y:auto; box-sizing:border-box; background:var(--card); color:var(--text);
+  border-radius:22px; padding:18px 18px 16px; display:flex; flex-direction:column; gap:10px; }
+.intro-top{ display:flex; align-items:center; justify-content:space-between; }
+.intro-count{ font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+button.intro-skip{ width:auto; min-height:40px; padding:8px 12px; border:none; background:none; color:var(--muted); font-size:15px; font-weight:700; }
+.intro-icon{ width:56px; height:56px; border-radius:16px; background:var(--amber); display:flex; align-items:center; justify-content:center; margin-top:2px; }
+.intro-icon svg{ width:28px; height:28px; stroke:var(--ink); }
+.intro-card h2{ margin:4px 0 0; font-family:'Barlow Semi Condensed','Barlow',sans-serif; font-size:26px; font-weight:700; letter-spacing:-.01em; }
+.intro-card p{ margin:0; font-size:16px; line-height:1.45; color:var(--muted); }
+.intro-card p b{ color:var(--text); }
+.intro-press{ display:flex; flex-direction:column; gap:10px; margin-top:4px; }
+.intro-press label{ display:flex; flex-direction:column; gap:4px; font-size:14px; font-weight:700; margin:0 !important; }
+.intro-press input{ margin:0 !important; height:48px; min-height:48px; padding:0 12px; font-size:18px; font-weight:600; border-radius:12px; box-sizing:border-box; }
+.intro-press .two-col{ gap:10px; }
+.intro-dots{ display:flex; gap:6px; justify-content:center; margin:6px 0 2px; }
+.intro-dots span{ width:8px; height:8px; border-radius:50%; background:var(--line); }
+.intro-dots span.on{ width:22px; border-radius:999px; background:var(--text); }
+.intro-actions{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr); gap:8px; }
+.intro-actions button{ margin:0 !important; }
+.svc-box{ display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+.svc-box label{ margin:6px 0 0 !important; }
+.svc-box input{ margin:0 !important; }
+.svc-status{ font-size:14px; font-weight:600; color:var(--muted); margin-top:6px; line-height:1.4; min-height:1em; }
+.svc-status.ok{ color:#177245; }
+.svc-status.bad{ color:var(--danger); }
+/* ===== Setup screen ===== */
+#viewJob #tabBar, #viewJob .stage-label{ display:none !important; }
+#viewJob #quickEntryCard.su-card{ background:none; border:none; box-shadow:none; padding:0; margin:0; }
+#viewJob #quickEntryCard.su-card > h2, #viewJob #quickEntryCard.su-card > .card-sub, #viewJob #quickEntryCard .qe-progress{ display:none; }
+#viewJob #jobInfoCard{ display:none !important; }
+.su-hidden{ display:none !important; }
+#viewJob .qe-type{ margin:0 0 10px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:4px; }
+#viewJob .qe-type button.active{ background:var(--text); color:var(--bg); box-shadow:none; }
+.su-check{ border-radius:14px; padding:12px 14px; margin:0 0 12px; font-size:15px; font-weight:500; line-height:1.4; background:var(--card); border:1px solid var(--line); color:var(--muted); }
+.su-check b{ font-weight:700; }
+.su-check.warn{ background:#FFF3CC; border-color:#F2D27A; color:#6B4600; }
+.su-check.ok{ background:#E8F4EC; border-color:#BFE0CB; color:#0F5A35; }
+.su-sec{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:14px 16px 16px; margin:0 0 12px; }
+.su-h{ margin:0 0 10px; font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.su-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px 10px; }
+.su-grid .full{ grid-column:1/-1; }
+.su-f{ min-width:0; }
+.su-f > label, .qe-f > label{ display:flex !important; align-items:center; gap:6px; flex-wrap:wrap; margin:0 0 5px !important; font-size:14px; font-weight:700; }
+.src-tag{ margin-left:auto; font-size:11px; font-weight:700; letter-spacing:.03em; padding:2px 7px; border-radius:6px; line-height:1.4; }
+.src-tag:empty{ display:none; }
+.su-f > label, .qe-f > label{ flex-wrap:nowrap !important; white-space:nowrap; }
+.su-grid .qe-f:not(.full) .qe-opt{ display:none; }
+#suMaterial .joblist-head label{ font-size:14px; font-weight:700; margin:0; }
+#suMaterial .joblist-head{ margin-bottom:6px; }
+#suMaterial .full > .card-sub{ display:none; }
+#viewJob .su-scan .top-actions .action-btn span{ white-space:nowrap; }
+.src-tag.scan{ color:#177245; background:#E8F4EC; }
+.src-tag.you{ color:#1458E6; background:#E7EEFD; }
+.src-tag.est{ color:#6B4600; background:#FFF3CC; }
+.src-tag.need{ color:#6B4600; background:#FFF3CC; }
+#viewJob .qe-f input.qe-filled{ border-color:var(--line); }
+.su-thick{ display:flex; flex-direction:column; gap:4px; padding:10px 12px; border-radius:12px; background:var(--field); }
+.su-thick-l{ display:flex; align-items:center; font-size:14px; font-weight:700; }
+.su-thick-v{ font-size:14px; font-weight:500; color:var(--muted); line-height:1.4; }
+.su-thick-v b{ color:var(--text); font-size:17px; font-weight:700; }
+#suNotes .notes-box{ width:100%; min-height:96px; }
+#viewJob .su-scan{ padding:12px; margin:0 0 12px; }
+#viewJob .su-scan > h2, #viewJob .su-scan > .card-sub{ display:none; }
+#viewJob .su-scan .top-actions{ display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:8px; margin:0; }
+#viewJob .su-scan .top-actions .action-btn{ gap:8px; margin:0; }
+#viewJob .su-scan label[for="docketCameraInput"]{ background:var(--amber); color:var(--ink); border-color:var(--amber); }
+#viewJob .su-scan label[for="docketCameraInput"] svg{ width:22px; height:22px; stroke:var(--ink); }
+#viewJob .su-scan #clearDocketScanBtn{ width:auto; min-height:36px; margin:8px 0 0; padding:4px 2px; border:none; background:none; color:var(--muted); font-size:14px; font-weight:600; text-decoration:underline; }
+#viewJob .su-scan .success, #viewJob .su-scan .error{ font-size:14px; margin-top:8px; }
+#viewJob #qeDoneBtn{ background:var(--amber); color:var(--ink); min-height:52px; font-size:17px; }
+#viewJob .qe-foot{ margin-top:4px; }
+/* ===== Run screen ===== */
+#runStrip .rs-chip.big b{ font-size:30px; }
+#runStrip .rs-chip b small{ font-size:14px; font-weight:600; opacity:.7; }
+#runStrip .rs-chip.bad b{ color:#FF8A80; }
+#runStrip .rs-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+.rp-card{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:14px 16px 16px; margin:0 0 12px; }
+.rp-card[hidden], .rp-tiles[hidden]{ display:none !important; }
+.rp-kick{ font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.rp-head{ font-family:'Barlow Semi Condensed','Barlow',sans-serif; font-size:30px; font-weight:700; line-height:1.1; }
+.rp-head.bad{ color:var(--danger); }
+.rp-sub{ margin:4px 0 0; font-size:15px; font-weight:500; color:var(--muted); }
+.rp-warn{ margin:8px 0 0; font-size:15px; font-weight:600; color:var(--danger); }
+.rp-empty{ margin:2px 0 8px; font-size:15px; color:var(--muted); }
+.rp-chips{ display:flex; gap:8px; overflow-x:auto; margin:12px -4px 0; padding:2px 4px 4px; scrollbar-width:none; }
+.rp-chips::-webkit-scrollbar{ display:none; }
+button.rp-chip{ flex:0 0 auto; width:auto; min-width:72px; min-height:56px; padding:6px 12px; border-radius:12px; border:1px solid var(--line); background:var(--card);
+  color:var(--text); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
+button.rp-chip b{ font-size:18px; font-weight:700; }
+button.rp-chip small{ font-size:12px; font-weight:600; color:var(--muted); white-space:nowrap; }
+button.rp-chip.on{ border:2px solid var(--text); background:var(--field); padding:5px 11px; }
+button.rp-chip.over small{ color:var(--danger); }
+.rp-extra{ margin:10px 0 0; padding:10px 12px; border-radius:12px; background:#E7EEFD; color:#1458E6; font-size:14px; font-weight:500; line-height:1.4; }
+.rp-extra b{ font-weight:700; }
+body.dark .rp-extra{ background:rgba(20,88,230,.2); color:#9DB9FF; }
+button.rp-link{ width:auto; min-height:40px; margin:8px 0 0; padding:6px 0; border:none; background:none; color:var(--text); font-size:14px; font-weight:700; text-decoration:underline; text-align:left; }
+.rp-tiles{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:0 0 12px; }
+.rp-tile{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:12px 14px; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.rp-tile span{ font-size:13px; font-weight:700; color:var(--muted); }
+.rp-tile b{ font-family:'Barlow Semi Condensed','Barlow',sans-serif; font-size:26px; font-weight:700; }
+.rp-tile small{ font-size:13px; font-weight:500; color:var(--muted); line-height:1.3; }
+table.rp-levels{ width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; table-layout:auto; }
+table.rp-levels th, table.rp-levels td{ width:auto !important; text-align:left; padding:8px 6px; font-size:15px; border-bottom:1px solid var(--line); }
+table.rp-levels th{ font-size:12px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); }
+table.rp-levels td:not(:first-child), table.rp-levels th:not(:first-child){ text-align:right; }
+table.rp-levels tr.on td{ font-weight:700; background:var(--field); }
+table.rp-levels tr:last-child td{ border-bottom:none; }
+.rp-over{ font-size:11px; font-weight:700; color:var(--danger); text-transform:uppercase; }
+.rp-tools-h{ margin:18px 2px 6px; font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+/* ===== Count screen ===== */
+#viewJob #rollShiftBtn, #viewJob #sheeterShiftBtn, #viewJob #folderShiftBtn{ display:none !important; }
+#viewJob .ct-card > h2{ display:none; }
+#viewJob .ct-card{ background:none; border:none; box-shadow:none; padding:0; margin:0; }
+#viewJob .ct-card > .card-body{ display:block !important; margin:0; }
+#viewJob .ct-card .add-roll-box, #viewJob .ct-sec, #viewJob .ct-card .extra-block, #viewJob .ct-card .shift-grid{
+  background:var(--card); border:1px solid var(--line); border-radius:18px; padding:14px 16px 16px; margin:0 0 12px; }
+#viewJob .ct-card .shift-grid{ padding:12px; }
+#viewJob .ct-card .add-roll-title, .ct-h{ margin:0 0 10px; font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.ct-res-h{ margin:6px 2px 8px !important; }
+.ct-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; }
+.ct-grid label{ display:flex !important; align-items:center; gap:6px; white-space:nowrap; margin:0 0 5px !important; font-size:14px; font-weight:700; }
+.ct-grid input{ margin:0 !important; }
+.ct-sec > label{ display:block; margin:12px 0 5px !important; font-size:14px; font-weight:700; }
+.ct-sec > .two-col label{ margin:0 0 5px !important; font-size:14px; font-weight:700; }
+.ct-sec .field-cam{ margin:0; }
+.ct-sec input{ margin:0 !important; }
+.ct-ra{ margin-top:10px; font-size:13px; font-weight:500; color:var(--muted); line-height:1.4; }
+.ct-ra .rp-link{ margin:0; min-height:0; padding:0; display:inline; font-size:13px; }
+.ct-miss{ color:#6B4600; }
+.ct-saved{ display:flex; flex-direction:column; gap:10px; }
+.ct-saved[hidden]{ display:none !important; }
+#viewJob #rollTallyList{ max-height:330px; overflow-y:auto; overscroll-behavior:contain; }
+#viewJob .ct-card .clear-mini{ display:block; width:auto; min-height:40px; margin:0 auto 12px; padding:6px 10px; border:none; background:none;
+  color:var(--muted); font-size:14px; font-weight:600; text-decoration:underline; }
+#viewJob .extra-q{ color:var(--text); }
+body.dark .seg-toggle button:not(.active){ color:var(--muted); }
+button.ct-next{ width:100%; min-height:48px; border:none; border-radius:12px; background:var(--text); color:var(--bg); font-size:16px; font-weight:700; }
+body.dark .ct-miss{ color:#F5CF66; }
+#viewJob .ct-card .rs-prev{ background:#101317; color:#FFFFFF; border:1px solid var(--line); border-radius:16px; padding:12px 14px; margin:0 0 12px; font-size:15px; line-height:1.4; }
+#viewJob .ct-card .rs-prev *{ color:inherit; }
+#viewJob .ct-card .running-total{ margin:0 0 12px; }
+#viewJob .ct-card .tally-list:empty{ display:none; }
+#viewJob .ct-card .roll-count{ margin:0 2px 8px; }
+#viewJob .ct-card .complete-job-btn{ display:flex !important; align-items:center; justify-content:center; width:100%; min-height:52px; margin:4px 0 12px;
+  border:none; border-radius:14px; background:var(--amber); color:var(--ink); font-size:17px; font-weight:700; }
+#viewJob .ct-card .error:empty, #viewJob .ct-card .mode-note:empty{ display:none; }
+button.rp-next{ margin:6px 0 12px; min-height:52px; border:none; border-radius:14px; background:var(--amber); color:var(--ink); font-size:17px; font-weight:700; }
+/* Tags and banners in dark mode: tinted, not bright */
+body.dark .src-tag.scan{ color:#7FD3A2; background:rgba(23,114,69,.28); }
+body.dark .src-tag.you{ color:#9DB9FF; background:rgba(20,88,230,.28); }
+body.dark .src-tag.est, body.dark .src-tag.need{ color:#F5CF66; background:rgba(242,183,5,.18); }
+body.dark .su-check.warn{ background:rgba(242,183,5,.12); border-color:rgba(242,183,5,.35); color:#F5CF66; }
+body.dark .su-check.ok{ background:rgba(23,114,69,.18); border-color:rgba(23,114,69,.45); color:#8EDCAE; }
+/* ===== Uniform text boxes: 48px tall, 18px text, everywhere ===== */
+main.wrap input:not([type=hidden]):not([type=file]):not([type=checkbox]):not([type=radio]):not(#jobsSearch), main.wrap select{
+  height:48px; min-height:48px; padding:0 12px; font-size:18px; font-weight:600; line-height:1.2; border-radius:12px; box-sizing:border-box;
+}
+main.wrap input::placeholder{ font-weight:500; }
+main.wrap textarea{ font-size:16px; padding:10px 12px; border-radius:12px; box-sizing:border-box; }
+#rollQtyInput, #ecciRadius, #erRolls{ font-weight:700; }
+.joblist-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.joblist-head button.joblist-add{ width:auto; padding:8px 14px; }
+/* Calculate + Clear side by side instead of two full-width bars */
+.btn-pair{ display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:8px; margin-top:12px; }
+.btn-pair > button{ margin:0 !important; width:100%; }
+/* Card headings and helper text, closer to the mockup */
+#viewJob .card h2, #viewShift .card h2, #viewSettings .card h2{
+  font-family:'Barlow Semi Condensed','Barlow',sans-serif; font-size:21px; font-weight:700; letter-spacing:-.005em;
+}
+#viewJob .card, #viewShift .card, #viewSettings .card{ padding:16px; margin:12px 0; box-shadow:none; }
+#viewJob .collapsible > h2.card-toggle{ min-height:28px; }
+#viewJob .card-sub, #viewShift .card-sub, #viewSettings .card-sub{ font-size:15px; color:var(--muted); }
+.rc-toast{ bottom:calc(100px + env(safe-area-inset-bottom)) !important; }
+
+/* Jobs home */
+.jobs-actions{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-bottom:14px; }
+.jobs-actions button{ height:96px; border-radius:18px; font-family:inherit; font-size:18px; font-weight:700; display:flex; flex-direction:column;
+  align-items:flex-start; justify-content:space-between; padding:14px 16px; cursor:pointer; text-align:left; }
+.jobs-actions .ja-scan{ background:var(--amber); color:var(--ink); border:none; }
+.jobs-actions .ja-enter{ background:var(--card); color:var(--text); border:1.5px solid var(--text); }
+.jobs-actions .ja-scan svg{ stroke:var(--ink); } .jobs-actions .ja-enter svg{ stroke:var(--text); }
+.jobs-search{ display:flex; align-items:center; gap:10px; height:50px; padding:0 14px; border-radius:14px; background:var(--card); border:1px solid var(--line); margin-bottom:16px; }
+.jobs-search svg{ stroke:var(--muted); flex:0 0 auto; }
+.jobs-search input{ flex:1 1 auto; min-width:0; border:none !important; outline:none; background:transparent !important; font-family:inherit; font-size:17px; color:var(--text); padding:0 !important; margin:0 !important; height:auto !important; box-shadow:none !important; }
+.jobs-sec{ display:flex; align-items:baseline; justify-content:space-between; margin:6px 2px 10px; font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.job-card{ position:relative; display:flex; flex-direction:column; gap:10px; width:100%; box-sizing:border-box; padding:16px; margin-bottom:12px; border-radius:18px;
+  background:var(--card); border:1px solid var(--line); color:var(--text); text-align:left; font-family:inherit; cursor:pointer; }
+.job-card.is-open{ border:1.5px solid var(--text); }
+.jc-top{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 10px; padding-right:40px; }
+.jc-status{ flex:0 0 auto; }
+body:not([data-view="job"]) #appStatus.success{ display:none!important; }
+.jc-id{ display:flex; align-items:baseline; gap:10px; min-width:0; flex:0 1 auto; }
+.jc-num{ font-family:'Barlow Semi Condensed','Barlow',sans-serif; font-size:28px; font-weight:700; line-height:1; }
+.jc-type{ font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:4px 8px; border-radius:6px; background:var(--text); color:var(--bg); }
+.jc-status{ font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:4px 8px; border-radius:6px; white-space:nowrap; }
+.jc-status.open{ color:#8A5A00; background:#FFF3CC; }
+.jc-status.wait{ color:var(--muted); background:var(--field); }
+.jc-status.done{ color:#0F5A35; background:#E8F4EC; }
+.jc-cust{ font-size:16px; font-weight:600; overflow-wrap:anywhere; }
+.jc-bar{ height:10px; border-radius:999px; background:var(--line); overflow:hidden; }
+.jc-bar span{ display:block; height:100%; background:var(--text); border-radius:999px; }
+.jc-prog{ display:flex; justify-content:space-between; font-size:14px; font-weight:600; color:var(--muted); }
+.jc-prog b{ color:var(--text); }
+.jc-next{ display:flex; align-items:center; justify-content:space-between; padding-top:10px; border-top:1px solid var(--line); font-size:14px; font-weight:600; color:var(--muted); }
+.jc-next b{ color:var(--text); font-weight:600; }
+.jc-del{ position:absolute; top:12px; right:12px; width:36px; height:36px; border-radius:50%; border:none; background:var(--field); color:var(--muted);
+  font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.jc-del:hover{ color:var(--danger); }
+.jobs-empty{ padding:28px 16px; text-align:center; color:var(--muted); font-size:15px; font-weight:600; background:var(--card); border:1px dashed var(--line); border-radius:18px; }
+.rc-toast .toast-undo{ margin-left:12px; height:36px; padding:0 14px; border:none; border-radius:10px; background:var(--amber); color:var(--ink); font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; }
+
+/* Job header (inside a job) */
+#jobHeader{ background:#101317; color:#FFFFFF; border-radius:18px; padding:12px 14px 14px; margin-bottom:14px; display:flex; flex-direction:column; gap:8px; }
+.jh-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.jh-back{ display:inline-flex; align-items:center; gap:4px; height:36px; padding:0 8px 0 0; border:none; background:none; color:#FFFFFF; font-family:inherit; font-size:15px; font-weight:600; cursor:pointer; }
+.jh-type{ font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:4px 8px; border-radius:6px; background:var(--amber); color:var(--ink); }
+.jh-num{ font-family:'Barlow Semi Condensed','Barlow',sans-serif; font-size:32px; font-weight:700; line-height:1; }
+.jh-cust{ font-size:14px; font-weight:600; color:#C9CED6; text-align:right; overflow-wrap:anywhere; }
+.jh-bar{ height:8px; border-radius:999px; background:#2B3138; overflow:hidden; }
+.jh-bar span{ display:block; height:100%; background:var(--amber); border-radius:999px; }
+.jh-prog{ display:flex; justify-content:space-between; font-size:13px; font-weight:600; color:#C9CED6; }
+.jh-prog b{ color:#FFFFFF; }
+
+/* Settings view */
+#viewSettings .settings-card{ display:block !important; }
+#viewSettings .mode-card .docket-bar{ display:none !important; }
+.set-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.set-row button{ height:44px; padding:0 16px; border-radius:12px; border:1px solid var(--line); background:var(--field); color:var(--text); font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; }
+#viewShift .reset-btn{ margin-top:14px; }
 </style>
 </head>
 <body>
@@ -1110,7 +1447,19 @@ body.dark .ecci-display{
   <div id="appStatus" class="success" style="display:none;"></div>
 
   <section class="card settings-card hidden" id="settingsPanel">
-    <h2>API Key</h2>
+    <h2>Scanning</h2>
+    <p class="card-sub" style="margin-top:6px">Use a <b>scan service</b> with the access code you were given, or your own Gemini API key. Typing dockets in works without either.</p>
+    <div id="svcBox" class="svc-box">
+      <label for="svcUrl">Scan service address</label>
+      <input id="svcUrl" type="url" inputmode="url" placeholder="https://roll-calc-scan.yourname.workers.dev" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label for="svcCode">Access code</label>
+      <input id="svcCode" type="password" placeholder="Access code" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="btn-pair"><button type="button" class="primary" id="svcSaveBtn">Save &amp; test</button><button type="button" class="secondary-btn" id="svcClearBtn">Remove</button></div>
+      <div id="svcStatus" class="svc-status"></div>
+      <button type="button" class="secondary-btn" id="svcInviteBtn" hidden style="width:100%;margin-top:8px">Copy invite link for a tester</button>
+    </div>
+    <div class="settings-divider"></div>
+    <h2 style="margin-top:0;">Your own API key</h2>
     <label for="apiKey">Gemini API Key</label>
     <input id="apiKey" type="password" placeholder="Paste Gemini API key" autocomplete="off">
     <div class="button-row">
@@ -1119,7 +1468,7 @@ body.dark .ecci-display{
     </div>
     <div id="keySuccess" class="success"></div>
     <p class="card-sub">Model: gemini-2.5-flash, fallback: gemini-2.5-flash-lite.</p>
-    <p class="card-sub">Photo scan is optional. Manual calculator works without the key.</p>
+    <p class="card-sub">If you save a key here, it's used instead of the scan service.</p>
 
     <div class="settings-divider"></div>
     <h2 style="margin-top:0;">Display</h2>
@@ -1179,25 +1528,27 @@ body.dark .ecci-display{
     <div class="qe-grid">
       <div class="qe-f full"><label for="qeDocket">Docket #</label><input id="qeDocket" inputmode="numeric" enterkeyhint="next" placeholder="e.g. 1411978" autocomplete="off"></div>
       <div class="qe-f full"><label for="qeCustomer">Customer <span class="qe-opt">optional</span></label><input id="qeCustomer" enterkeyhint="next" placeholder="e.g. Shoppers Drug Mart" autocomplete="off" autocapitalize="characters"></div>
-      <div class="qe-f"><label for="qeQty">Total quantity</label><input id="qeQty" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 525000"></div>
+      <div class="qe-f"><label for="qeQty">Total labels</label><input id="qeQty" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 525000"></div>
       <div class="qe-f" data-qefor="roll"><label for="qeFinished">Finished roll</label><input id="qeFinished" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 5000"></div>
       <div class="qe-f" data-qefor="roll folder"><label for="qeRepeat">Repeat</label><input id="qeRepeat" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 1.625"></div>
       <div class="qe-f" data-qefor="roll folder"><label for="qeAcross">Across</label><input id="qeAcross" inputmode="numeric" enterkeyhint="next" placeholder="e.g. 4"></div>
-      <div class="qe-f" data-qefor="roll"><label for="qeCarrier">Carrier width (in)</label><input id="qeCarrier" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 3.125"></div>
-      <div class="qe-f" data-qefor="sheeter"><label for="qeSheet">Sheet depth (in)</label><input id="qeSheet" inputmode="decimal" enterkeyhint="next" placeholder="11"></div>
-      <div class="qe-f" data-qefor="sheeter"><label for="qeSheeterBox">Labels per box</label><input id="qeSheeterBox" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 500"></div>
-      <div class="qe-f" data-qefor="folder"><label for="qeFanfold">Fanfold size (in)</label><input id="qeFanfold" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 12.25"></div>
-      <div class="qe-f" data-qefor="folder"><label for="qeFolderBox">Labels per box</label><input id="qeFolderBox" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 4000"></div>
-      <div class="qe-f" data-qefor="folder"><label for="qeFoldSheet">Labels per fold sheet</label><input id="qeFoldSheet" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 4"></div>
-      <div class="qe-f" data-qefor="folder"><label for="qePack">Labels per pack</label><input id="qePack" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 2000"></div>
+      <div class="qe-f" data-qefor="roll"><label for="qeAround">Around</label><input id="qeAround" inputmode="numeric" enterkeyhint="next" placeholder="1"></div>
+      <div class="qe-f" data-qefor="roll"><label for="qeCarrier">Carrier (in)</label><input id="qeCarrier" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 3.125"></div>
+      <div class="qe-f" data-qefor="sheeter"><label for="qeSheet">Sheet (in)</label><input id="qeSheet" inputmode="decimal" enterkeyhint="next" placeholder="11"></div>
+      <div class="qe-f" data-qefor="sheeter"><label for="qeSheeterBox">Per box</label><input id="qeSheeterBox" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 500"></div>
+      <div class="qe-f" data-qefor="folder"><label for="qeFanfold">Fanfold (in)</label><input id="qeFanfold" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 12.25"></div>
+      <div class="qe-f" data-qefor="folder"><label for="qeFolderBox">Per box</label><input id="qeFolderBox" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 4000"></div>
+      <div class="qe-f" data-qefor="folder"><label for="qeFoldSheet">Per fold</label><input id="qeFoldSheet" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 4"></div>
+      <div class="qe-f" data-qefor="folder"><label for="qePack">Per pack</label><input id="qePack" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 2000"></div>
       <div class="qe-f full"><label for="qeStock">Stock <span class="qe-opt">optional</span></label><input id="qeStock" enterkeyhint="next" placeholder="e.g. 3mil DT BOPP AT2550 40#" autocomplete="off"></div>
       <div class="qe-f full"><label for="qeColors">Colours <span class="qe-opt">optional — commas between, or Plain</span></label><input id="qeColors" enterkeyhint="next" placeholder="e.g. PMS 417 Grey, Black" autocomplete="off"></div>
-      <div class="qe-f" id="qeGearWrap"><label for="qeGear">Gear teeth</label><input id="qeGear" inputmode="numeric" enterkeyhint="done" placeholder="e.g. 98"></div>
+
     </div>
+    <input type="hidden" id="qeSrc" value="">
     <div class="qe-hint" id="qeHint"></div>
     <div class="qe-foot">
       <div class="qe-progress" id="qeProgress"></div>
-      <button id="qeDoneBtn" class="qe-done" type="button">Done — open job ›</button>
+      <button id="qeDoneBtn" class="qe-done" type="button">Go to Run ›</button>
     </div>
   </section>
 
@@ -1221,18 +1572,23 @@ body.dark .ecci-display{
         <input id="salesQuantity" placeholder="105" inputmode="numeric">
       </div>
       <div>
-        <label for="crossPerfTPI">Cross Perf TPI</label>
+        <label for="crossPerfTPI">Cross perf TPI</label>
         <input id="crossPerfTPI" placeholder="10" inputmode="text">
       </div>
       <div>
-        <label for="rollDirection">Roll Direction</label>
+        <label for="rollDirection">Roll direction</label>
         <input id="rollDirection" placeholder="1" inputmode="text">
       </div>
       <div>
         <label for="gearTeeth">Gear Teeth</label>
-        <input id="gearTeeth" placeholder="e.g. 98" inputmode="numeric">
+        <input id="gearTeeth" placeholder="auto" inputmode="numeric">
+        <input type="hidden" id="gearAuto" value="">
       </div>
-      <div></div>
+      <div>
+        <label for="jobAround">Around</label>
+        <input id="jobAround" placeholder="1" inputmode="numeric">
+      </div>
+      <div class="full gear-note" id="gearNote"></div>
       <div class="full">
         <label for="stockInfo">Stock Info</label>
         <input id="stockInfo" placeholder="e.g. 2.4mil WH.BOPP TC AT20N 40#" inputmode="text" autocomplete="off">
@@ -1287,7 +1643,7 @@ body.dark .ecci-display{
     <div class="segmented" id="decimalControls">
       <button data-mode="exact" class="active" type="button">Exact</button>
       <button data-mode="up" type="button">Round Up</button>
-      <button data-mode="down" type="button">Round<br>Down</button>
+      <button data-mode="down" type="button">Round Down</button>
       <button data-mode="nearest" type="button">Nearest</button>
     </div>
   </section>
@@ -1443,7 +1799,7 @@ body.dark .ecci-display{
     <input id="frRepeat" placeholder="2.125" inputmode="decimal">
     <label>Levels</label>
     <input id="frLevels" value="50" placeholder="50" inputmode="numeric">
-    <button id="frBtn" class="primary" type="button">Generate Finished Roll Table</button>
+    <button id="frBtn" class="primary" type="button">Generate Table</button>
     <button id="clearFrBtn" class="section-clear" type="button">Clear Finished Roll</button>
     <div id="frError" class="error"></div>
 
@@ -1486,6 +1842,13 @@ body.dark .ecci-display{
         <div><label for="rollImpInput">Impressions</label>
           <input id="rollImpInput" class="tally-input" placeholder="counter" inputmode="decimal"></div>
       </div>
+      <button type="button" id="rollPlanBtn" class="plan-chip" hidden></button>
+      <label for="rollQtyInput" style="margin-top:8px;">How many rolls like this</label>
+      <div class="roll-qty">
+        <button class="nudge-btn" id="rollQtyDown" type="button" aria-label="One fewer">−</button>
+        <input id="rollQtyInput" class="nudge-input" value="1" inputmode="numeric" aria-label="Number of rolls">
+        <button class="nudge-btn" id="rollQtyUp" type="button" aria-label="One more">+</button>
+      </div>
       <button id="rollExtraToggle" class="roll-extra-toggle" type="button">+ Extra on this roll</button>
       <div id="rollExtraRow" class="roll-extra-row" style="display:none;">
         <input id="rollRowExtra" class="tally-input" placeholder="Extra on this roll" inputmode="decimal">
@@ -1494,7 +1857,7 @@ body.dark .ecci-display{
           <button data-unit="impressions" type="button">Impressions</button>
         </div>
       </div>
-      <p class="card-sub" style="margin:6px 0 0;">Enter labels, impressions, or both. If you only enter one, the other is worked out from Repeat and Across.</p>
+      <p class="card-sub" style="margin:6px 0 0;">Enter labels or impressions — the other is worked out for you.</p>
       <button id="rollAddBtn" class="btn-add" type="button" style="width:100%;margin-top:10px;">Add Roll</button>
     </div>
 
@@ -1548,7 +1911,7 @@ body.dark .ecci-display{
       <div class="shift-cell waste"><div class="sc-label">Wasted Impressions</div><div class="sc-value" id="rollWaste">—</div></div>
       <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="rollWastePct">—</div></div>
     </div>
-    <button id="rollCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">✓ Save Job to My Shift</button>
+    <button id="rollCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">Save shift count</button>
   </section>
 
   </div><!-- /panel-roll -->
@@ -1619,7 +1982,7 @@ body.dark .ecci-display{
           <div class="shift-cell waste"><div class="sc-label">Wasted Impressions</div><div class="sc-value" id="sheeterWaste">—</div></div>
           <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="sheeterWastePct">—</div></div>
         </div>
-        <button id="sheeterCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">✓ Save Job to My Shift</button>
+        <button id="sheeterCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">Save shift count</button>
       </section>
   </div><!-- /panel-sheeter -->
 
@@ -1695,7 +2058,7 @@ body.dark .ecci-display{
           <div class="shift-cell waste"><div class="sc-label">Wasted Impressions</div><div class="sc-value" id="folderWaste">—</div></div>
           <div class="shift-cell"><div class="sc-label">Wastage %</div><div class="sc-value" id="folderWastePct">—</div></div>
         </div>
-        <button id="folderCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">✓ Save Job to My Shift</button>
+        <button id="folderCompleteJobBtn" class="complete-job-btn" type="button" style="display:none;">Save shift count</button>
       </section>
 
       <section class="card">
@@ -1813,6 +2176,28 @@ function getGeminiEndpoint(model){
   return "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent";
 }
 const GEMINI_ENDPOINT = getGeminiEndpoint(GEMINI_MODEL);
+/* Scanning can use your own API key, or a scan service (a small server that holds the key) plus an access code. */
+const SCAN_SERVICE_KEY = "ROLL_CALC_SCAN_SERVICE";   // not RC_ — kept out of backups, like the API key
+const SERVICE_TOKEN = "@service";
+function scanService(){
+  try{ const o = JSON.parse(safeGet(SCAN_SERVICE_KEY) || "null"); if(o && o.url) return { url:String(o.url), code:String(o.code || "") }; }catch(e){}
+  return { url:"", code:"" };
+}
+// What a scan should use: your own key if you've saved one, otherwise the scan service.
+function scanAuth(){
+  const k = ((document.getElementById("apiKey") || {}).value || "").trim();
+  if(k) return k;
+  return scanService().url ? SERVICE_TOKEN : "";
+}
+function geminiFetch(endpoint, apiKey, init){
+  if(apiKey === SERVICE_TOKEN){
+    const svc = scanService();
+    const model = endpoint.split("/models/")[1];
+    const headers = Object.assign({}, init.headers || {}, { "X-Access-Code": svc.code });
+    return fetch(svc.url.replace(/\/+$/, "") + "/v1beta/models/" + model, Object.assign({}, init, { headers }));
+  }
+  return fetch(endpoint + "?key=" + encodeURIComponent(apiKey), init);
+}
 let labelPhotoFile = null;
 let docketPhotoFile = null;
 let currentDecimalMode = "exact";
@@ -1922,7 +2307,7 @@ function calculateImpressions(){
     showError("impError","Enter Labels, Repeat, and Across. Across cannot be 0.");
     return;
   }
-  document.getElementById("impAnswer").textContent=formatNumber(labels*repeat/across/10);
+  document.getElementById("impAnswer").textContent=formatNumber(labels*repeat/across/ECCI_COUNTER_LENGTH_DIVISOR);
 }
 function calculatePressCounts(){
   const count=cleanNumber("pcCount"), repeat=cleanNumber("pcRepeat"), across=cleanNumber("pcAcross");
@@ -1932,7 +2317,7 @@ function calculatePressCounts(){
     showError("pcError","Enter Count, Repeat, and Across. Repeat cannot be 0.");
     return;
   }
-  document.getElementById("pcAnswer").textContent=formatNumber(count*10*across/repeat);
+  document.getElementById("pcAnswer").textContent=formatNumber(count*ECCI_COUNTER_LENGTH_DIVISOR*across/repeat);
 }
 function calculateFinishedRoll(){
   const roll=cleanNumber("frRoll"), across=cleanNumber("frAcross"), repeat=cleanNumber("frRepeat"), levels=Math.floor(cleanNumber("frLevels"));
@@ -1949,7 +2334,7 @@ function calculateFinishedRoll(){
   let rows="";
   for(let level=1; level<=levels; level++){
     const labels=base*level;
-    const count=labels*repeat/across/10;
+    const count=labels*repeat/across/ECCI_COUNTER_LENGTH_DIVISOR;
     rows += `<tr><td>${level}</td><td class="labels-cell">${formatNumber(labels)}</td><td>${formatNumber(count)}</td></tr>`;
   }
   table.innerHTML=rows;
@@ -1971,11 +2356,11 @@ function calculateCoreSize(){
   document.getElementById("coreAnswer").textContent=renderMeasure(width*across,"core");
 }
 
-const ECCI_CORE_OUTER_DIAMETER = 3.0;
+let ECCI_CORE_OUTER_DIAMETER = 3.0;   // set from the active press profile
 // The press counter advances once per 10 inches of web length.
 // Validated against a real job: 50,924 labels at 6,050 counter (repeat 2.375, across 2)
 // -> 50924 * 2.375 / 2 / 10 = 6,047 ≈ 6,050. This matches the Impressions formula exactly.
-const ECCI_COUNTER_LENGTH_DIVISOR = 10;
+let ECCI_COUNTER_LENGTH_DIVISOR = 10;   // inches of web per counter tick — set from the active press profile
 
 function calculateECCICounter(t, L, A, targetRadius){
   const thickness = Number(String(t).replace(/,/g,""));
@@ -2204,13 +2589,13 @@ function refreshRadiusNudgeLabel(){
 }
 
 async function lookupMaterialSpecWithAI(){
-  const apiKey = document.getElementById("apiKey").value.trim();
+  const apiKey = scanAuth();
   const specText = document.getElementById("manualSpecSearch").value.replace(/[^0-9A-Za-z .#/-]/g,"").trim();
   const sourceOut = document.getElementById("thicknessSourceOut");
 
   if(!apiKey){
-    if(sourceOut) sourceOut.textContent = "Thickness source: Missing Gemini API key";
-    throw new Error("Missing Gemini API key. Tap \u2699\uFE0F and paste your Google AI Studio API key first.");
+    if(sourceOut) sourceOut.textContent = "Thickness source: Scanning isn't set up";
+    throw new Error("Scanning isn't set up. In Settings, add a scan service (access code) or your own API key.");
   }
 
   if(!specText){
@@ -2251,7 +2636,7 @@ materialThickness must be the total construction caliper expressed in inches as 
     generationConfig: { temperature: 0 }
   };
 
-  const response = await fetch(endpoint + "?key=" + encodeURIComponent(apiKey), {
+  const response = await geminiFetch(endpoint, apiKey, {
     method: "POST",
     headers: {"Content-Type":"application/json"},
     body: JSON.stringify(requestBody)
@@ -2407,10 +2792,15 @@ function recalculateAll(){
   calculateAndRenderECCI();
 }
 
+// Settings fields (API key, scan service address and access code) never go into job data or backups.
+function isPrivateField(el){
+  return !!el && (el.id === "apiKey" || /^svc/.test(el.id || "") || !!(el.closest && el.closest("#settingsPanel")));
+}
 function safeGet(key){
   try{ return localStorage.getItem(key); }catch(err){ return null; }
 }
 function safeSet(key,value){
+  if(window.__rcFrozen) return;   // a restore is reloading the page: don't let old screen state write back
   try{ localStorage.setItem(key,value); }catch(err){}
 }
 function safeRemove(key){
@@ -2433,6 +2823,7 @@ function toggleTheme(){
 }
 
 function toggleSettings(){
+  if(typeof showView === "function"){ showView("settings"); return; }
   const panel = document.getElementById("settingsPanel");
   if(panel) panel.classList.toggle("hidden");
 }
@@ -2647,7 +3038,7 @@ async function callGeminiWithFallback(apiKey, requestBody){
   for(const model of GEMINI_MODELS){
     const endpoint = getGeminiEndpoint(model);
 
-    const response = await fetch(endpoint + "?key=" + encodeURIComponent(apiKey), {
+    const response = await geminiFetch(endpoint, apiKey, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -2720,7 +3111,7 @@ async function ocrImageToText(file, onProgress){
 async function runGeminiScan(file, scanType, opts){
   opts = opts || {};
   let tab = opts.tab || "roll";
-  const apiKey=document.getElementById("apiKey").value.trim();
+  const apiKey=scanAuth();
 
   const ui = scanType === "label"
     ? { err:"labelScanError", ok:"labelScanSuccess", btn:"labelScanBtn", idle:"Scan Label / Paper Spec" }
@@ -2736,7 +3127,7 @@ async function runGeminiScan(file, scanType, opts){
   showError(errorId,"");
   showSuccess(successId,"");
 
-  if(!apiKey){showError(errorId,"Missing API key. Tap ⚙️ and paste your Google AI Studio API key first.");return;}
+  if(!apiKey){showError(errorId,"Scanning isn't set up. In Settings, add a scan service (access code) or your own API key.");return;}
   if(!file){showError(errorId,"Choose or take a photo first.");return;}
   if(!file.type.startsWith("image/")){showError(errorId,"Unsupported upload. Please choose an image file.");return;}
 
@@ -2829,6 +3220,7 @@ Required JSON schema:
   "docketNumber": string | null,
   "customer": string | null,
   "gearTeeth": number | null,
+  "around": number | null,
   "crossPerfTPI": string | null,
   "labelColor": string | null,
   "colors": string[] | null,
@@ -2908,6 +3300,7 @@ Strict rules:
 7e-ii. labelsPerFoldSheet is the number of labels on one fold sheet, e.g. "# of labels per fold sheet is 4" -> 4. If absent, return null.
 7e-iii. labelsPerPack is the labels per pack/bag, e.g. "poly bag in 2,000's" or "packs of 2,000" -> 2000. If absent, return null.
 7e-iv. group is the "Group:" value exactly as printed, e.g. "DLabel-F", "DLabel-R", "DLabel-N". If absent, return null.
+7e-viii. around is how many labels around the cylinder, from the Prepress line: "3 across x 2 around" -> 2, "8 across x 1 around" -> 1. If absent, return null.
 7e-vii. gearTeeth is the print cylinder gear tooth count, used on printed (colour) jobs. Look on the Prepress line or near the repeat:
    - "12.25\" repeat & 98 teeth" -> 98. "8 across x 1 around - 88T - 11\"" -> 88. "96T" -> 96. "Gear: 104" -> 104.
    - It is a whole number, usually 60-160. Do not use a die number, perf TPI, or a quantity. If absent or the job is Plain, return null.
@@ -3279,7 +3672,7 @@ function handleDocketPhoto(file){
   if(unsaved.length > 0){
     const proceed = confirm(
       "You have unsaved job results from the current docket.\n\n" +
-      "Tip: go to the job tab and tap \u201cSave Job to My Shift\u201d first — then scan the new docket.\n\n" +
+      "Tip: open Count and tap \u201cSave shift count\u201d first — then scan the new docket.\n\n" +
       "Scan the new docket anyway without saving?"
     );
     if(!proceed) return;
@@ -3346,8 +3739,8 @@ function clearDocketScan(){
 
 function clearECCIValues(){
   ["manualSpecSearch","ecciThickness","ecciRepeat","ecciAcross"].forEach(clearInputValue);
-  document.getElementById("ecciRadius").value = "11.5";
-  const _rs = document.getElementById("ecciRadiusSlider"); if(_rs) _rs.value = "11.5";
+  document.getElementById("ecciRadius").value = String(activePress().maxDia / 2);
+  const _rs = document.getElementById("ecciRadiusSlider"); if(_rs) _rs.value = String(activePress().maxDia / 2);
   safeRemove("ROLL_CALC_MATERIAL_THICKNESS");
   showError("ecciError","");
   updateThicknessBadge("none","—");
@@ -3429,7 +3822,7 @@ function captureWorkspace(){
   document.querySelectorAll("input, textarea").forEach(el=>{
     if(!el.id) return;
     if(el.type === "file" || el.type === "range" || el.type === "checkbox") return;
-    if(el.id === "apiKey") return;
+    if(isPrivateField(el)) return;
     inputs[el.id] = el.value;
   });
   return {
@@ -3443,7 +3836,7 @@ function applyWorkspace(ws){
   if(!ws) return;
   // Clear every field first so a switch never leaves stale values behind.
   document.querySelectorAll("input, textarea").forEach(el=>{
-    if(!el.id || el.type === "file" || el.type === "range" || el.type === "checkbox" || el.id === "apiKey") return;
+    if(!el.id || el.type === "file" || el.type === "range" || el.type === "checkbox" || isPrivateField(el)) return;
     el.value = "";
   });
   Object.keys(ws.inputs || {}).forEach(id=>{
@@ -3456,7 +3849,7 @@ function applyWorkspace(ws){
   TABS.forEach(renderTally);
   renderAllJobLists();
   ["roll","sheeter","folder"].forEach(p=>{ setText(p+"Labels","—"); setText(p+"Good","—"); setText(p+"Gross","—"); setText(p+"Waste","—"); setText(p+"WastePct","—"); });
-  if(ws.tab) switchTab(ws.tab);
+  if(ws.tab && ws.tab !== "runsheet") switchTab(ws.tab);
   recalculateAll();
   saveAllInputs();
   ["roll","sheeter","folder"].forEach(updateCompleteJobBtn);
@@ -3515,7 +3908,9 @@ function switchDocket(id){
 
 function newDocket(){
   syncActiveDocket();
-  const ws = { id: Date.now(), label:"Untitled", customer:"",
+  let nid = Date.now();
+  while(docketWorkspaces.some(d=>d.id === nid)) nid++;
+  const ws = { id: nid, label:"Untitled", customer:"",
     inputs:{}, tally:{roll:[],sheeter:[],folder:[]}, joblists:{dies:[],colors:[],notes:[],anilox:[]}, tab:"roll" };
   docketWorkspaces.push(ws);
   activeDocketId = ws.id;
@@ -3576,7 +3971,7 @@ const RUNSHEET_KEY = "RC_RUNSHEETS_V1";
 let runSheets = {};            // key -> { key, docket, customer, jobType, status, createdAt, updatedAt, completedAt, job, draft, sessions[] }
 let rsNotice = null;           // { key, kind, html }
 // Fields that hold a shift's COUNT (not the job definition) — stripped from the saved job, rolled forward on recall.
-const RS_COUNT_IDS = ["rollMasterStart","rollMasterEnd","rollTallyInput","extraAmount",
+const RS_COUNT_IDS = ["rollMasterStart","rollMasterEnd","rollTallyInput","rollQtyInput","extraAmount",
   "sheeterStartBox","sheeterEndBox","sheeterTotalBoxes","sheeterMasterStart","sheeterMasterEnd",
   "folderStartBox","folderEndBox","folderTotalBoxes","folderMasterStart","folderMasterEnd","rsSessionId"];
 const RS_PROGRESS_IDS = ["rollMasterEnd","sheeterMasterEnd","folderMasterEnd","sheeterTotalBoxes","folderTotalBoxes","sheeterEndBox","folderEndBox"];
@@ -3825,6 +4220,7 @@ function logDraftAsSession(key){
 
 // After a docket scan: if this docket has history, carry its counts forward.
 function runSheetAfterScan(){
+  if(typeof markScanSources === "function") markScanSources();
   const key = runKeyNow();
   if(!key) return;
   const rec = runSheets[key];
@@ -3849,9 +4245,12 @@ function runSheetAfterScan(){
 }
 
 // Typing a docket number (then leaving the field) recalls it if this phone has seen it.
+let qeSkipCommit = null;
 function onDocketNumberCommitted(){
   const key = runKeyNow();
   if(!key) return;
+  if(qeSkipCommit === key){ qeSkipCommit = null; return; }   // Quick Entry just switched to this open docket
+  qeSkipCommit = null;
   const rec = runSheets[key];
   if(rec){
     const unsaved = ["roll","sheeter","folder"].filter(hasUnsavedJob);
@@ -3920,6 +4319,8 @@ function deleteRunSheet(key){
 
 function renderRunSheetUI(){
   const rec = currentRunSheet();
+  if(typeof renderJobHeader === "function") renderJobHeader();
+  if(typeof currentView !== "undefined" && currentView === "jobs" && typeof renderJobsHome === "function") renderJobsHome();
   const card = document.getElementById("runSheetCard");
   const emptyCard = document.getElementById("runSheetEmpty");
   if(emptyCard) emptyCard.style.display = rec ? "none" : "block";
@@ -3983,7 +4384,7 @@ function renderRunSheetUI(){
             '<div class="rs-sess-meta">' + escHtml(what + " · " + formatNumber(x.labels) + " labels · Good " + formatNumber(x.good) + ctr) + "</div>" +
             "</div>" + (done ? "" : '<button class="tally-del" data-rssessdel="' + x.id + '" type="button" aria-label="Remove shift">✕</button>') + "</div>";
         });
-        list.innerHTML = rows.length ? rows.reverse().join("") : '<div class="rs-lib-empty">No shifts saved yet. Tap “Save Job to My Shift” to log this shift\'s count.</div>';
+        list.innerHTML = rows.length ? rows.reverse().join("") : '<div class="rs-lib-empty">No shifts saved yet. Tap “Save shift count” on Count to log this shift\'s count.</div>';
       }
       const cb = document.getElementById("rsCompleteBtn"), rb = document.getElementById("rsReopenBtn");
       if(cb) cb.style.display = done ? "none" : "block";
@@ -4089,7 +4490,7 @@ function computeJobResults(jobType, inp){
     if(inp.extraOn !== false && amt && amt > 0){
       const base = (inp.extraScope === "perroll") ? amt * rolls : amt;
       if(inp.extraUnit === "impressions"){
-        extra = (repeat && across) ? (base * 10 * across) / repeat : 0;
+        extra = (repeat && across) ? (base * ECCI_COUNTER_LENGTH_DIVISOR * across) / repeat : 0;
       }else{
         extra = base;
       }
@@ -4101,7 +4502,7 @@ function computeJobResults(jobType, inp){
     totalLabels = (snapNum(inp.totalBoxes) || 0) * (snapNum(inp.labelsPerBox) || 0);
   }
   const haveRA = repeat && across && repeat > 0 && across > 0;
-  const good = haveRA ? (totalLabels * repeat / 10 / across) : 0;
+  const good = haveRA ? (totalLabels * repeat / ECCI_COUNTER_LENGTH_DIVISOR / across) : 0;
   const haveCounters = start !== null && end !== null;
   const gross = haveCounters ? Math.max(0, end - start) : 0;
   const waste = Math.max(0, gross - good);
@@ -4139,7 +4540,7 @@ function snapshotInputs(prefix, results){
 function commitJob(prefix){
   const results = readJobResults(prefix);
   if(!results.good && !results.gross){
-    alert("Calculate the job summary first, then tap “Save Job to My Shift”.");
+    alert("Nothing to save yet. Add what came off the press and enter the press counter start and end, then tap “Save shift count”.");
     return false;
   }
   const rsRec = currentRunSheet();
@@ -4447,6 +4848,12 @@ function setText(id, value){
 
 /* ---- Tab switching (persisted) ---- */
 function switchTab(name){
+  if(name === "myshift"){
+    if(typeof showView === "function" && document.getElementById("viewShift")){ showView("shift"); return; }
+  }
+  if(name === "runsheet" && typeof setStage === "function" && document.getElementById("jobNav")){
+    setStage("history"); return;
+  }
   const ALL_TABS = [...TABS, "myshift", "runsheet"];
   if(!ALL_TABS.includes(name)) name = "roll";
   ALL_TABS.forEach(t=>{
@@ -4457,6 +4864,10 @@ function switchTab(name){
     b.classList.toggle("active", b.dataset.tab === name);
   });
   safeSet(TAB_KEY, name);
+  if(TABS.includes(name)){
+    try{ if(typeof autoGearTeeth === "function") autoGearTeeth(); }catch(e){}
+    try{ if(typeof renderJobHeader === "function") renderJobHeader(); }catch(e){}
+  }
   window.scrollTo(0, 0);
 }
 
@@ -4487,11 +4898,11 @@ function rollCalc(e, repeat, across){
   const conv = repeat > 0 && across > 0;
   let base = 0, labelsDerived = false, imps = null, impDerived = false;
   if(r.labels > 0) base = r.labels;
-  else if(r.imp > 0 && conv){ base = r.imp * 10 * across / repeat; labelsDerived = true; }
+  else if(r.imp > 0 && conv){ base = r.imp * ECCI_COUNTER_LENGTH_DIVISOR * across / repeat; labelsDerived = true; }
   if(r.imp > 0) imps = r.imp;
-  else if(r.labels > 0 && conv){ imps = r.labels * repeat / 10 / across; impDerived = true; }
+  else if(r.labels > 0 && conv){ imps = r.labels * repeat / ECCI_COUNTER_LENGTH_DIVISOR / across; impDerived = true; }
   let extraLabels = 0;
-  if(r.extra > 0) extraLabels = r.extraUnit === "impressions" ? (conv ? r.extra * 10 * across / repeat : 0) : r.extra;
+  if(r.extra > 0) extraLabels = r.extraUnit === "impressions" ? (conv ? r.extra * ECCI_COUNTER_LENGTH_DIVISOR * across / repeat : 0) : r.extra;
   return { r, base, labelsDerived, imps, impDerived, extraLabels, total: base + extraLabels };
 }
 function tallyTotal(prefix){
@@ -4565,9 +4976,28 @@ function renderTally(prefix){
   }
 }
 
+function rollQty(){
+  const n = Math.round(rnum((document.getElementById("rollQtyInput") || {}).value) || 1);
+  return Math.min(200, Math.max(1, n));
+}
+function setRollQty(n){
+  const el = document.getElementById("rollQtyInput");
+  if(el) el.value = String(Math.min(200, Math.max(1, n)));
+  updateAddRollBtn();
+}
+function updateAddRollBtn(){
+  const b = document.getElementById("rollAddBtn");
+  const n = rollQty();
+  if(b) b.textContent = n > 1 ? "Add " + n + " Rolls" : "Add Roll";
+}
 function addRollEntry(){
   const errEl = document.getElementById("rollShiftError");
   if(errEl) errEl.textContent = "";
+  // Shortcut: "5x36000" / "5 × 36,000" in the labels box = 5 rolls of 36,000
+  const lab = document.getElementById("rollTallyInput");
+  const sm = lab ? String(lab.value).replace(/,/g, "").match(/^\s*(\d{1,3})\s*[x×*]\s*(\d+(?:\.\d+)?)\s*$/i) : null;
+  if(sm){ setRollQty(+sm[1]); lab.value = sm[2]; }
+  const count = rollQty();
   const labels = cleanNumber("rollTallyInput"), imp = cleanNumber("rollImpInput"), extra = cleanNumber("rollRowExtra");
   const hasL = Number.isFinite(labels) && labels > 0, hasI = Number.isFinite(imp) && imp > 0;
   if(!hasL && !hasI){
@@ -4575,10 +5005,16 @@ function addRollEntry(){
     return;
   }
   const unitBtn = document.querySelector("#rollRowExtraUnit button.active");
-  tallyState.roll.push({ labels: hasL ? labels : null, imp: hasI ? imp : null,
-    extra: Number.isFinite(extra) && extra > 0 ? extra : null,
-    extraUnit: unitBtn ? unitBtn.dataset.unit : "labels" });
+  for(let i = 0; i < count; i++){
+    tallyState.roll.push({ labels: hasL ? labels : null, imp: hasI ? imp : null,
+      extra: Number.isFinite(extra) && extra > 0 ? extra : null,
+      extraUnit: unitBtn ? unitBtn.dataset.unit : "labels" });
+  }
   ["rollTallyInput","rollImpInput","rollRowExtra"].forEach(id=>{ const el = document.getElementById(id); if(el) el.value = ""; });
+  setRollQty(1);
+  if(count > 1 && typeof showToast === "function"){
+    showToast("Added <b>" + count + " rolls</b> of " + formatNumber(hasL ? labels : imp) + (hasL ? " labels." : " impressions."), 3000);
+  }
   const row = document.getElementById("rollExtraRow"); if(row) row.style.display = "none";
   rollEditIdx = null;
   saveTallyState();
@@ -4633,7 +5069,7 @@ function deleteTally(prefix, idx){
 async function scanNumberInto(targetId, file, statusPrefix){
   if(!file) return;
   const errEl = document.getElementById(statusPrefix + "ShiftError");
-  const apiKey = document.getElementById("apiKey").value.trim();
+  const apiKey = scanAuth();
   if(errEl) errEl.textContent = "Reading number from photo...";
   try{
     let num = null;
@@ -4691,7 +5127,7 @@ const QE = {
   qeFoldSheet:  { folder:["bbLabelsPerFold"] },
   qePack:       { folder:["bbPackSize"] },
   qeStock:      { all:["stockInfo"] },
-  qeGear:       { all:["gearTeeth"] }
+  qeAround:     { roll:["jobAround"] }
 };
 let qeTypeSel = "roll";
 let qeHintTimer = null;
@@ -4740,6 +5176,18 @@ function qeApply(id){
   }
   if(id === "qeDocket"){
     const cur = ((document.getElementById("docketNumber") || {}).value || "").trim();
+    const openWs = raw ? (docketWorkspaces || []).find(d => d.id !== activeDocketId && normDocketKey(d.label) === normDocketKey(raw)) : null;
+    if(openWs && cur !== raw){
+      // That docket is already open on this phone: go to it instead of starting a copy.
+      const keepFocus = document.activeElement;
+      switchDocket(openWs.id);
+      { const rec = runSheets[normDocketKey(raw)]; if(rec && TABS.includes(rec.jobType)) switchTab(rec.jobType); }
+      qeSkipCommit = normDocketKey(raw);
+      if(typeof qeRefresh === "function") qeRefresh();
+      if(typeof renderJobHeader === "function") renderJobHeader();
+      if(keepFocus && keepFocus !== document.body && keepFocus.focus) keepFocus.focus();
+      return;
+    }
     if(raw && cur && normDocketKey(raw) !== normDocketKey(cur)){
       // A different docket: park the current one in its own chip (like scanning does) and start clean.
       const unsaved = ["roll","sheeter","folder"].filter(hasUnsavedJob);
@@ -4772,6 +5220,37 @@ function qeApplyColors(){
   saveJobLists(); renderJobList("colors");
   if(typeof reconcileAnilox === "function") reconcileAnilox();   // no API call — the 🔍 button does that
   qeUpdateGear();
+}
+function autoGearTeeth(){
+  const el = document.getElementById("gearTeeth"), flag = document.getElementById("gearAuto"), note = document.getElementById("gearNote");
+  if(!el) return;
+  const n = id => { const v = rnum((document.getElementById(id) || {}).value); return v > 0 ? v : null; };
+  const type = (typeof jobTypeNow === "function" && jobTypeNow()) || "roll";
+  const around = n("jobAround") || 1;
+  let plate = null, how = "";
+  if(type === "folder"){
+    const f = n("folderFoldSize");
+    if(f){ plate = f; how = "fanfold " + f + "″ × 8"; }
+  }else if(type === "sheeter"){
+    const sh = n("sheeterSheetSize");
+    if(sh){ plate = sh * around; how = "sheet " + sh + "″" + (around > 1 ? " × " + around + " around" : "") + " × 8"; }
+  }else{
+    const r = n("rollRepeat") || n("ecciRepeat") || n("impRepeat");
+    if(r){ plate = r * around; how = "repeat " + r + "″ × " + around + " around × 8"; }
+  }
+  const teeth = plate ? Math.round(plate * 8) : null;
+  const plausible = teeth && teeth >= 40;            // a real print gear; e.g. 1.625″ × 1 around = 13 is not
+  const isAuto = flag ? flag.value === "1" : true;
+  const empty = String(el.value).trim() === "";
+  if(empty || isAuto){
+    if(plausible){ el.value = teeth; if(flag) flag.value = "1"; }
+    else if(isAuto && !empty){ el.value = ""; }
+  }
+  if(note){
+    const auto = flag && flag.value === "1" && String(el.value).trim() !== "";
+    note.textContent = auto ? "Gear teeth worked out: " + how + " = " + teeth + "T."
+      : (teeth && !plausible ? "Enter how many labels Around the cylinder to work out the gear teeth (" + how + " = " + teeth + " is too small for a gear)." : "");
+  }
 }
 function qeUpdateGear(){
   const wrap = document.getElementById("qeGearWrap");
@@ -4833,6 +5312,7 @@ function qeProgress(){
   need.forEach(id=>{ const el = document.getElementById(id); if(el && String(el.value).trim() !== "") filled++; });
   const p = document.getElementById("qeProgress");
   if(p) p.textContent = filled === need.length ? "✓ All key fields in" : (filled + " of " + need.length + " key fields");
+  if(typeof renderSetupCheck === "function") renderSetupCheck(need);
 }
 
 // Keyboard "Next" walks down the visible boxes.
@@ -4848,11 +5328,15 @@ function qeDone(){
   switchTab(qeTypeSel);
   const card = document.getElementById("quickEntryCard");
   if(card) card.classList.remove("open");
-  const bar = document.getElementById("tabBar");
-  if(bar) bar.scrollIntoView({ behavior:"smooth", block:"start" });
+  if(typeof setStage === "function" && document.getElementById("jobNav")){
+    setStage("run");
+  }else{
+    const bar = document.getElementById("tabBar");
+    if(bar) bar.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
   if(typeof showToast === "function"){
     const d = ((document.getElementById("docketNumber") || {}).value || "").trim();
-    showToast("Job " + (d ? "<b>" + escHtml(d) + "</b> " : "") + "is set up on the " + rsTypeLabel(qeTypeSel) + " tab.", 4000);
+    showToast("Job " + (d ? "<b>" + escHtml(d) + "</b> " : "") + "is set up. Here's how to run it.", 4000);
   }
 }
 
@@ -4884,7 +5368,7 @@ function erAutoValues(){
     repeat:   n("rollRepeat") || n("ecciRepeat") || n("frRepeat") || n("impRepeat"),
     across:   n("rollAcross") || n("ecciAcross") || n("frAcross") || n("impAcross"),
     thickness: thick, thickSrc,
-    maxDia: 23, core: ECCI_CORE_OUTER_DIAMETER
+    maxDia: activePress().maxDia, core: ECCI_CORE_OUTER_DIAMETER
   };
 }
 const ER_MAP = { erQty:"qty", erFinished:"finished", erThickness:"thickness",
@@ -4916,13 +5400,19 @@ function fillEvenRolls(force){
   });
   calcEvenRolls();
   FEET_CARDS.forEach(calcFeetFor);   // roll-feet boxes use the same repeat/across
+  if(typeof autoGearTeeth === "function") autoGearTeeth();
   if(typeof qeRefresh === "function") qeRefresh();
 }
 let erOptionsOpen = false;
 document.addEventListener("toggle", (e)=>{ if(e.target && e.target.id === "erOptions") erOptionsOpen = e.target.open; }, true);
 function erDiameterFor(lengthIn, t, core){ return Math.sqrt(4 * t * lengthIn / Math.PI + core * core); }
 
+let erLast = null;   // the plan calcEvenRolls last worked out — the Run screen draws from it
 function calcEvenRolls(){
+  erLast = null;
+  try{ calcEvenRollsInner(); }finally{ if(typeof renderRunPlan === "function"){ try{ renderRunPlan(); }catch(e){} } }
+}
+function calcEvenRollsInner(){
   const out = document.getElementById("erResult"), err = document.getElementById("erError");
   if(!out) return;
   const auto = erAutoValues();
@@ -4982,6 +5472,8 @@ function calcEvenRolls(){
   const rollsTyped = touched.has("erRolls");
   let R = rollsTyped ? Math.max(0, Math.round(rnum(rollsEl && rollsEl.value) || 0)) : Rmin;
   if(rollsEl && !rollsTyped && document.activeElement !== rollsEl) rollsEl.value = String(Rmin);
+  erLast = { Q, R, Rmin, kmax, fq, step, Dmax, core:d, rollsTyped,
+    option: rr => { const kk = Math.ceil(Q / (rr * step)); return { rolls:rr, k:kk, labels:kk * step, over:kk > kmax, extra:rr * kk * step - Q }; } };
 
   let html;
   if(R <= 0){
@@ -4997,11 +5489,14 @@ function calcEvenRolls(){
     const L = k * step;                              // labels per press roll (divisible by the finished roll)
     const extra = R * L - Q;
     const tooBig = k > kmax;
+    erLast = { Q, R, Rmin, k, kmax, L, extra, fq, step, Dmax, core:d, tooBig, rollsTyped,
+      counter: counterFor(k), dia: diaFor(k),
+      option: rr => { const kk = Math.ceil(Q / (rr * step)); return { rolls:rr, k:kk, labels:kk * step, over:kk > kmax, extra:rr * kk * step - Q }; },
+      level: kk => ({ k:kk, labels:kk * step, counter:counterFor(kk), dia:diaFor(kk), over:kk > kmax }) };
     const bad = tooBig ? "bad" : "";
     html = '<div class="er-plan' + (tooBig ? ' er-plan-bad' : '') + '"><div class="er-plan-kicker">' +
       (tooBig ? 'Too big — over ' + Dmax + '″' : (rollsTyped && R !== Rmin ? 'Your plan — ' + R + ' even press rolls' : 'Recommended — even press rolls')) + '</div>' +
-      '<div class="er-plan-head">' + R + ' press roll' + (R === 1 ? "" : "s") + ' × ' + formatNumber(L) + ' labels</div>' +
-      '<div class="er-plan-sub">Finished Roll table level ' + k + ' · counter ≈ ' + formatNumber(counterFor(k)) + ' (estimated) · ' + fmtD(diaFor(k)) + ' (max ' + Dmax + '″)</div></div>';
+      '<div class="er-plan-head">' + R + ' press roll' + (R === 1 ? "" : "s") + ' × ' + formatNumber(L) + ' labels</div></div>';
     if(tooBig){
       html += '<div class="er-note er-warn">' + R + ' press roll' + (R === 1 ? "" : "s") + ' would need ' + fmtD(diaFor(k)) +
         ' rolls. Use at least <b>' + Rmin + '</b> press rolls to stay under ' + Dmax + '″.</div>';
@@ -5010,11 +5505,14 @@ function calcEvenRolls(){
       cell("Counter per roll (est.)", "≈ " + formatNumber(counterFor(k)), bad) +
       cell("Diameter", fmtD(diaFor(k)), bad) +
       cell("Labels per press roll", formatNumber(L), bad) +
-      cell("÷ finished roll", formatNumber(L / fq) + " × " + formatNumber(fq), bad) +
-      cell("Total labels run", formatNumber(R * L) + " of " + formatNumber(Q), ("full " + bad).trim()) + '</div>';
+      cell("÷ finished roll", formatNumber(L / fq) + " × " + formatNumber(fq) + '<small class="er-lvl">table level ' + k + '</small>', bad) +
+      '<div class="er-cell er-total full' + (bad ? " bad" : "") + '"><span>Total labels incl. extras</span><b>' + formatNumber(R * L) + '</b>' +
+        '<small>' + formatNumber(Q) + ' order' + (extra > 0 ? ' <span class="x-extra">+ ' + formatNumber(extra) + ' extra</span>' : '') +
+        ' = ' + R + ' rolls × ' + formatNumber(L) + '</small></div>' + '</div>';
     html += extra > 0
-      ? '<div class="er-note er-extra">Extra labels: <b>' + formatNumber(extra) + '</b> (' + (extra / Q * 100).toFixed(2) +
-        '% over the order) — added so every press roll divides evenly by ' + formatNumber(fq) + '.</div>'
+      ? '<div class="er-note er-extra"><b>Extra labels: ' + formatNumber(extra) + ' for the whole job</b> — not per roll' +
+        (R > 1 ? ' (works out to about ' + formatNumber(Math.round(extra / R)) + ' per roll)' : '') + '. ' +
+        (extra / Q * 100).toFixed(2) + '% over the order, added so every press roll divides evenly by ' + formatNumber(fq) + '.</div>'
       : '<div class="er-note">No extra labels — the order splits into even press rolls exactly.</div>';
   }
   html += estNote;
@@ -5077,6 +5575,7 @@ function syncSheeterSheet(){
   }
   calcImprFor("sheeter");
   recomputeShift("sheeter", true);
+  if(typeof autoGearTeeth === "function") autoGearTeeth();
 }
 
 function calcBoxRange(prefix){
@@ -5146,7 +5645,8 @@ function updateFolderGear(fillInput){
 /* ---- Collapsible tool cards: title shows, body toggles open/closed ---- */
 function setupCollapsibles(){
   document.querySelectorAll(".tab-panel section.card, #jobInfoCard, #quickEntryCard, .scan-card").forEach(card=>{
-    if(card.classList.contains("collapsible") || card.closest("#panel-runsheet")) return;
+    if(card.classList.contains("collapsible") || card.closest("#panel-runsheet") || card.closest("#panel-myshift")) return;
+    if(card.dataset.st === "setup") return;   // Setup screen cards are always open
     const h2 = card.querySelector(":scope > h2");
     if(!h2) return;
     // All sections start collapsed — except Docket Scan, which starts open and remembers your choice.
@@ -5408,9 +5908,9 @@ async function regenerateAniloxFor(color, opts){
     const e = jobListsState.anilox[existing];
     if(e && !e.loading && (e.lpi || e.bcm)) return;
   }
-  const apiKey = (document.getElementById("apiKey") || {}).value ? document.getElementById("apiKey").value.trim() : "";
+  const apiKey = scanAuth();
   if(!apiKey){
-    upsertAnilox({ color, loading:false, lpi:"", bcm:"", note:"Add API key to recommend" });
+    upsertAnilox({ color, loading:false, lpi:"", bcm:"", note:"Set up scanning in Settings to recommend" });
     saveJobLists(); renderAnilox(); return;
   }
   const stock = (aniloxStock || ((document.getElementById("stockInfo")||{}).value || "")).trim() || "unknown";
@@ -5552,13 +6052,20 @@ function fillJobInfo(parsed, fields){
   setIf("rollDirection", parsed.rollDirection ?? parsed.roll_direction ?? null);
   setJobListFromScan("dies", parsed.dies ?? parsed.die ?? parsed.dieCodes);
   setJobListFromScan("colors", parsed.colors ?? parsed.colours ?? parsed.labelColor ?? parsed.label_color);
+  // Around (labels around the cylinder) -> used to work out gear teeth.
+  let around = normalizeNumber(parsed.around ?? parsed.labelsAround ?? parsed.around_count);
+  if(!around){
+    const m = String(Array.isArray(parsed.notes) ? parsed.notes.join(" ") : (parsed.notes || "")).match(/\b(\d{1,2})\s*around\b/i);
+    if(m) around = +m[1];
+  }
+  if(around) setIf("jobAround", around);
   // Gear teeth: only on printed jobs (a Plain job has no print cylinder).
   if(isColorJob(parsed.colors ?? parsed.colours ?? parsed.labelColor ?? parsed.label_color)){
     let teeth = normalizeNumber(parsed.gearTeeth ?? parsed.gear_teeth ?? parsed.teeth);
     if(!teeth) teeth = gearTeethFromText([
       Array.isArray(parsed.notes) ? parsed.notes.join(" \n ") : parsed.notes, parsed.materialDescription,
       parsed.labelColor, parsed.prepress].map(x=>String(x||"")).join(" \n "));
-    if(teeth) setIf("gearTeeth", Math.round(teeth));
+    if(teeth){ setIf("gearTeeth", Math.round(teeth)); const gf = document.getElementById("gearAuto"); if(gf) gf.value = ""; }
   }
   // After a scan, ask the model for a real per-color anilox (numbers), considering the stock.
   recommendAniloxForAll();
@@ -5617,7 +6124,7 @@ function computeExtraLabels(){
     if(!Number.isFinite(repeat) || !Number.isFinite(across)){
       return { labels:0, error:"Need Repeat and Across (from a docket or the fields above) to convert extra impressions." };
     }
-    return { labels: (base * 10 * across) / repeat };
+    return { labels: (base * ECCI_COUNTER_LENGTH_DIVISOR * across) / repeat };
   }
   return { labels: base };
 }
@@ -5718,7 +6225,7 @@ function calcShift(prefix, mode){
     return false;
   }
 
-  const good = (totalLabels * repeat) / 10 / across;
+  const good = (totalLabels * repeat) / ECCI_COUNTER_LENGTH_DIVISOR / across;
 
   if(!Number.isFinite(start) || !Number.isFinite(end)){
     if(errEl) errEl.textContent = "Enter both the Master Start and Master End counters.";
@@ -5780,7 +6287,7 @@ function calcImprFor(prefix){
     out.textContent = "—";
     return;
   }
-  out.textContent = formatNumber(Math.round((labels * repeat) / across / 10));
+  out.textContent = formatNumber(Math.round((labels * repeat) / across / ECCI_COUNTER_LENGTH_DIVISOR));
 }
 
 // Re-run the summary only if it was already showing values (so live edits stay in sync).
@@ -5798,7 +6305,7 @@ function saveAllInputs(){
   document.querySelectorAll("input, textarea").forEach(el=>{
     if(!el.id) return;
     if(el.type === "file" || el.type === "range" || el.type === "checkbox") return; // files can't persist; range mirrors its number input; checkboxes are settings
-    if(el.id === "apiKey") return; // API key kept under its own key
+    if(isPrivateField(el)) return; // API key kept under its own key
     data[el.id] = el.value;
   });
   safeSet(INPUT_KEY, JSON.stringify(data));
@@ -5839,16 +6346,16 @@ function resetShift(){
   saveTallyState();
 
   document.querySelectorAll("input, textarea").forEach(el=>{
-    if(!el.id || el.id === "apiKey" || el.type === "file") return;
+    if(!el.id || isPrivateField(el) || el.type === "file") return;
     if(el.type === "range") return;
     el.value = "";
   });
   // restore defaults
   const lv = document.getElementById("frLevels"); if(lv) lv.value = "50";
-  const erc = document.getElementById("erCore"); if(erc) erc.value = "3";
-  const erm = document.getElementById("erMaxDia"); if(erm) erm.value = "23";
-  const rad = document.getElementById("ecciRadius"); if(rad) rad.value = "11.5";
-  const radS = document.getElementById("ecciRadiusSlider"); if(radS) radS.value = "11.5";
+  const erc = document.getElementById("erCore"); if(erc) erc.value = String(activePress().core);
+  const erm = document.getElementById("erMaxDia"); if(erm) erm.value = String(activePress().maxDia);
+  const rad = document.getElementById("ecciRadius"); if(rad) rad.value = String(activePress().maxDia / 2);
+  const radS = document.getElementById("ecciRadiusSlider"); if(radS) radS.value = String(activePress().maxDia / 2);
 
   TABS.forEach(renderTally);
   TABS.forEach(p=>{ setText(p+"Gross","—"); setText(p+"Good","—"); setText(p+"Waste","—"); setText(p+"WastePct","—"); setText(p+"Labels","—"); const e=document.getElementById(p+"ShiftError"); if(e) e.textContent=""; });
@@ -5879,7 +6386,1352 @@ function resetShift(){
 }
 
 
+/* =====================================================================
+   STAGE 1 — job-first shell (Jobs home, job header, Shift, Settings, bottom nav)
+   The existing sections are moved into four views at startup, so every field,
+   id, listener and saved value keeps working exactly as before.
+   ===================================================================== */
+const VIEW_KEY = "RC_VIEW_V1";
+let currentView = "jobs";
+let jobsUndo = null;
+
+const ICON = {
+  scan: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><path d="M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 9h8"/><path d="M8 12h8"/><path d="M8 15h5"/></svg>',
+  keys: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01"/><path d="M11 10h.01"/><path d="M15 10h.01"/><path d="M7 14h10"/></svg>',
+  search: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  chev: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>',
+  back: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>',
+  jobs: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="6" rx="1.5"/><rect x="4" y="14" width="16" height="6" rx="1.5"/></svg>',
+  shift: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>',
+  setup: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 10h6"/><path d="M9 14h6"/><path d="M9 18h3"/></svg>',
+  run: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3.5v3"/><path d="M20.5 12h-3"/><path d="M12 20.5v-3"/><path d="M3.5 12h3"/></svg>',
+  count: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4v16"/><path d="M10 4v16"/><path d="M14 4v16"/><path d="M18 4v16"/><path d="M3 15 21 9"/></svg>',
+  history: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/></svg>',
+  settings: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10"/><path d="M18 7h2"/><circle cx="16" cy="7" r="2"/><path d="M4 17h4"/><path d="M12 17h8"/><circle cx="10" cy="17" r="2"/></svg>'
+};
+
+function todayLine(){
+  const d = new Date();
+  return d.toLocaleDateString([], { weekday:"short", month:"short", day:"numeric" });
+}
+function mkView(id, kicker, title){
+  const v = document.createElement("section");
+  v.className = "view"; v.id = id;
+  if(title){
+    v.innerHTML = '<div class="view-head">' + (kicker ? '<div class="view-kicker">' + kicker + '</div>' : '') +
+      '<h1 class="view-title">' + title + '</h1></div>';
+  }
+  return v;
+}
+
+// Re-parent the existing UI into the four views. Runs once at startup, before collapsibles are set up.
+function buildShell(){
+  const main = document.querySelector("main.wrap");
+  if(!main || document.getElementById("viewJobs")) return;
+  const tabBar = document.getElementById("tabBar");
+
+  const vJobs = mkView("viewJobs", todayLine(), "Jobs");
+  vJobs.insertAdjacentHTML("beforeend",
+    '<div class="jobs-actions">' +
+      '<button type="button" class="ja-scan" id="jobsScanBtn">' + ICON.scan + 'Scan docket</button>' +
+      '<button type="button" class="ja-enter" id="jobsEnterBtn">' + ICON.keys + 'Enter docket</button>' +
+    '</div>' +
+    '<label class="jobs-search">' + ICON.search + '<span style="position:absolute;left:-9999px">Find a job</span>' +
+      '<input type="search" id="jobsSearch" placeholder="Docket # or customer" autocomplete="off"></label>' +
+    '<div id="jobsList"></div>');
+
+  const vJob = mkView("viewJob");
+  const head = document.createElement("div");
+  head.id = "jobHeader";
+  vJob.appendChild(head);
+
+  const vShift = mkView("viewShift", todayLine(), "Shift");
+  const vSet = mkView("viewSettings", "", "Settings");
+  // Attach the (empty) views first so every lookup below still finds its element.
+  const anchor = document.getElementById("appStatus");
+  [vJobs, vJob, vShift, vSet].forEach(v=>main.insertBefore(v, null));
+  if(anchor) main.insertBefore(anchor, vJobs);
+
+  // Job view: scan card, Quick Entry, Job Info, the job tabs and their panels.
+  const take = el => { if(el) vJob.appendChild(el); };
+  take(document.querySelector(".scan-card"));
+  take(document.getElementById("quickEntryCard"));
+  take(document.getElementById("jobInfoCard"));
+  take(tabBar);
+  ["panel-roll","panel-sheeter","panel-folder","panel-runsheet"].forEach(id=>take(document.getElementById(id)));
+
+  // Shift view: My Shift + end-of-shift.
+  const my = document.getElementById("panel-myshift");
+  if(my) vShift.appendChild(my);
+  const clr = document.getElementById("clearShiftLogBtn");
+  if(clr) clr.insertAdjacentHTML("beforebegin", '<button type="button" class="primary" id="shareShiftBtn" style="margin:4px 0 10px">Share shift report</button>');
+  const reset = document.getElementById("resetShiftBtn");
+  if(reset){ reset.textContent = "End shift & start a new one"; vShift.appendChild(reset); }
+
+  // Settings view: API key + display toggles, scan/manual mode, decimal display, theme.
+  const sp = document.getElementById("settingsPanel");
+  if(sp){ sp.classList.remove("hidden"); vSet.appendChild(sp); }
+  const mode = document.querySelector(".mode-card");
+  if(mode) vSet.appendChild(mode);
+  const dec = document.getElementById("decimalControls");
+  const decCard = dec ? dec.closest("section.card") : null;
+  if(decCard) vSet.appendChild(decCard);
+  vSet.insertAdjacentHTML("beforeend",
+    '<section class="card" id="pressCard"><h2>Presses</h2>' +
+    '<p class="card-sub">Pick the press you\'re on. Even Rolls, ECCI, roll feet and every counter number use its settings.</p>' +
+    '<div id="pressList"></div>' +
+    '<button type="button" class="secondary-btn" id="addPressBtn" style="width:100%;margin-top:10px">+ Add a press</button></section>' +
+    '<section class="card"><div class="set-row"><span style="font-size:16px;font-weight:600">Theme</span>' +
+    '<button type="button" id="setThemeBtn">Light / Dark</button></div></section>' +
+    '<section class="card" id="dataCard"><h2>Your data</h2>' +
+    '<p class="card-sub">Everything is saved on this phone only. Make a backup file now and then — it\'s how you move to a new phone or recover if the browser is cleared. Your API key is not included.</p>' +
+    '<div class="btn-pair" style="grid-template-columns:1fr 1fr"><button type="button" class="primary" id="exportDataBtn">Back up</button>' +
+    '<button type="button" class="secondary-btn" id="importDataBtn">Restore…</button></div>' +
+    '<input type="file" id="importDataInput" accept="application/json,.json" hidden>' +
+    '<p class="card-sub" id="dataInfo" style="margin-top:10px"></p>' +
+    '<button type="button" class="secondary-btn" id="undoRestoreBtn" hidden style="margin-top:8px">Undo last restore</button></section>' +
+    '<button type="button" class="secondary-btn" id="replayIntroBtn" style="width:100%;margin:4px 0 12px">Show the intro again</button>');
+
+  // Old navigation that the new shell replaces.
+  const lib = document.getElementById("runSheetLibCard"); if(lib) lib.style.display = "none";
+  const rsCard = document.getElementById("runSheetCard");
+  if(rsCard) rsCard.insertAdjacentHTML("afterend", '<button type="button" class="primary" id="shareJobBtn" style="margin-top:4px">Share job report</button>');
+  if(tabBar){
+    const ms = tabBar.querySelector('[data-tab="myshift"]'); if(ms) ms.remove();
+    const rs = tabBar.querySelector('[data-tab="runsheet"]'); if(rs) rs.remove();
+    tabBar.setAttribute("aria-label", "Job type");
+  }
+  tagStages(vJob, tabBar);
+  buildSetup();
+  buildCount();
+  pairButtons();
+
+
+  const nav = document.createElement("nav");
+  nav.id = "appNav"; nav.setAttribute("aria-label", "Main");
+  nav.innerHTML = [["jobs","Jobs"],["shift","Shift"],["settings","Settings"]].map(([v,l]) =>
+    '<button type="button" data-view="' + v + '"><span class="nav-pill">' + ICON[v] + '</span>' + l + '</button>').join("");
+  document.body.appendChild(nav);
+
+  const jn = document.createElement("nav");
+  jn.id = "jobNav"; jn.setAttribute("aria-label", "Job");
+  jn.innerHTML = STAGES.map(([v,l]) =>
+    '<button type="button" data-stage-go="' + v + '"><span class="nav-pill">' + ICON[v] + '</span>' + l + '</button>').join("");
+  document.body.appendChild(jn);
+}
+
+function pairButtons(){
+  document.querySelectorAll("button.primary").forEach(btn=>{
+    const next = btn.nextElementSibling;
+    if(!next || !next.matches("button.section-clear, button.clear-mini") || btn.parentElement.classList.contains("btn-pair")) return;
+    const wrap = document.createElement("div");
+    wrap.className = "btn-pair";
+    btn.before(wrap);
+    wrap.appendChild(btn); wrap.appendChild(next);
+    next.setAttribute("aria-label", next.textContent.trim());
+    next.textContent = "Clear";
+  });
+}
+
+/* ---- Stage 2: a job is Setup → Run → Count (+ History) ---- */
+const STAGE_KEY = "RC_STAGE_V1";
+const STAGES = [["setup","Setup"],["run","Run"],["count","Count"],["history","History"]];
+const STAGE_OF = { "ECCI Counter":"run", "Even Rolls":"run", "Impressions":"run", "Press Counts":"run", "Core Size":"run",
+  "Finished Roll":"run", "Gear Size":"run", "B.Bunch Counter":"run", "End of Job Count":"count",
+  "Sheeter Job":"setup", "Folder Job":"setup" };
+let currentStage = "setup";
+
+function tagStages(vJob, tabBar){
+  const tag = (el, st) => { if(el) el.dataset.st = st; };
+  tag(vJob.querySelector(".scan-card"), "setup");
+  tag(document.getElementById("quickEntryCard"), "setup");
+  tag(document.getElementById("jobInfoCard"), "setup");
+  if(tabBar){
+    tag(tabBar, "setup");
+    tabBar.insertAdjacentHTML("beforebegin", '<div class="stage-label" data-st="setup">Job type</div>');
+  }
+  ["panel-roll","panel-sheeter","panel-folder"].forEach(id=>{
+    const panel = document.getElementById(id);
+    if(!panel) return;
+    panel.querySelectorAll("section.card").forEach(sec=>{
+      const h = sec.querySelector("h2");
+      const name = h ? h.textContent.trim() : "";
+      tag(sec, STAGE_OF[name] || "run");
+    });
+  });
+  // Run order for roll jobs: the even-roll plan first, then the table it comes from.
+  const roll = document.getElementById("panel-roll");
+  const er = document.getElementById("evenRollsCard");
+  if(roll && er){
+    const fr = [...roll.querySelectorAll("section.card")].find(s => (s.querySelector("h2") || {}).textContent === "Finished Roll");
+    const first = roll.querySelector("section.card[data-st]");
+    if(first) roll.insertBefore(er, first);
+    if(fr) er.after(fr);
+  }
+  // "Set the press" strip at the top of Run, then the plan, gear/core tiles and levels; calculators go under "More tools".
+  const strip = document.createElement("section");
+  strip.id = "runStrip"; strip.dataset.st = "run";
+  const firstPanel = document.getElementById("panel-roll");
+  if(firstPanel) firstPanel.before(strip);
+  strip.insertAdjacentHTML("afterend",
+    '<section id="runPlan" class="rp-card" data-st="run"></section>' +
+    '<div id="runTiles" class="rp-tiles" data-st="run"></div>' +
+    '<section id="runLevels" class="rp-card" data-st="run"></section>' +
+    '<div class="rp-tools-h" data-st="run">More tools</div>' +
+    '<div id="ctSaved" class="su-check ok ct-saved" data-st="count" hidden></div>');
+  const lastPanel = document.getElementById("panel-folder");
+  if(lastPanel) lastPanel.insertAdjacentHTML("afterend",
+    '<button type="button" class="rp-next" id="runCountBtn" data-st="run">Count this shift ›</button>');
+  // Stage heading line under the header.
+  const hd = document.createElement("div");
+  hd.id = "stageHead";
+  const header = document.getElementById("jobHeader");
+  if(header) header.after(hd);
+}
+
+function setStage(st){
+  if(!STAGES.some(([v]) => v === st)) st = "setup";
+  currentStage = st;
+  const vJob = document.getElementById("viewJob");
+  if(vJob) vJob.dataset.stage = st;
+  safeSet(STAGE_KEY, st);
+  document.querySelectorAll("#jobNav button").forEach(b=>{
+    const on = b.dataset.stageGo === st;
+    b.classList.toggle("active", on);
+    if(on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+  });
+  const hd = document.getElementById("stageHead");
+  if(hd){
+    const type = (typeof jobTypeNow === "function" && jobTypeNow()) || "roll";
+    const words = {
+      setup: ["Job setup", "Entered once. Every number on Run and Count uses these values."],
+      run: ["Run the job", type === "roll" ? "Set the press and plan even rolls." : "Set the press for this " + rsTypeLabel(type).toLowerCase() + " job."],
+      count: ["Count this shift", "Add what came off the press, then save the shift."],
+      history: ["Job history", "Every shift saved on this docket, on this phone."]
+    }[st];
+    hd.innerHTML = '<h2>' + words[0] + '</h2><p>' + escHtml(words[1]) + '</p>';
+  }
+  // A stage with a single card (Count, or Run on a sheeter job) opens it — no extra tap.
+  if(vJob && st !== "history"){
+    const cards = [...vJob.querySelectorAll('.tab-panel.active section.card.collapsible[data-st="' + st + '"]')];
+    if(cards.length === 1 || st === "count") cards.forEach(c => c.classList.add("open"));
+  }
+  if(st === "run"){ renderRunStrip(); renderRunPlan(); }
+  if(st === "count"){ renderPlanChip(); ["roll","sheeter","folder"].forEach(p => { try{ liveShift(p); }catch(e){} }); }
+  if(st === "setup" && typeof qeProgress === "function"){ try{ qeRefresh(); }catch(e){} }
+  if(st === "history" && typeof renderRunSheetUI === "function"){ try{ renderRunSheetUI(); }catch(e){} }
+  window.scrollTo(0, 0);
+}
+
+// Count: one tap fills "Labels on roll" with the even-roll plan's labels per press roll.
+function planLabelsPerRoll(){
+  if(((typeof jobTypeNow === "function" && jobTypeNow()) || "roll") !== "roll") return null;
+  if(document.querySelector("#erResult .er-plan-bad")) return null;
+  const c = [...document.querySelectorAll("#erResult .er-cell")].find(x => /^labels per press roll/i.test((x.querySelector("span") || {}).textContent || ""));
+  const n = c ? rnum((c.querySelector("b") || {}).textContent) : null;
+  return n > 0 ? n : null;
+}
+function renderPlanChip(){
+  const b = document.getElementById("rollPlanBtn");
+  if(!b) return;
+  const n = planLabelsPerRoll();
+  b.hidden = !n;
+  if(n){ b.dataset.labels = n; b.innerHTML = 'Use plan: <b>' + formatNumber(n) + '</b> labels per roll'; }
+}
+
+/* ---- Design build-out: Count screen ---- */
+function buildCount(){
+  ["roll","sheeter","folder"].forEach(pre=>{
+    const btn = document.getElementById(pre + "ShiftBtn");
+    const card = btn ? btn.closest("section.card") : null;
+    if(!card || card.classList.contains("ct-card")) return;
+    card.classList.add("ct-card");
+    const el = id => document.getElementById(id);
+    const lab = id => card.querySelector('label[for="' + id + '"]');
+    // Press counter: Start / End side by side in their own block.
+    const sec = document.createElement("div");
+    sec.className = "ct-sec"; sec.id = pre + "CounterSec";
+    sec.innerHTML = '<h3 class="ct-h">Press counter</h3><div class="ct-grid"></div><div class="ct-ra" id="' + pre + 'CtRA"></div>';
+    const grid = sec.querySelector(".ct-grid");
+    [["MasterStart","Start"],["MasterEnd","End"]].forEach(([suf, word])=>{
+      const inp = el(pre + suf), l = lab(pre + suf);
+      if(!inp) return;
+      const cell = document.createElement("div");
+      if(l){ l.textContent = word; l.insertAdjacentHTML("beforeend", '<span class="src-tag" id="' + pre + suf + 'Tag"></span>'); cell.appendChild(l); }
+      cell.appendChild(inp);
+      grid.appendChild(cell);
+    });
+    // Repeat / Across come from Setup — keep the boxes, show a line instead.
+    const ra = el(pre + "Repeat");
+    const raRow = ra ? ra.closest(".two-col") : null;
+    if(raRow) raRow.classList.add("su-hidden");
+    // Sheeter / folder: the box fields get their own card.
+    if(pre !== "roll"){
+      const sb = el(pre + "StartBox");
+      const first = sb ? sb.closest(".two-col") : null;
+      if(first){
+        const boxSec = document.createElement("div");
+        boxSec.className = "ct-sec"; boxSec.id = pre + "BoxSec";
+        boxSec.innerHTML = '<h3 class="ct-h">Boxes</h3>';
+        first.before(boxSec);
+        const parts = [first, el(pre + "BoxRangeNote"), lab(pre + "TotalBoxes"), (el(pre + "TotalBoxes") || {}).parentElement, lab(pre + "LabelsPerCarton"), el(pre + "LabelsPerCarton")];
+        parts.forEach(x => { if(x) boxSec.appendChild(x); });
+        const lpc = lab(pre + "LabelsPerCarton"); if(lpc) lpc.textContent = "Labels per box";
+        const tb = lab(pre + "TotalBoxes"); if(tb) tb.textContent = "Boxes done this shift";
+      }
+    }
+    // Where the counter block goes: roll after the extras; sheeter/folder after labels-per-box.
+    const results = card.querySelector(".shift-grid");
+    const err = el(pre + "ShiftError");
+    if(pre === "roll"){
+      const extra = card.querySelector(".extra-block");
+      if(extra) extra.after(sec); else if(err) err.before(sec);
+    }else{
+      const bs = el(pre + "BoxSec");
+      if(bs) bs.after(sec); else if(raRow) raRow.after(sec); else if(err) err.before(sec);
+    }
+    // Results heading + save button.
+    if(results) results.insertAdjacentHTML("beforebegin", '<h3 class="ct-h ct-res-h">This shift</h3>');
+    const save = el(pre + "CompleteJobBtn");
+    if(save) save.classList.add("ct-save");
+    card.querySelectorAll(".clear-mini").forEach(c => { c.textContent = "Clear this count"; });
+    // Live results: no Calculate button needed.
+    [pre + "MasterStart", pre + "MasterEnd", pre + "TotalBoxes", pre + "LabelsPerCarton", pre + "StartBox", pre + "EndBox", pre + "Repeat", pre + "Across"]
+      .forEach(id => { const x = el(id); if(x){ x.addEventListener("input", () => liveShiftSoon(pre)); x.addEventListener("change", () => liveShiftSoon(pre)); } });
+  });
+  const list = document.getElementById("rollTallyList");
+  if(list && window.MutationObserver) new MutationObserver(() => liveShiftSoon("roll")).observe(list, { childList:true, subtree:true });
+  ["extraAmount"].forEach(id => { const x = document.getElementById(id); if(x) x.addEventListener("input", () => liveShiftSoon("roll")); });
+  document.addEventListener("click", e => {
+    if(e.target.closest && e.target.closest("#extraNo, #extraYes, #extraScopeTotal, #extraScopePer, #extraUnitLabels, #extraUnitImpr, #rollShiftWith, #rollShiftWithout")) liveShiftSoon("roll");
+  });
+}
+const liveTimers = {};
+function liveShiftSoon(pre){
+  clearTimeout(liveTimers[pre]);
+  liveTimers[pre] = setTimeout(() => liveShift(pre), 60);
+}
+// Work the shift out as you type. Missing counters just leave the counter results blank — no error.
+function liveShift(pre){
+  if(typeof calcShift !== "function") return;
+  const v = id => ((document.getElementById(id) || {}).value || "").trim();
+  const hasCount = pre === "roll" ? (tallyTotal("roll") > 0) : rnum(v(pre + "TotalBoxes")) > 0;
+  const err = document.getElementById(pre + "ShiftError");
+  const set = (id, t) => { const e = document.getElementById(id); if(e) e.textContent = t; };
+  if(!hasCount && !v(pre + "MasterEnd")){
+    ["Labels","Good","Gross","Waste","WastePct"].forEach(k => set(pre + k, "—"));
+    if(err) err.textContent = "";
+    if(typeof updateCompleteJobBtn === "function") updateCompleteJobBtn(pre);
+    renderCountBits(pre);
+    return;
+  }
+  const ok = calcShift(pre);
+  if(!ok){
+    // Never leave numbers from an earlier, valid entry on screen.
+    set(pre + "Gross", "—"); set(pre + "Waste", "—"); set(pre + "WastePct", "—");
+    const msg = err ? (err.textContent || "") : "";
+    if(/both the Master Start and Master End|Labels per Carton|Repeat and Across/.test(msg)) err.textContent = "";
+    if(typeof updateCompleteJobBtn === "function") updateCompleteJobBtn(pre);
+  }
+  renderCountBits(pre);
+}
+function renderCountBits(pre){
+  const v = id => ((document.getElementById(id) || {}).value || "").trim();
+  if(pre === "roll"){
+    const q = document.getElementById("rollQtyInput");
+    if(q && document.activeElement !== q && !String(q.value).trim()){ q.value = "1"; if(typeof updateAddRollBtn === "function") updateAddRollBtn(); }
+    const mode = document.getElementById("rollShiftMode");
+    if(mode && v("rollExtraOn") !== "yes") mode.textContent = "";
+  }
+  // Already saved? Offer the next shift instead of re-counting this one.
+  const sv = document.getElementById("ctSaved");
+  const type = (typeof jobTypeNow === "function" && jobTypeNow()) || "roll";
+  if(sv && pre === type){
+    const rec = typeof currentRunSheet === "function" ? currentRunSheet() : null;
+    const sid = typeof screenSessionId === "function" ? screenSessionId() : null;
+    const sess = rec && sid ? (rec.sessions || []).find(x => x.id === sid) : null;
+    const unsaved = typeof hasUnsavedJob === "function" && hasUnsavedJob(pre);
+    if(sess && rec.status !== "completed"){
+      sv.hidden = false;
+      sv.innerHTML = '<div><b>' + (unsaved ? 'Changed since you saved it.' : 'This count is saved.') + '</b> ' +
+        (unsaved ? 'Tap Save shift count to update it, or start the next shift.' : 'Saved ' + escHtml(rsWhen(sess.savedAt)) + '.') + '</div>' +
+        '<button type="button" class="ct-next" id="ctNextShift">Start next shift ›</button>';
+    }else sv.hidden = true;
+  }
+  const ra = document.getElementById(pre + "CtRA");
+  if(ra){
+    const r = pre === "roll" ? (typeof getRollRepeat === "function" ? getRollRepeat() : rnum(v("rollRepeat"))) : rnum(v(pre + "Repeat"));
+    const a = pre === "roll" ? (typeof getRollAcross === "function" ? getRollAcross() : rnum(v("rollAcross"))) : rnum(v(pre + "Across"));
+    ra.innerHTML = (r > 0 && a > 0)
+      ? 'Repeat ' + r + '″ · ' + a + ' across — from Setup. Good impressions = labels × repeat ÷ ' + ECCI_COUNTER_LENGTH_DIVISOR + ' ÷ across.'
+      : '<span class="ct-miss">Repeat and across are missing — add them in <button type="button" class="rp-link" data-goto="setup">Setup</button> to work out impressions.</span>';
+  }
+  const prev = document.getElementById(pre + "RunPrev");
+  const tag = document.getElementById(pre + "MasterStartTag");
+  if(tag){
+    const fromLast = prev && prev.style.display !== "none" && v(pre + "MasterStart") !== "";
+    tag.className = "src-tag" + (fromLast ? " you" : "");
+    tag.textContent = fromLast ? "From last shift" : "";
+  }
+}
+
+/* ---- Design build-out: Run screen ---- */
+function renderRunPlan(){
+  const plan = document.getElementById("runPlan"), tiles = document.getElementById("runTiles"), lv = document.getElementById("runLevels");
+  if(!plan) return;
+  const type = (typeof jobTypeNow === "function" && jobTypeNow()) || "roll";
+  const roll = type === "roll";
+  plan.hidden = !roll; if(lv) lv.hidden = !roll; if(tiles) tiles.hidden = !roll;
+  if(!roll) return;
+  const P = erLast;
+  if(!P){
+    const why = ((document.getElementById("erError") || {}).textContent || "").trim();
+    plan.innerHTML = '<div class="rp-kick">Even press rolls</div><p class="rp-empty">' + escHtml(why || "Enter the total labels in Setup to plan even rolls.") + '</p>' +
+      '<button type="button" class="rp-link" data-goto="setup">Go to Setup ›</button>';
+    if(lv) lv.hidden = true;
+  }else if(P.R <= 0){
+    plan.innerHTML = '<div class="rp-kick">Even press rolls</div><div class="rp-head bad">0 press rolls</div>' +
+      '<p class="rp-sub">' + formatNumber(P.Q) + ' labels need at least ' + P.Rmin + ' press rolls under ' + P.Dmax + '″.</p>' + chipsHtml(P);
+  }else{
+    const fin = P.L / P.fq;
+    plan.innerHTML = '<div class="rp-kick">Even press rolls' + (P.rollsTyped && P.R !== P.Rmin ? ' · your plan' : '') + '</div>' +
+      '<div class="rp-head' + (P.tooBig ? ' bad' : '') + '">' + P.R + ' rolls × ' + formatNumber(P.L) + '</div>' +
+      '<p class="rp-sub">Each = ' + formatNumber(fin) + ' finished rolls of ' + formatNumber(P.fq) + ' · table level ' + P.k + '</p>' +
+      (P.tooBig ? '<p class="rp-warn">Too big — each roll would be ' + P.dia.toFixed(2) + '″. Use at least <b>' + P.Rmin + '</b> rolls.</p>' : '') +
+      chipsHtml(P) +
+      (P.extra > 0
+        ? '<p class="rp-extra"><b>' + formatNumber(P.extra) + ' extra labels for the whole job</b>' + (P.R > 1 ? ' (about ' + formatNumber(Math.round(P.extra / P.R)) + ' per roll)' : '') +
+          ' so every roll divides by ' + formatNumber(P.fq) + '. Total run ' + formatNumber(P.R * P.L) + '.</p>'
+        : '<p class="rp-sub">No extra labels — the order splits evenly.</p>') +
+      '<button type="button" class="rp-link" data-opener="evenRollsCard">Change max diameter, thickness or rolls ›</button>';
+  }
+  // Gear + core tiles.
+  if(tiles){
+    const gear = ((document.getElementById("gearTeeth") || {}).value || "").trim();
+    const gnote = ((document.getElementById("gearNote") || {}).textContent || "").replace(/^Gear teeth worked out:\s*/i, "").replace(/\s*=\s*\d+T\.?$/, "");
+    const core = ((document.getElementById("coreAnswer") || {}).textContent || "").trim();
+    const cw = ((document.getElementById("coreCarrierWidth") || {}).value || "").trim(), ca = ((document.getElementById("coreAcross") || {}).value || "").trim();
+    tiles.innerHTML =
+      '<div class="rp-tile"><span>Gear</span><b>' + (gear ? escHtml(gear) + 'T' : '—') + '</b><small>' + (gear ? escHtml(gnote) : 'Needs repeat (and around) in Setup') + '</small></div>' +
+      '<div class="rp-tile"><span>Core size</span><b>' + (core && core !== "—" ? escHtml(core) : '—') + '</b><small>' + (cw && ca ? escHtml(cw) + '″ × ' + escHtml(ca) + ' across' : 'Needs carrier width in Setup') + '</small></div>';
+  }
+  // Finished roll levels around the plan.
+  if(lv && P && P.R > 0){
+    const ks = [];
+    for(let kk = Math.max(1, P.k - 2); kk <= P.k + 1; kk++) ks.push(kk);
+    lv.hidden = false;
+    lv.innerHTML = '<div class="rp-kick">Finished roll levels</div><table class="rp-levels"><thead><tr><th>Level</th><th>Labels</th><th>Counter</th></tr></thead><tbody>' +
+      ks.map(kk => { const L = P.level(kk);
+        return '<tr' + (kk === P.k ? ' class="on"' : '') + '><td>' + kk + '</td><td>' + formatNumber(L.labels) + '</td><td>' + formatNumber(L.counter) + (L.over ? ' <span class="rp-over">over</span>' : '') + '</td></tr>'; }).join("") +
+      '</tbody></table>';
+  }
+}
+function chipsHtml(P){
+  const list = [];
+  const add = rr => { if(rr >= 1 && !list.includes(rr)) list.push(rr); };
+  add(P.Rmin - 1); add(P.Rmin); add(P.R);
+  for(let rr = P.Rmin + 1; list.length < 5; rr++) add(rr);
+  list.sort((a,b) => a - b);
+  return '<div class="rp-chips" role="group" aria-label="Number of press rolls">' + list.map(rr => {
+    const o = P.option(rr);
+    const note = o.over ? "too big" : (rr === P.Rmin ? "fewest" : (o.extra > 0 ? "+" + formatNumber(o.extra) : "exact"));
+    return '<button type="button" class="rp-chip' + (rr === P.R ? ' on' : '') + (o.over ? ' over' : '') + '" data-errolls="' + rr + '" aria-pressed="' + (rr === P.R) + '">' +
+      '<b>' + rr + (rr === P.Rmin ? ' ★' : '') + '</b><small>' + note + '</small></button>';
+  }).join("") + '</div>';
+}
+
+/* ---- Design build-out: Setup screen ---- */
+const SU_KEY_LABELS = { qeDocket:"Docket #", qeQty:"Total labels", qeRepeat:"Repeat", qeAcross:"Across", qeFinished:"Finished roll",
+  qeCarrier:"Carrier width", qeSheet:"Sheet depth", qeSheeterBox:"Labels per box", qeFanfold:"Fanfold size", qeFolderBox:"Labels per box" };
+function buildSetup(){
+  const qe = document.getElementById("quickEntryCard");
+  if(!qe || document.getElementById("suOrder")) return;
+  qe.classList.add("su-card");
+  const wrapOf = id => { const el = document.getElementById(id); return el ? (el.closest(".qe-f") || el.parentElement) : null; };
+  const sec = (id, title, extra) => {
+    const d = document.createElement("section");
+    d.className = "su-sec"; d.id = id;
+    d.innerHTML = '<h3 class="su-h">' + title + (extra || "") + '</h3><div class="su-grid"></div>';
+    return d;
+  };
+  const put = (secEl, ids, full) => ids.forEach(id => {
+    const w = wrapOf(id);
+    if(!w) return;
+    if(!w.classList.contains("qe-f")) w.classList.add("su-f");
+    if(full) w.classList.add("full");
+    secEl.querySelector(".su-grid").appendChild(w);
+  });
+  const order = sec("suOrder", "Order");
+  const layout = sec("suLayout", "Press layout");
+  const mat = sec("suMaterial", "Material &amp; print");
+  const notes = sec("suNotes", "Docket notes");
+  put(order, ["qeDocket","qeCustomer","qeQty","qeFinished","qeSheeterBox","qeFolderBox","qeFoldSheet","qePack"]);
+  put(layout, ["qeRepeat","qeAcross","qeAround","qeCarrier","qeSheet","qeFanfold"]);
+  put(mat, ["qeStock"]);
+  mat.querySelector(".su-grid").insertAdjacentHTML("beforeend", '<div class="su-f full su-thick" id="suThick"></div>');
+  put(mat, ["crossPerfTPI","rollDirection"]);
+  ["colorsList","aniloxList","diesList"].forEach(id=>{
+    const el = document.getElementById(id);
+    const blk = el ? (id === "aniloxList" ? document.getElementById("aniloxWrap") : el.closest(".full")) : null;
+    if(blk){ blk.classList.add("su-f","full"); mat.querySelector(".su-grid").appendChild(blk); }
+  });
+  const nb = document.getElementById("notesBox");
+  const nblk = nb ? nb.closest(".full") : null;
+  if(nblk){ nblk.classList.add("su-f","full"); const l = nblk.querySelector(".joblist-head"); if(l) l.remove(); notes.querySelector(".su-grid").appendChild(nblk); }
+  // Colours are edited as a list (with anilox) — the comma box stays for scans but is hidden.
+  const qc = wrapOf("qeColors"); if(qc) qc.classList.add("su-hidden");
+  // Check banner + sections go where the old grid was.
+  const grid = qe.querySelector(".qe-grid");
+  const banner = document.createElement("div");
+  banner.id = "suCheck"; banner.className = "su-check";
+  const typeSeg = document.getElementById("qeType");
+  if(typeSeg) qe.insertBefore(banner, typeSeg.nextSibling);
+  [order, layout, mat, notes].forEach(x => grid.parentElement.insertBefore(x, grid));
+  grid.classList.add("su-hidden");
+  // Source tags on each field label.
+  Object.keys(QE).forEach(id=>{
+    const el = document.getElementById(id);
+    const lab = el ? document.querySelector('label[for="' + id + '"]') : null;
+    if(lab && !lab.querySelector(".src-tag")) lab.insertAdjacentHTML("beforeend", '<span class="src-tag" data-srcfor="' + id + '"></span>');
+    if(el) el.addEventListener("input", () => { setSrc(id, String(el.value).trim() ? "you" : null); });
+  });
+  // Compact scan row.
+  const sc = document.querySelector("#viewJob .scan-card");
+  if(sc){
+    sc.classList.add("su-scan");
+    const cam = sc.querySelector('label[for="docketCameraInput"]'), up = sc.querySelector('label[for="docketUploadInput"]');
+    if(cam) cam.innerHTML = ICON.scan + '<span>Scan docket</span>';
+    if(up) up.innerHTML = '<span>Upload photo</span>';
+    const clr = document.getElementById("clearDocketScanBtn"); if(clr) clr.textContent = "Clear scan";
+  }
+}
+function srcMap(){
+  try{ return JSON.parse((document.getElementById("qeSrc") || {}).value || "{}") || {}; }catch(e){ return {}; }
+}
+function setSrc(id, v){
+  const el = document.getElementById("qeSrc");
+  if(!el) return;
+  const m = srcMap();
+  if(v) m[id] = v; else delete m[id];
+  el.value = JSON.stringify(m);
+  renderSrcTags();
+}
+function markScanSources(){
+  if(typeof qeRefresh === "function") qeRefresh();
+  const el = document.getElementById("qeSrc");
+  if(!el) return;
+  const m = {};
+  Object.keys(QE).forEach(id=>{ const f = document.getElementById(id); if(f && String(f.value).trim()) m[id] = "scan"; });
+  el.value = JSON.stringify(m);
+  renderSrcTags();
+}
+function renderSrcTags(){
+  const m = srcMap();
+  const started = Object.keys(QE).some(id => { const el = document.getElementById(id); return el && String(el.value).trim(); });
+  document.querySelectorAll(".src-tag[data-srcfor]").forEach(t=>{
+    const id = t.dataset.srcfor, f = document.getElementById(id);
+    const has = f && String(f.value).trim() !== "";
+    let kind = has ? (m[id] || "") : "";
+    if(!has && started && SU_KEY_LABELS[id] && t.closest(".qe-f:not(.qe-hide)")) kind = "need";
+    t.className = "src-tag" + (kind ? " " + kind : "");
+    t.textContent = { scan:"Scanned", you:"You set", need:"Needed" }[kind] || "";
+  });
+}
+function renderSetupThickness(){
+  const box = document.getElementById("suThick");
+  if(!box) return;
+  const t = parseFloat(((document.getElementById("ecciThickness") || {}).value || "").replace(/[^0-9.]/g, ""));
+  const srcTxt = ((document.getElementById("thicknessSourceOut") || {}).textContent || "").replace(/^Thickness source:\s*/i, "");
+  if(!(t > 0)){
+    box.innerHTML = '<span class="su-thick-l">Thickness</span><span class="su-thick-v muted">Not known yet — add the stock, or set it in <b>Run › ECCI</b>.</span>';
+    return;
+  }
+  const mil = t < 0.05 ? t * 1000 : t;
+  const est = /estimat|average|typical|fallback/i.test(srcTxt);
+  box.innerHTML = '<span class="su-thick-l">Thickness <span class="src-tag ' + (est ? "est" : "scan") + '">' + (est ? "Estimated" : "Found") + '</span></span>' +
+    '<span class="su-thick-v"><b>' + (Math.round(mil * 100) / 100) + ' mil</b>' + (est ? ' · estimated from stock — check it if counters run off' : (srcTxt && srcTxt !== "—" ? ' · ' + escHtml(srcTxt) : '')) + '</span>';
+}
+function renderSetupCheck(need){
+  const b = document.getElementById("suCheck");
+  if(!b) return;
+  renderSrcTags();
+  renderSetupThickness();
+  const missing = (need || []).filter(id => { const el = document.getElementById(id); return !(el && String(el.value).trim()); });
+  const any = Object.keys(QE).some(id => { const el = document.getElementById(id); return el && String(el.value).trim(); });
+  const scanned = Object.values(srcMap()).includes("scan");
+  const ok = document.getElementById("docketScanSuccess");
+  if(ok) ok.style.display = /^No docket photo selected/.test(ok.textContent || "") ? "none" : "";
+  if(!any){
+    b.className = "su-check";
+    b.innerHTML = 'Scan the docket, or type the numbers below.';
+  }else if(missing.length){
+    b.className = "su-check warn";
+    b.innerHTML = '<b>' + missing.length + (missing.length === 1 ? ' thing' : ' things') + ' to fill in:</b> ' + missing.map(id => escHtml(SU_KEY_LABELS[id] || id)).join(", ") + '.';
+  }else{
+    b.className = "su-check ok";
+    b.innerHTML = '<b>All key numbers are in.</b> ' + (scanned ? 'Check anything tagged Scanned, then go to Run.' : 'Go to Run when you\'re ready.');
+  }
+}
+
+/* ---- Stage 3d: scan service ---- */
+function svcMsg(kind, html){
+  const el = document.getElementById("svcStatus");
+  if(!el) return;
+  el.className = "svc-status" + (kind ? " " + kind : "");
+  el.innerHTML = html || "";
+}
+function renderScanService(){
+  const svc = scanService();
+  const u = document.getElementById("svcUrl"), c = document.getElementById("svcCode");
+  if(u && document.activeElement !== u) u.value = svc.url;
+  if(c && document.activeElement !== c) c.value = svc.code;
+  const inv = document.getElementById("svcInviteBtn"); if(inv) inv.hidden = !svc.url;
+  const own = ((document.getElementById("apiKey") || {}).value || "").trim();
+  const st = document.getElementById("svcStatus");
+  if(!svc.url) svcMsg("", own ? "Scanning uses your own API key." : "Not set up yet.");
+  else if(own) svcMsg("", "Saved. Your own API key is filled in below, so scans use that instead.");
+  else if(st && !st.textContent) svcMsg("ok", "Scans go through the scan service.");
+}
+function normSvcUrl(v){
+  v = String(v || "").trim();
+  if(!v) return "";
+  if(!/^https?:\/\//i.test(v)) v = "https://" + v;
+  return v.replace(/\/+$/, "");
+}
+async function testScanService(svc){
+  svcMsg("", "Checking…");
+  try{
+    const r = await fetch(svc.url + "/status", { headers:{ "X-Access-Code": svc.code } });
+    const b = await r.json().catch(()=>null);
+    if(r.ok && b && b.ok){
+      const lim = b.dailyLimit ? " · " + (b.usedToday || 0) + " of " + b.dailyLimit + " scans used today" : "";
+      svcMsg("ok", "Connected as <b>" + escHtml(b.name || "you") + "</b>" + escHtml(lim) + ".");
+      return true;
+    }
+    svcMsg("bad", escHtml((b && b.error && b.error.message) || ("The service answered with an error (" + r.status + ").")));
+  }catch(e){
+    svcMsg("bad", "Couldn't reach the scan service. Check the address and your connection.");
+  }
+  return false;
+}
+async function saveScanService(){
+  const url = normSvcUrl((document.getElementById("svcUrl") || {}).value);
+  const code = ((document.getElementById("svcCode") || {}).value || "").trim();
+  if(!url){ svcMsg("bad", "Enter the scan service address."); return; }
+  if(!code){ svcMsg("bad", "Enter your access code."); return; }
+  const svc = { url, code };
+  safeSet(SCAN_SERVICE_KEY, JSON.stringify(svc));
+  const u = document.getElementById("svcUrl"); if(u) u.value = url;
+  const inv = document.getElementById("svcInviteBtn"); if(inv) inv.hidden = false;
+  await testScanService(svc);
+}
+function clearScanService(){
+  safeRemove(SCAN_SERVICE_KEY);
+  const u = document.getElementById("svcUrl"), c = document.getElementById("svcCode");
+  if(u) u.value = ""; if(c) c.value = "";
+  svcMsg("", "Removed.");
+  const inv = document.getElementById("svcInviteBtn"); if(inv) inv.hidden = true;
+}
+// A link that sets up scanning on a tester's phone: …/roll-calculator.html#scan=<address>|<code>
+function inviteLink(code){
+  const svc = scanService();
+  const base = location.href.split("#")[0];
+  return base + "#scan=" + encodeURIComponent(svc.url) + "|" + encodeURIComponent(code);
+}
+function copyInvite(){
+  const svc = scanService();
+  if(!svc.url) return;
+  const code = prompt("Access code for the person you're inviting (give each tester their own):", "");
+  if(code === null) return;
+  const c = code.trim();
+  if(!c){ showToast("No code entered — nothing copied.", 3500); return; }
+  const link = inviteLink(c);
+  const done = () => showToast("Invite link copied. Send it to your tester — opening it sets up scanning on their phone.", 5000);
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, () => fallbackCopy(link, done));
+  else fallbackCopy(link, done);
+}
+function importScanInvite(){
+  const m = (location.hash || "").match(/^#scan=([^|]+)\|(.+)$/);
+  if(!m) return;
+  let url = "", code = "";
+  try{ url = normSvcUrl(decodeURIComponent(m[1])); code = decodeURIComponent(m[2]).trim(); }catch(e){}
+  try{ history.replaceState(null, "", location.href.split("#")[0]); }catch(e){ location.hash = ""; }
+  if(!url || !code) return;
+  safeSet(SCAN_SERVICE_KEY, JSON.stringify({ url, code }));
+  showToast("Scanning is set up on this phone. Tap <b>Scan docket</b> to try it.", 6000);
+}
+
+/* ---- Stage 3c: first-run walkthrough ---- */
+const INTRO_KEY = "RC_INTRO_DONE_V1";
+let introStep = 0;
+const INTRO_STEPS = [
+  { icon:"jobs", title:"Every job in one list",
+    body:"Scan a docket or type its number. The job stays here — with its progress and where the next shift picks up — until you mark it done." },
+  { icon:"run", title:"Setup → Run → Count",
+    body:"<b>Setup</b> is the docket numbers, entered once. <b>Run</b> tells you how to set the press: even rolls, counter, core and gear. <b>Count</b> is what came off the press this shift." },
+  { icon:"settings", title:"Your press", press:true,
+    body:"These drive every roll plan and counter number. You can change them, or add more presses, in Settings." },
+  { icon:"scan", title:"Scanning is optional",
+    body:"Typing the docket always works. To scan photos, add an API key in Settings later. Everything stays on this phone — use <b>Back up</b> in Settings now and then." }
+];
+function hasAnyJobData(){
+  try{
+    return Object.keys(runSheets || {}).length > 0 || (shiftLog || []).length > 0 ||
+      (docketWorkspaces || []).some(w => normDocketKey(w.label || "") && normDocketKey(w.label) !== "UNTITLED");
+  }catch(e){ return false; }
+}
+function maybeShowIntro(){
+  if(safeGet(INTRO_KEY)) return;
+  if(hasAnyJobData()){ safeSet(INTRO_KEY, "1"); return; }   // already using the app: don't interrupt
+  showIntro();
+}
+function showIntro(){
+  introStep = 0;
+  let el = document.getElementById("introOverlay");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "introOverlay";
+    el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-labelledby", "introTitle");
+    document.body.appendChild(el);
+    el.addEventListener("click", e=>{
+      const b = e.target.closest("button");
+      if(!b) return;
+      if(b.dataset.intro === "next") introNext();
+      else if(b.dataset.intro === "back"){ introStep = Math.max(0, introStep - 1); renderIntro(); }
+      else if(b.dataset.intro === "skip") closeIntro();
+    });
+  }
+  document.body.classList.add("intro-open");
+  renderIntro();
+}
+function renderIntro(){
+  const el = document.getElementById("introOverlay");
+  if(!el) return;
+  const st = INTRO_STEPS[introStep], last = introStep === INTRO_STEPS.length - 1;
+  const pr = activePress();
+  const pressForm = st.press ?
+    '<div class="intro-press">' +
+      '<label>Press name<input id="introPressName" value="' + escHtml(pr.name) + '" autocomplete="off"></label>' +
+      '<div class="two-col"><label>Max roll (in)<input id="introPressMax" inputmode="decimal" value="' + pr.maxDia + '"></label>' +
+      '<label>Core OD (in)<input id="introPressCore" inputmode="decimal" value="' + pr.core + '"></label></div>' +
+      '<label>Inches of web per counter tick<input id="introPressIpc" inputmode="decimal" value="' + pr.inchesPerCount + '"></label>' +
+      '<div class="error" id="introPressErr"></div></div>' : '';
+  el.innerHTML =
+    '<div class="intro-card">' +
+      '<div class="intro-top"><span class="intro-count">' + (introStep + 1) + ' of ' + INTRO_STEPS.length + '</span>' +
+        '<button type="button" class="intro-skip" data-intro="skip">Skip</button></div>' +
+      '<div class="intro-icon">' + (ICON[st.icon] || "") + '</div>' +
+      '<h2 id="introTitle">' + st.title + '</h2>' +
+      '<p>' + st.body + '</p>' + pressForm +
+      '<div class="intro-dots" aria-hidden="true">' + INTRO_STEPS.map((_, i) => '<span' + (i === introStep ? ' class="on"' : '') + '></span>').join("") + '</div>' +
+      '<div class="intro-actions">' +
+        (introStep > 0 ? '<button type="button" class="secondary-btn" data-intro="back">Back</button>' : '<span></span>') +
+        '<button type="button" class="primary intro-next" data-intro="next">' + (last ? "Start" : "Next") + '</button>' +
+      '</div>' +
+    '</div>';
+  const nb = el.querySelector(".intro-next"); if(nb) nb.focus();
+}
+function introNext(){
+  if(INTRO_STEPS[introStep].press && !introSavePress()) return;
+  if(introStep < INTRO_STEPS.length - 1){ introStep++; renderIntro(); }
+  else closeIntro();
+}
+function introSavePress(){
+  const g = id => ((document.getElementById(id) || {}).value || "").trim();
+  const num = id => { const n = parseFloat(g(id).replace(/[^0-9.]/g, "")); return Number.isFinite(n) ? n : NaN; };
+  const maxDia = num("introPressMax"), core = num("introPressCore"), ipc = num("introPressIpc");
+  const err = document.getElementById("introPressErr");
+  let msg = "";
+  if(!(core > 0)) msg = "Enter the core size.";
+  else if(!(maxDia > core)) msg = "Max roll has to be bigger than the core.";
+  else if(!(ipc > 0)) msg = "Enter how many inches of web make one counter tick.";
+  if(msg){ if(err) err.textContent = msg; return false; }
+  const pr = activePress(), prev = Object.assign({}, pr);
+  Object.assign(pr, { name: g("introPressName") || "My press", maxDia, core, inchesPerCount: ipc });
+  savePresses(); renderPresses(); applyPress(prev);
+  return true;
+}
+function closeIntro(){
+  safeSet(INTRO_KEY, "1");
+  document.body.classList.remove("intro-open");
+  const el = document.getElementById("introOverlay"); if(el) el.remove();
+  if(currentView !== "jobs") showView("jobs");
+  const b = document.getElementById("jobsEnterBtn"); if(b) b.focus();
+}
+
+/* ---- Stage 3b: press profiles ---- */
+const PRESS_KEY = "RC_PRESSES_V1";
+const PRESS_DEFAULT = { id:"p1", name:"My press", maxDia:23, core:3, inchesPerCount:10 };
+let presses = (function(){
+  try{
+    const o = JSON.parse(safeGet(PRESS_KEY) || "null");
+    if(o && Array.isArray(o.list) && o.list.length) return o;
+  }catch(e){}
+  return { list:[Object.assign({}, PRESS_DEFAULT)], activeId:"p1" };
+})();
+let pressEditing = null;
+function activePress(){
+  return presses.list.find(x => x.id === presses.activeId) || presses.list[0] || PRESS_DEFAULT;
+}
+function savePresses(){ safeSet(PRESS_KEY, JSON.stringify(presses)); }
+function pressLine(pr){
+  const f = n => String(Math.round(n * 10000) / 10000);
+  return "Max roll " + f(pr.maxDia) + "″ · Core " + f(pr.core) + "″ · 1 count per " + f(pr.inchesPerCount) + "″ of web";
+}
+// Push the active press into every calculation that depends on it.
+function applyPress(prev){
+  const pr = activePress();
+  ECCI_COUNTER_LENGTH_DIVISOR = pr.inchesPerCount;
+  ECCI_CORE_OUTER_DIAMETER = pr.core;
+  const ipc = String(pr.inchesPerCount);
+  document.querySelectorAll(".feet-rule").forEach(el=>{
+    el.textContent = "Counter = feet × 12 ÷ " + ipc + " (1 count per " + ipc + "″ of web). Labels use this card's Repeat and Across.";
+  });
+  const rad = document.getElementById("ecciRadius"), radS = document.getElementById("ecciRadiusSlider");
+  const oldR = prev ? String(prev.maxDia / 2) : "11.5";
+  if(rad && (rad.value === oldR || rad.value === "")){ rad.value = String(pr.maxDia / 2); if(radS) radS.value = rad.value; }
+  if(rad) rad.placeholder = String(pr.maxDia / 2);
+  const erm = document.getElementById("erMaxDia"); if(erm) erm.placeholder = String(pr.maxDia);
+  const erc = document.getElementById("erCore"); if(erc) erc.placeholder = String(pr.core);
+  try{ if(typeof fillEvenRolls === "function") fillEvenRolls(); }catch(e){}
+  try{ const th = document.getElementById("ecciThickness"); if(prev && typeof calculateAndRenderECCI === "function" && th && th.value.trim()) calculateAndRenderECCI(); }catch(e){}
+  try{ TABS.forEach(renderTally); }catch(e){}
+  try{ renderRunStrip(); }catch(e){}
+}
+function renderPresses(){
+  const box = document.getElementById("pressList");
+  if(!box) return;
+  const act = activePress().id;
+  box.innerHTML = presses.list.map(pr=>{
+    if(pr.id === pressEditing){
+      const v = n => String(n);
+      return '<div class="press-edit" data-pressform="' + pr.id + '">' +
+        '<label>Name<input data-pf="name" value="' + escHtml(pr.name) + '" autocomplete="off"></label>' +
+        '<div class="two-col">' +
+          '<label>Max roll diameter (in)<input data-pf="maxDia" inputmode="decimal" value="' + v(pr.maxDia) + '"></label>' +
+          '<label>Core OD (in)<input data-pf="core" inputmode="decimal" value="' + v(pr.core) + '"></label>' +
+        '</div>' +
+        '<label>Inches of web per counter tick<input data-pf="inchesPerCount" inputmode="decimal" value="' + v(pr.inchesPerCount) + '"></label>' +
+        '<p class="card-sub" style="margin:0">Most presses here count once every 10″. Change it only if this press counts differently.</p>' +
+        '<div class="error" data-pferr></div>' +
+        '<div class="btn-pair"><button type="button" class="primary" data-presssave="' + pr.id + '">Save</button>' +
+        '<button type="button" class="secondary-btn" data-presscancel>Cancel</button></div>' +
+        (presses.list.length > 1 ? '<button type="button" class="section-clear" data-pressdel="' + pr.id + '" style="margin-top:8px">Delete this press</button>' : '') +
+      '</div>';
+    }
+    const on = pr.id === act;
+    return '<div class="press-row' + (on ? ' on' : '') + '">' +
+      '<button type="button" class="press-pick" data-presspick="' + pr.id + '" aria-pressed="' + on + '">' +
+        '<span class="press-dot" aria-hidden="true"></span>' +
+        '<span class="press-txt"><b>' + escHtml(pr.name) + '</b><small>' + escHtml(pressLine(pr)) + '</small></span></button>' +
+      '<button type="button" class="press-editbtn" data-pressedit="' + pr.id + '">Edit</button></div>';
+  }).join("");
+}
+function pickPress(id){
+  if(id === presses.activeId) return;
+  const prev = Object.assign({}, activePress());
+  presses.activeId = id; savePresses();
+  pressEditing = null; renderPresses(); applyPress(prev);
+  showToast("Now using <b>" + escHtml(activePress().name) + "</b>.", 3000);
+}
+function savePressForm(id){
+  const form = document.querySelector('[data-pressform="' + id + '"]');
+  const pr = presses.list.find(x => x.id === id);
+  if(!form || !pr) return;
+  const g = k => (form.querySelector('[data-pf="' + k + '"]') || {}).value || "";
+  const num = k => { const n = parseFloat(g(k).replace(/[^0-9.]/g, "")); return Number.isFinite(n) ? n : NaN; };
+  const name = g("name").trim() || "Press";
+  const maxDia = num("maxDia"), core = num("core"), ipc = num("inchesPerCount");
+  const err = form.querySelector("[data-pferr]");
+  let msg = "";
+  if(!(core > 0)) msg = "Enter the core size.";
+  else if(!(maxDia > core)) msg = "Max roll diameter has to be bigger than the core.";
+  else if(!(ipc > 0)) msg = "Enter how many inches of web make one counter tick.";
+  if(msg){ if(err) err.textContent = msg; return; }
+  const prev = Object.assign({}, activePress());
+  Object.assign(pr, { name, maxDia, core, inchesPerCount:ipc });
+  savePresses(); pressEditing = null; renderPresses();
+  if(pr.id === presses.activeId) applyPress(prev);
+}
+function addPress(){
+  let id = "p" + Date.now();
+  const base = activePress();
+  presses.list.push({ id, name:"Press " + (presses.list.length + 1), maxDia:base.maxDia, core:base.core, inchesPerCount:base.inchesPerCount });
+  savePresses(); pressEditing = id; renderPresses();
+  const f = document.querySelector('[data-pressform="' + id + '"] [data-pf="name"]');
+  if(f){ f.focus(); f.select(); }
+}
+function deletePress(id){
+  const pr = presses.list.find(x => x.id === id);
+  if(!pr || presses.list.length < 2) return;
+  if(!confirm("Delete the press “" + pr.name + "”?")) return;
+  const prev = Object.assign({}, activePress());
+  presses.list = presses.list.filter(x => x.id !== id);
+  if(presses.activeId === id) presses.activeId = presses.list[0].id;
+  savePresses(); pressEditing = null; renderPresses();
+  if(prev.id === id) applyPress(prev);
+}
+
+/* ---- Stage 3a: reports + backup ---- */
+const BACKUP_UNDO_KEY = "RCBAK_BEFORE_RESTORE";
+const n0 = v => formatNumber(Math.round(Number(v) || 0));
+function shareText(title, text){
+  if(navigator.share){
+    navigator.share({ title, text }).catch(err => { if(err && err.name !== "AbortError") copyText(text); });
+  }else copyText(text);
+}
+function copyText(text){
+  const done = () => showToast("Report copied — paste it into a text or email.", 4000);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+  }else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done){
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); done(); }catch(e){ showToast("Couldn't copy on this phone.", 4000); }
+  ta.remove();
+}
+function wasteLine(good, gross, waste, pct){
+  return "Good " + n0(good) + " · Gross " + n0(gross) + " · Waste " + n0(waste) + (pct && pct !== "—" ? " (" + pct + ")" : "");
+}
+function shiftReportText(){
+  if(!shiftLog.length) return "";
+  const tot = shiftLog.reduce((t,e)=>({ labels:t.labels+(e.labels||0), good:t.good+(e.good||0), gross:t.gross+(e.gross||0), waste:t.waste+(e.waste||0) }),
+    { labels:0, good:0, gross:0, waste:0 });
+  const pct = tot.gross > 0 ? (tot.waste / tot.gross * 100).toFixed(1) + "%" : "—";
+  const L = [];
+  L.push("Shift report — " + todayLine());
+  L.push(shiftLog.length + (shiftLog.length === 1 ? " job" : " jobs") + " · " + n0(tot.labels) + " labels");
+  L.push(wasteLine(tot.good, tot.gross, tot.waste, pct));
+  shiftLog.forEach(e=>{
+    L.push("");
+    L.push(e.docket + (e.customer ? " · " + e.customer : "") + " · " + (e.typeLabel || ""));
+    const parts = [];
+    if(e.rolls) parts.push(e.rolls + (e.rolls === 1 ? " roll" : " rolls"));
+    const inp = e.inputs || {};
+    if(inp.totalBoxes) parts.push(inp.totalBoxes + (inp.totalBoxes === 1 ? " box" : " boxes"));
+    parts.push(n0(e.labels) + " labels");
+    if(e.qty) parts.push("order " + n0(rnum(e.qty)));
+    L.push("  " + parts.join(" · "));
+    L.push("  " + wasteLine(e.good, e.gross, e.waste, e.wastePct));
+    if(Number(inp.end) > 0) L.push("  Counter " + n0(inp.start) + " → " + n0(inp.end));
+  });
+  return L.join("\n");
+}
+function shareShiftReport(){
+  const t = shiftReportText();
+  if(!t){ showToast("Nothing saved this shift yet.", 3500); return; }
+  shareText("Shift report", t);
+}
+function jobReportText(rec){
+  if(!rec) return "";
+  const t = rsTotals(rec);
+  const qty = rnum(((rec.job || {}).inputs || {}).jobQuantity);
+  const L = [];
+  L.push("Docket " + rec.docket + (rec.customer ? " · " + rec.customer : "") + " · " + rsTypeLabel(rec.jobType || "roll") + " job");
+  L.push(rec.status === "completed" ? "Status: Completed" : "Status: In progress");
+  L.push(n0(t.labels) + (qty > 0 ? " of " + n0(qty) + " labels (" + Math.min(100, t.labels / qty * 100).toFixed(1) + "%)" : " labels"));
+  L.push(wasteLine(t.good, t.gross, t.waste, t.wastePct));
+  if(rec.status !== "completed"){ const c = continuationText(rec); if(c) L.push("Picks up at: " + c); }
+  (rec.sessions || []).forEach((x,i)=>{
+    L.push("");
+    L.push("Shift " + (i + 1) + " — " + rsWhen(x.savedAt));
+    const parts = [];
+    if(Array.isArray(x.rolls) && x.rolls.length) parts.push(x.rolls.length + (x.rolls.length === 1 ? " roll" : " rolls"));
+    if(Number(x.totalBoxes) > 0) parts.push("boxes " + (x.startBox ? x.startBox + "–" + x.endBox : x.totalBoxes));
+    parts.push(n0(x.labels) + " labels");
+    L.push("  " + parts.join(" · "));
+    if(Number(x.counterEnd) > 0) L.push("  Counter " + n0(x.counterStart) + " → " + n0(x.counterEnd));
+  });
+  return L.join("\n");
+}
+function shareJobReport(){
+  const rec = currentRunSheet();
+  if(!rec){ showToast("Save a shift on this job first.", 3500); return; }
+  shareText("Docket " + rec.docket, jobReportText(rec));
+}
+
+function appDataKeys(){
+  const keys = [];
+  try{ for(let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if(k && k.indexOf("RC_") === 0) keys.push(k); } }catch(e){}
+  return keys.sort();
+}
+function backupSummary(data){
+  const j = k => { try{ return JSON.parse(data[k] || "null"); }catch(e){ return null; } };
+  const rs = j("RC_RUNSHEETS_V1") || {}, sl = j("RC_SHIFTLOG_V1") || [], dk = j("RC_DOCKETS_V1");
+  const jobs = new Set(Object.keys(rs));
+  ((dk && dk.list) || (Array.isArray(dk) ? dk : []) || []).forEach(w => { const k = normDocketKey(w.label || ""); if(k && k !== "UNTITLED") jobs.add(k); });
+  return jobs.size + (jobs.size === 1 ? " job" : " jobs") + ", " + (sl.length || 0) + " shift " + (sl.length === 1 ? "entry" : "entries");
+}
+function exportData(){
+  try{ syncActiveDocket(); updateRunSheetFromScreen({ quiet:true }); }catch(e){}
+  const data = {};
+  appDataKeys().forEach(k => { data[k] = safeGet(k); });
+  const payload = { app:"roll-calculator", version:1, exportedAt:new Date().toISOString(), data };
+  const json = JSON.stringify(payload);
+  const d = new Date();
+  const name = "roll-calculator-backup-" + d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0") + ".json";
+  const blob = new Blob([json], { type:"application/json" });
+  let file = null;
+  try{ file = new File([blob], name, { type:"application/json" }); }catch(e){}
+  if(file && navigator.canShare && navigator.canShare({ files:[file] })){
+    navigator.share({ files:[file], title:"Roll Calculator backup" }).catch(err => { if(err && err.name !== "AbortError") downloadBlob(blob, name); });
+  }else downloadBlob(blob, name);
+  safeSet("RC_LAST_BACKUP_V1", String(Date.now()));
+  renderDataInfo();
+  showToast("Backup made: " + escHtml(backupSummary(data)) + ".", 4000);
+}
+function downloadBlob(blob, name){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+function importDataFile(file){
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    let p = null;
+    try{ p = JSON.parse(r.result); }catch(e){}
+    if(!p || p.app !== "roll-calculator" || !p.data || typeof p.data !== "object"){
+      showToast("That file isn't a Roll Calculator backup.", 5000); return;
+    }
+    const keys = Object.keys(p.data).filter(k => k.indexOf("RC_") === 0 && typeof p.data[k] === "string");
+    const when = p.exportedAt ? new Date(p.exportedAt).toLocaleString([], { month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" }) : "an unknown date";
+    if(!confirm("Restore the backup from " + when + "?\n\nIt has " + backupSummary(p.data) + ".\nEverything on this phone now will be replaced. You can undo this from Settings.")) return;
+    const before = {};
+    appDataKeys().forEach(k => { before[k] = safeGet(k); });
+    safeSet(BACKUP_UNDO_KEY, JSON.stringify(before));
+    appDataKeys().forEach(k => { if(k !== "RC_LAST_BACKUP_V1") safeRemove(k); });
+    keys.forEach(k => safeSet(k, p.data[k]));
+    safeSet("RC_VIEW_V1", "jobs");
+    window.__rcFrozen = true;
+    location.reload();
+  };
+  r.readAsText(file);
+}
+function undoRestore(){
+  const raw = safeGet(BACKUP_UNDO_KEY);
+  if(!raw) return;
+  let before = null; try{ before = JSON.parse(raw); }catch(e){}
+  if(!before) return;
+  if(!confirm("Put back the data that was on this phone before the last restore?")) return;
+  appDataKeys().forEach(k => { if(k !== "RC_LAST_BACKUP_V1") safeRemove(k); });
+  Object.keys(before).forEach(k => { if(typeof before[k] === "string") safeSet(k, before[k]); });
+  safeRemove(BACKUP_UNDO_KEY);
+  safeSet("RC_VIEW_V1", "settings");
+  window.__rcFrozen = true;
+  location.reload();
+}
+function renderDataInfo(){
+  const el = document.getElementById("dataInfo");
+  if(el){
+    const last = Number(safeGet("RC_LAST_BACKUP_V1"));
+    const data = {}; appDataKeys().forEach(k => { data[k] = safeGet(k); });
+    el.innerHTML = "On this phone: <b>" + escHtml(backupSummary(data)) + "</b>.<br>" +
+      (last ? "Last backup: " + escHtml(new Date(last).toLocaleDateString([], { weekday:"short", month:"short", day:"numeric" })) + "." : "No backup made yet.");
+  }
+  const u = document.getElementById("undoRestoreBtn");
+  if(u) u.hidden = !safeGet(BACKUP_UNDO_KEY);
+}
+
+function renderRunStrip(){
+  const el = document.getElementById("runStrip");
+  if(!el) return;
+  const type = (typeof jobTypeNow === "function" && jobTypeNow()) || "roll";
+  const chips = [];
+  const txt = n => n ? n.textContent.replace(/\s+/g, " ").trim() : "";
+  const gear = ((document.getElementById("gearTeeth") || {}).value || "").trim();
+  if(type === "roll"){
+    const P = erLast;
+    if(P && P.R > 0){
+      chips.push(["Counter per press roll", "≈ " + formatNumber(P.counter), "wide big" + (P.tooBig ? " bad" : ""), "Estimate"]);
+      chips.push(["Diameter", P.dia.toFixed(2) + "″ <small>of " + P.Dmax + "″</small>", P.tooBig ? "bad" : ""]);
+      chips.push(["Core", String(+P.core.toFixed(4)) + "″"]);
+    }
+  }else{
+    if(gear) chips.push(["Gear", gear.replace(/t$/i, "") + "T"]);
+    if(type === "folder"){
+      const bb = ((document.getElementById("bbCounter") || {}).textContent || "").trim();
+      if(bb && bb !== "—" && /\d/.test(bb)) chips.push(["B.Bunch counter", bb]);
+    }
+  }
+  if(!chips.length){
+    el.innerHTML = '<div class="rs-kicker">Set the press · ' + escHtml(activePress().name) + '</div><p class="rs-empty">Fill in <b>Setup</b> first — the press settings show up here.</p>';
+    return;
+  }
+  el.innerHTML = '<div class="rs-kicker">Set the press · ' + escHtml(activePress().name) + '</div><div class="rs-grid">' + chips.map(c =>
+    '<div class="rs-chip' + (c[2] ? " " + c[2] : "") + '"><span>' + escHtml(c[0]) + (c[3] ? ' <em>' + c[3] + '</em>' : "") + '</span><b>' + (/<small>/.test(c[1]) ? c[1] : escHtml(c[1])) + '</b></div>').join("") + '</div>';
+}
+
+function showView(v){
+  if(!["jobs","job","shift","settings"].includes(v)) v = "jobs";
+  if(currentView === "job" && v !== "job"){
+    // Save what's on screen right away (normally this waits for a short pause in typing).
+    try{ syncActiveDocket(); updateRunSheetFromScreen({ quiet:true }); }catch(e){}
+  }
+  currentView = v;
+  document.body.dataset.view = v;
+  safeSet(VIEW_KEY, v);
+  document.querySelectorAll("#appNav button").forEach(b=>{
+    const on = b.dataset.view === v || (v === "job" && b.dataset.view === "jobs");
+    b.classList.toggle("active", on);
+    if(on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+  });
+  if(v === "jobs") renderJobsHome();
+  if(v === "job"){ renderJobHeader(); setStage(currentStage); }
+  if(v === "settings"){ renderDataInfo(); renderPresses(); renderScanService(); }
+  if(v === "shift" && typeof renderShiftLog === "function") renderShiftLog();
+  window.scrollTo(0, 0);
+}
+
+/* ---- One list of jobs: run sheets + any open docket without one ---- */
+function jobEntries(){
+  const map = new Map();
+  Object.values(runSheets || {}).forEach(r=>{
+    map.set(r.key, { key:r.key, docket:r.docket, customer:r.customer || "", type:r.jobType || "", status:r.status || "open",
+      updatedAt:r.updatedAt || r.createdAt || 0, completedAt:r.completedAt || null, rec:r, wsId:null,
+      qty: rnum(((r.job || {}).inputs || {}).jobQuantity) });
+  });
+  (docketWorkspaces || []).forEach(ws=>{
+    const k = normDocketKey(ws.label);
+    if(!k || k === "UNTITLED") return;
+    const e = map.get(k);
+    if(e){ e.wsId = ws.id; if(!e.qty) e.qty = rnum((ws.inputs || {}).jobQuantity); return; }
+    map.set(k, { key:k, docket:ws.label, customer:ws.customer || "", type:ws.tab || "", status:"open",
+      updatedAt:ws.id, completedAt:null, rec:null, wsId:ws.id, qty: rnum((ws.inputs || {}).jobQuantity) });
+  });
+  return [...map.values()];
+}
+function jobProgress(e){
+  const t = e.rec ? rsTotals(e.rec) : { labels:0, shifts:0, lastBox:null, rolls:0 };
+  const pct = e.qty > 0 ? Math.min(100, t.labels / e.qty * 100) : null;
+  return { t, pct };
+}
+function renderJobsHome(){
+  const list = document.getElementById("jobsList");
+  if(!list) return;
+  const q = ((document.getElementById("jobsSearch") || {}).value || "").trim().toLowerCase();
+  const openKey = runKeyNow();
+  const all = jobEntries().filter(e => !q || (e.docket + " " + e.customer).toLowerCase().includes(q));
+  const active = all.filter(e => e.status !== "completed").sort((a,b)=>{
+    if(a.key === openKey) return -1; if(b.key === openKey) return 1;
+    return (b.updatedAt || 0) - (a.updatedAt || 0);
+  });
+  const done = all.filter(e => e.status === "completed").sort((a,b)=>(b.completedAt || b.updatedAt || 0) - (a.completedAt || a.updatedAt || 0));
+  const card = e => {
+    const { t, pct } = jobProgress(e);
+    const isOpen = e.key === openKey;
+    const status = e.status === "completed" ? '<span class="jc-status done">Done</span>'
+      : (isOpen ? '<span class="jc-status open">Open</span>' : (t.shifts ? '<span class="jc-status wait">In progress</span>' : '<span class="jc-status wait">Not started</span>'));
+    const type = e.type ? '<span class="jc-type">' + escHtml(rsTypeLabel(e.type)) + '</span>' : '';
+    let prog = "";
+    if(e.qty > 0){
+      prog = '<div class="jc-bar"><span style="width:' + (pct || 0).toFixed(1) + '%"></span></div>' +
+        '<div class="jc-prog"><span><b>' + formatNumber(t.labels) + '</b> of ' + formatNumber(e.qty) + ' labels</span><b>' + Math.round(pct || 0) + '%</b></div>';
+    }
+    let next = "";
+    if(e.status === "completed"){
+      next = 'Completed ' + escHtml(rsWhen(e.completedAt || e.updatedAt));
+    }else if(e.rec && t.shifts){
+      next = 'Next: <b>' + escHtml(continuationText(e.rec) || "—") + '</b>';
+    }else{
+      next = 'No shifts saved yet';
+    }
+    return '<div class="job-card' + (isOpen ? ' is-open' : '') + '" role="button" tabindex="0" data-openjob="' + escAttr(e.key) + '">' +
+      '<button type="button" class="jc-del" data-deljob="' + escAttr(e.key) + '" aria-label="Remove job ' + escAttr(e.docket) + '">✕</button>' +
+      '<div class="jc-top"><div class="jc-id"><span class="jc-num">' + escHtml(e.docket) + '</span>' + type + '</div>' + status + '</div>' +
+      (e.customer ? '<div class="jc-cust">' + escHtml(e.customer) + '</div>' : '') +
+      prog +
+      '<div class="jc-next"><span>' + next + '</span>' + ICON.chev + '</div></div>';
+  };
+  let html = "";
+  if(!active.length && !done.length){
+    html = '<div class="jobs-empty">' + (q ? "No jobs match." : "No jobs yet. Scan or enter a docket to start one.") + '</div>';
+  }else{
+    if(active.length) html += '<div class="jobs-sec"><span>In progress · ' + active.length + '</span></div>' + active.map(card).join("");
+    if(done.length) html += '<div class="jobs-sec" style="margin-top:18px"><span>Completed · ' + done.length + '</span></div>' + done.map(card).join("");
+  }
+  list.innerHTML = html;
+}
+
+function openJob(key){
+  if(!key) return;
+  if(runKeyNow() !== key){
+    const ws = (docketWorkspaces || []).find(d => normDocketKey(d.label) === key);
+    if(ws) switchDocket(ws.id);
+    else recallRunSheet(key);
+  }
+  const qty = rnum(((document.getElementById("jobQuantity") || {}).value || ""));
+  currentStage = qty > 0 ? "run" : "setup";
+  showView("job");
+}
+
+function startNewJob(){
+  // Reuse an empty "Untitled" workspace; otherwise park the current docket in its own slot.
+  const cur = ((document.getElementById("docketNumber") || {}).value || "").trim();
+  if(cur) newDocket();
+  currentStage = "setup";
+  showView("job");
+  const qe = document.getElementById("quickEntryCard");
+  if(qe){
+    qe.classList.add("open");
+    if(typeof qeRefresh === "function") qeRefresh();
+    setTimeout(()=>{ const d = document.getElementById("qeDocket"); if(d){ d.focus(); } }, 50);
+  }
+}
+
+function scanNewJob(){
+  const key = scanAuth();
+  if(!key){
+    showToast('Scanning isn\'t set up — add a scan service or API key in <b>Settings</b>, or use <b>Enter docket</b>.', 6000);
+    return;
+  }
+  const input = document.getElementById("docketCameraInput");
+  currentStage = "setup";
+  showView("job");
+  if(input) input.click();   // the scan handler parks the current docket and starts a new one
+}
+
+function removeJob(key){
+  const rec = runSheets[key] ? JSON.parse(JSON.stringify(runSheets[key])) : null;
+  const ws = (docketWorkspaces || []).find(d => normDocketKey(d.label) === key);
+  const wsCopy = ws ? JSON.parse(JSON.stringify(ws)) : null;
+  if(rec){ delete runSheets[key]; saveRunSheets(); }
+  if(ws) closeDocket(ws.id);
+  jobsUndo = { key, rec, ws: wsCopy };
+  renderJobsHome();
+  showToast('Removed job <b>' + escHtml((rec && rec.docket) || (wsCopy && wsCopy.label) || key) + '</b>' +
+    '<button type="button" class="toast-undo" data-jobundo="1">Undo</button>', 7000);
+}
+function undoRemoveJob(){
+  if(!jobsUndo) return;
+  const { key, rec, ws } = jobsUndo;
+  if(rec){ runSheets[key] = rec; saveRunSheets(); }
+  if(ws && !docketWorkspaces.some(d => d.id === ws.id)){ docketWorkspaces.push(ws); saveDockets(); renderDocketChips(); }
+  jobsUndo = null;
+  const t = document.getElementById("rcToast"); if(t) t.classList.remove("show");
+  renderJobsHome();
+}
+
+/* ---- Dark header inside a job: which docket, who, how far along ---- */
+function renderJobHeader(){
+  const h = document.getElementById("jobHeader");
+  if(!h) return;
+  const g = id => ((document.getElementById(id) || {}).value || "").trim();
+  const docket = g("docketNumber");
+  const cust = g("customerName");
+  const type = (typeof jobTypeNow === "function" && jobTypeNow()) || "roll";
+  const rec = currentRunSheet();
+  const qty = rnum(g("jobQuantity"));
+  const t = rec ? rsTotals(rec) : { labels:0 };
+  const pct = qty > 0 ? Math.min(100, t.labels / qty * 100) : null;
+  h.innerHTML =
+    '<div class="jh-row"><button type="button" class="jh-back" data-view-go="jobs">' + ICON.back + 'Jobs</button>' +
+      '<span class="jh-type">' + escHtml(rsTypeLabel(type)) + '</span></div>' +
+    '<div class="jh-row" style="align-items:baseline"><span class="jh-num">' + (docket ? escHtml(docket) : "New job") + '</span>' +
+      '<span class="jh-cust">' + escHtml(cust) + '</span></div>' +
+    (qty > 0
+      ? '<div class="jh-bar"><span style="width:' + pct.toFixed(1) + '%"></span></div>' +
+        '<div class="jh-prog"><span><b>' + formatNumber(t.labels) + '</b> of ' + formatNumber(qty) + ' labels saved</span><b>' + Math.round(pct) + '%</b></div>'
+      : '<div class="jh-prog"><span>Enter the docket below — scan it, or type it in Quick Entry.</span></div>');
+}
+
+function bindShell(){
+  document.querySelectorAll("#appNav button").forEach(b=>b.addEventListener("click", ()=>{
+    // "Jobs" while inside a job goes back to the list
+    showView(b.dataset.view);
+  }));
+  document.querySelectorAll("#jobNav button").forEach(b=>b.addEventListener("click", ()=>setStage(b.dataset.stageGo)));
+  const on = (id, ev, fn) => { const el = document.getElementById(id); if(el) el.addEventListener(ev, fn); };
+  on("shareShiftBtn", "click", shareShiftReport);
+  on("shareJobBtn", "click", shareJobReport);
+  on("exportDataBtn", "click", exportData);
+  on("importDataBtn", "click", () => { const i = document.getElementById("importDataInput"); if(i){ i.value = ""; i.click(); } });
+  on("importDataInput", "change", e => importDataFile(e.target.files && e.target.files[0]));
+  on("undoRestoreBtn", "click", undoRestore);
+  on("addPressBtn", "click", addPress);
+  on("replayIntroBtn", "click", showIntro);
+  on("runCountBtn", "click", () => setStage("count"));
+  document.addEventListener("click", e => {
+    if(!(e.target.closest && e.target.closest("#ctNextShift"))) return;
+    const rec = currentRunSheet();
+    if(!rec) return;
+    if(["roll","sheeter","folder"].some(hasUnsavedJob) && !confirm("The count on screen has changes that aren't saved. Start the next shift anyway?")) return;
+    loadContinuation(rec);
+    try{ renderRunSheetUI(); }catch(err){}
+    setStage("count");
+    showToast("Next shift started — picks up at <b>" + escHtml(continuationText(rec) || "the start") + "</b>.", 4500);
+  });
+  document.addEventListener("click", e => {
+    const g = e.target.closest && e.target.closest("[data-goto]");
+    if(g){ setStage(g.dataset.goto); return; }
+    const o = e.target.closest && e.target.closest("[data-opener]");
+    if(o){ const c = document.getElementById(o.dataset.opener); if(c){ c.classList.add("open"); c.scrollIntoView({ behavior:"smooth", block:"start" }); } }
+  });
+  on("svcSaveBtn", "click", saveScanService);
+  on("svcClearBtn", "click", clearScanService);
+  on("svcInviteBtn", "click", copyInvite);
+  on("svcCode", "keydown", e => { if(e.key === "Enter"){ e.preventDefault(); saveScanService(); } });
+  importScanInvite();
+  window.addEventListener("hashchange", importScanInvite);
+  on("pressList", "click", e=>{
+    const t = e.target.closest("button");
+    if(!t) return;
+    if(t.dataset.presspick) pickPress(t.dataset.presspick);
+    else if(t.dataset.pressedit){ pressEditing = t.dataset.pressedit; renderPresses(); }
+    else if(t.dataset.presssave) savePressForm(t.dataset.presssave);
+    else if("presscancel" in t.dataset){ pressEditing = null; renderPresses(); }
+    else if(t.dataset.pressdel) deletePress(t.dataset.pressdel);
+  });
+  on("pressList", "keydown", e=>{
+    if(e.key === "Enter" && e.target.matches("[data-pf]")){ e.preventDefault(); const f = e.target.closest("[data-pressform]"); if(f) savePressForm(f.dataset.pressform); }
+  });
+  renderPresses();
+  applyPress(null);
+  { const pb = document.getElementById("rollPlanBtn");
+    if(pb) pb.addEventListener("click", ()=>{
+      const inp = document.getElementById("rollTallyInput");
+      if(!inp || !pb.dataset.labels) return;
+      inp.value = pb.dataset.labels;
+      inp.dispatchEvent(new Event("input", { bubbles:true }));
+      inp.focus();
+    }); }
+  const live = () => { if(currentView === "job" && currentStage === "run") requestAnimationFrame(renderRunStrip); };
+  document.addEventListener("input", live);
+  document.addEventListener("change", live);
+  { const s = safeGet(STAGE_KEY); if(STAGES.some(([v]) => v === s)) currentStage = s; }
+  document.addEventListener("click", (e)=>{
+    const t = e.target;
+    if(!t || !t.closest) return;
+    const go = t.closest("[data-view-go]");
+    if(go){ showView(go.dataset.viewGo); return; }
+    if(t.closest("[data-jobundo]")){ undoRemoveJob(); return; }
+    const del = t.closest("[data-deljob]");
+    if(del){ e.stopPropagation(); removeJob(del.dataset.deljob); return; }
+    const open = t.closest("[data-openjob]");
+    if(open){ openJob(open.dataset.openjob); }
+  });
+  document.addEventListener("keydown", (e)=>{
+    if(e.key !== "Enter" && e.key !== " ") return;
+    const open = e.target && e.target.closest && e.target.closest("[data-openjob]");
+    if(open && e.target === open){ e.preventDefault(); openJob(open.dataset.openjob); }
+  });
+  const s = document.getElementById("jobsSearch"); if(s) s.addEventListener("input", renderJobsHome);
+  const sc = document.getElementById("jobsScanBtn"); if(sc) sc.addEventListener("click", scanNewJob);
+  const en = document.getElementById("jobsEnterBtn"); if(en) en.addEventListener("click", startNewJob);
+  const th = document.getElementById("setThemeBtn"); if(th) th.addEventListener("click", ()=>{ if(typeof toggleTheme === "function") toggleTheme(); });
+  ["docketNumber","customerName","jobQuantity"].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.addEventListener("input", renderJobHeader);
+  });
+  const tb = document.getElementById("tabBar");
+  if(tb) tb.addEventListener("click", ()=>setTimeout(renderJobHeader, 0));
+}
+
 document.addEventListener("DOMContentLoaded",()=>{
+  buildShell();
   const status = document.getElementById("appStatus");
 
   const setStatus = (message, isError=false) => {
@@ -6018,6 +7870,17 @@ document.addEventListener("DOMContentLoaded",()=>{
     /* ---- Roll: impressions / per-roll extra / tap-to-edit ---- */
     ["rollImpInput","rollRowExtra"].forEach(id=>
       bind(id,"keydown",(e)=>{ if(e.key === "Enter"){ e.preventDefault(); addRollEntry(); } }));
+    bind("rollQtyDown","click",()=>setRollQty(rollQty() - 1));
+    bind("rollQtyUp","click",()=>setRollQty(rollQty() + 1));
+    bind("rollQtyInput","input",updateAddRollBtn);
+    bind("rollQtyInput","blur",()=>setRollQty(rollQty()));
+    bind("rollQtyInput","keydown",(e)=>{ if(e.key === "Enter"){ e.preventDefault(); addRollEntry(); } });
+    bind("rollTallyInput","input",()=>{
+      const v = String(document.getElementById("rollTallyInput").value).replace(/,/g, "");
+      const m = v.match(/^\s*(\d{1,3})\s*[x×*]\s*(\d+(?:\.\d+)?)/i);
+      const b = document.getElementById("rollAddBtn");
+      if(m && b) b.textContent = "Add " + Math.min(200, +m[1]) + " Rolls"; else updateAddRollBtn();
+    });
     bind("rollExtraToggle","click",()=>{
       const row = document.getElementById("rollExtraRow");
       if(row) row.style.display = row.style.display === "none" ? "grid" : "none";
@@ -6209,6 +8072,15 @@ document.addEventListener("DOMContentLoaded",()=>{
       });
     })();
 
+    /* ---- Gear teeth: auto from plate repeat x 8 ---- */
+    bind("gearTeeth","input",(e)=>{
+      const f = document.getElementById("gearAuto");
+      if(f) f.value = String(e.target.value).trim() === "" ? "1" : "";   // typed = yours; cleared = back to auto
+      autoGearTeeth();
+    });
+    ["jobAround","rollRepeat","ecciRepeat","impRepeat","sheeterSheetSize","folderFoldSize"].forEach(id=>bind(id,"input",autoGearTeeth));
+    document.querySelectorAll("#tabBar button").forEach(b=>b.addEventListener("click",()=>setTimeout(autoGearTeeth,0)));
+
     /* ---- Quick Entry ---- */
     Object.keys(QE).forEach(id=>{
       const el = document.getElementById(id);
@@ -6325,7 +8197,7 @@ document.addEventListener("DOMContentLoaded",()=>{
         if(a === "keepdraft"){ rsNotice = null; renderRunSheetUI(); }
         else if(a === "restoredraft" && rec && rec.draft){
           applyWorkspace(rec.draft);
-          rsNotice = { key: rec.key, kind:"ok", html:"Unsaved count restored. Tap \u201cSave Job to My Shift\u201d when this shift is done." };
+          rsNotice = { key: rec.key, kind:"ok", html:"Unsaved count restored. Tap \u201cSave shift count\u201d when this shift is done." };
           syncActiveDocket();
           renderRunSheetUI();
         }
@@ -6485,12 +8357,15 @@ document.addEventListener("DOMContentLoaded",()=>{
       docketSyncTimer = setTimeout(()=>{ syncActiveDocket(); updateRunSheetFromScreen(); }, 600);
     });
     // Restore the active tab last.
-    switchTab(safeGet(TAB_KEY) || "roll");
+    { const savedTab = safeGet(TAB_KEY); switchTab(TABS.includes(savedTab) ? savedTab : "roll"); }
+    bindShell();
+    showView(safeGet(VIEW_KEY) || "jobs");
+    maybeShowIntro();
 
     /* ---- Generic "Clear" button injection for every card ---- */
     function clearCard(card){
       card.querySelectorAll("input,textarea").forEach(el=>{
-        if(el.type==="file"||el.type==="hidden"||el.type==="range"||el.id==="apiKey") return;
+        if(el.type==="file"||el.type==="hidden"||el.type==="range"||isPrivateField(el)) return;
         el.value="";
         el.dispatchEvent(new Event("input",{bubbles:true}));
       });
@@ -6507,7 +8382,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       if(card.querySelector(".section-clear,.clear-mini")) return;
       if(!card.querySelector("input:not([type=file]):not([type=hidden]):not([type=range]),textarea")) return;
       const btn=document.createElement("button");
-      btn.type="button"; btn.className="clear-mini"; btn.textContent="Clear";
+      btn.type="button"; btn.className="clear-mini"; btn.textContent = card.classList.contains("ct-card") ? "Clear this count" : "Clear";
       btn.addEventListener("click",()=>clearCard(card));
       card.appendChild(btn);
     });
