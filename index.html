@@ -1136,7 +1136,7 @@ body:not([data-view="job"]) #jobNav{ display:none; }
 #viewJob[data-stage]:not([data-stage="run"]) [data-st="run"],
 #viewJob[data-stage]:not([data-stage="count"]) [data-st="count"]{ display:none !important; }
 #viewJob[data-stage="history"] .tab-panel:not(#panel-runsheet){ display:none !important; }
-#viewJob[data-stage="history"] #panel-runsheet{ display:block !important; }
+#viewJob[data-stage="history"] #panel-runsheet{ display:none !important; }
 #viewJob:not([data-stage="history"]) #panel-runsheet{ display:none !important; }
 #stageHead{ margin:4px 2px 14px; }
 #stageHead h2{ margin:0; font-family:'Barlow Semi Condensed','Barlow',sans-serif; font-size:26px; font-weight:700; letter-spacing:-.01em; }
@@ -1240,6 +1240,7 @@ button.intro-skip{ width:auto; min-height:40px; padding:8px 12px; border:none; b
 .su-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px 10px; }
 .su-grid .full{ grid-column:1/-1; }
 .su-f{ min-width:0; }
+.su-f.qe-hide{ display:none; }
 .su-f > label, .qe-f > label{ display:flex !important; align-items:center; gap:6px; flex-wrap:wrap; margin:0 0 5px !important; font-size:14px; font-weight:700; }
 .src-tag{ margin-left:auto; font-size:11px; font-weight:700; letter-spacing:.03em; padding:2px 7px; border-radius:6px; line-height:1.4; }
 .src-tag:empty{ display:none; }
@@ -1334,6 +1335,42 @@ table.rp-levels tr:last-child td{ border-bottom:none; }
   color:var(--muted); font-size:14px; font-weight:600; text-decoration:underline; }
 #viewJob .extra-q{ color:var(--text); }
 body.dark .seg-toggle button:not(.active){ color:var(--muted); }
+/* Jobs: three start buttons, collapsible groups */
+#viewJobs .jobs-actions{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+#viewJobs .jobs-actions button{ height:76px !important; flex-direction:column !important; align-items:center !important; justify-content:center !important;
+  gap:6px !important; padding:6px 4px !important; font-size:14px !important; text-align:center; line-height:1.15; }
+.jobs-actions .ja-up{ background:var(--card); color:var(--text); border:1.5px solid var(--text); }
+.jobs-actions .ja-up svg{ stroke:var(--text); }
+button.jobs-sec{ width:100%; display:flex; align-items:center; justify-content:space-between; min-height:44px; margin:4px 0 6px; padding:0 2px;
+  border:none; background:none; color:var(--muted); font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; text-align:left; }
+.jobs-sec-chev svg{ transform:rotate(90deg); transition:transform .15s ease; stroke:var(--muted); }
+.jobs-group.shut .jobs-sec-chev svg{ transform:rotate(0deg); }
+.jobs-group.shut .jobs-group-body{ display:none; }
+.jobs-group + .jobs-group{ margin-top:10px; }
+/* History shelved */
+.soon-card{ position:relative; }
+.soon-card h2{ margin:10px 0 8px; }
+.soon-card p{ margin:0 0 10px; font-size:15px; line-height:1.45; color:var(--muted); }
+.soon-card ul{ margin:0 0 12px; padding-left:20px; font-size:15px; line-height:1.6; color:var(--text); }
+.soon-pill{ display:inline-block; font-size:12px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:4px 9px; border-radius:999px; background:#E7EEFD; color:#1458E6; }
+body.dark .soon-pill{ background:rgba(20,88,230,.25); color:#9DB9FF; }
+.soon-note{ font-size:14px !important; }
+#jobNav .nav-pill{ position:relative; }
+.nav-soon{ position:absolute; top:-6px; right:-10px; font-size:9.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; padding:1px 5px; border-radius:6px; background:#1458E6; color:#fff; line-height:1.4; }
+#jobNav button.soon:not(.active){ opacity:.75; }
+button.ct-done{ display:block; width:auto; min-height:40px; margin:-4px auto 16px; padding:6px 10px; border:none; background:none; color:var(--muted); font-size:14px; font-weight:600; text-decoration:underline; }
+/* Settings: API key folded away */
+.set-details{ margin-top:4px; }
+.set-details > summary{ list-style:none; display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:48px; cursor:pointer;
+  font-family:'Barlow Semi Condensed','Barlow',sans-serif; font-size:21px; font-weight:700; }
+.set-details > summary::-webkit-details-marker{ display:none; }
+.set-details > summary::after{ content:"›"; font-size:22px; color:var(--muted); transition:transform .15s ease; margin-left:4px; }
+.set-details[open] > summary::after{ transform:rotate(90deg); }
+.set-sum-state{ margin-left:auto; font-family:'Barlow',sans-serif; font-size:13px; font-weight:700; color:var(--muted); }
+.set-details-body{ padding-top:6px; }
+#settingsPanel [hidden]{ display:none !important; }
+.ct-countby{ margin:0 0 12px; }
+.ct-sec[hidden]{ display:none !important; }
 button.ct-next{ width:100%; min-height:48px; border:none; border-radius:12px; background:var(--text); color:var(--bg); font-size:16px; font-weight:700; }
 body.dark .ct-miss{ color:#F5CF66; }
 #viewJob .ct-card .rs-prev{ background:#101317; color:#FFFFFF; border:1px solid var(--line); border-radius:16px; padding:12px 14px; margin:0 0 12px; font-size:15px; line-height:1.4; }
@@ -1459,7 +1496,9 @@ body:not([data-view="job"]) #appStatus.success{ display:none!important; }
       <button type="button" class="secondary-btn" id="svcInviteBtn" hidden style="width:100%;margin-top:8px">Copy invite link for a tester</button>
     </div>
     <div class="settings-divider"></div>
-    <h2 style="margin-top:0;">Your own API key</h2>
+    <details class="set-details" id="apiKeyDetails">
+    <summary><span>Your own API key</span><span class="set-sum-state" id="apiKeyState"></span></summary>
+    <div class="set-details-body">
     <label for="apiKey">Gemini API Key</label>
     <input id="apiKey" type="password" placeholder="Paste Gemini API key" autocomplete="off">
     <div class="button-row">
@@ -1469,6 +1508,8 @@ body:not([data-view="job"]) #appStatus.success{ display:none!important; }
     <div id="keySuccess" class="success"></div>
     <p class="card-sub">Model: gemini-2.5-flash, fallback: gemini-2.5-flash-lite.</p>
     <p class="card-sub">If you save a key here, it's used instead of the scan service.</p>
+    </div>
+    </details>
 
     <div class="settings-divider"></div>
     <h2 style="margin-top:0;">Display</h2>
@@ -1539,7 +1580,7 @@ body:not([data-view="job"]) #appStatus.success{ display:none!important; }
       <div class="qe-f" data-qefor="folder"><label for="qeFanfold">Fanfold (in)</label><input id="qeFanfold" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 12.25"></div>
       <div class="qe-f" data-qefor="folder"><label for="qeFolderBox">Per box</label><input id="qeFolderBox" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 4000"></div>
       <div class="qe-f" data-qefor="folder"><label for="qeFoldSheet">Per fold</label><input id="qeFoldSheet" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 4"></div>
-      <div class="qe-f" data-qefor="folder"><label for="qePack">Per pack</label><input id="qePack" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 2000"></div>
+      <div class="qe-f" data-qefor="folder sheeter"><label for="qePack">Per pack</label><input id="qePack" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 2000"></div>
       <div class="qe-f full"><label for="qeStock">Stock <span class="qe-opt">optional</span></label><input id="qeStock" enterkeyhint="next" placeholder="e.g. 3mil DT BOPP AT2550 40#" autocomplete="off"></div>
       <div class="qe-f full"><label for="qeColors">Colours <span class="qe-opt">optional — commas between, or Plain</span></label><input id="qeColors" enterkeyhint="next" placeholder="e.g. PMS 417 Grey, Black" autocomplete="off"></div>
 
@@ -1576,8 +1617,17 @@ body:not([data-view="job"]) #appStatus.success{ display:none!important; }
         <input id="crossPerfTPI" placeholder="10" inputmode="text">
       </div>
       <div>
+        <input type="hidden" id="rcFoldsPerPack" value="">
         <label for="rollDirection">Roll direction</label>
         <input id="rollDirection" placeholder="1" inputmode="text">
+      </div>
+      <div class="xperf-f">
+        <label for="crossPerfOnFold">Cross perf on fold (in)</label>
+        <input id="crossPerfOnFold" placeholder="e.g. 6.030" inputmode="decimal">
+      </div>
+      <div class="xperf-f">
+        <label for="crossPerfOffFold">Cross perf off fold (in)</label>
+        <input id="crossPerfOffFold" placeholder="e.g. 14.30" inputmode="decimal">
       </div>
       <div>
         <label for="gearTeeth">Gear Teeth</label>
@@ -3212,6 +3262,13 @@ Required JSON schema:
   "labelSheetSize": number | null,
   "labelsPerFoldSheet": number | null,
   "labelsPerPack": number | null,
+  "foldsPerPack": number | null,
+  "labelsPerCarton": number | null,
+  "packsPerCarton": number | null,
+  "labelDepth": number | null,
+  "countInPacks": boolean | null,
+  "crossPerfOnFold": number | null,
+  "crossPerfOffFold": number | null,
   "totalQuantity": number | null,
   "salesQuantity": number | null,
   "finishedRollQuantity": number | null,
@@ -3294,11 +3351,18 @@ Strict rules:
    - "sheeter" signals: a "Sheeter:" die/line, "Label Sheet size" or "Carrier Sheet size", "sheets", "sheeted", "chipboard every N sheets", sheet counts, or a carton/UOM like "CT500" (and NOT fanfolded).
    - Fold signals win over roll/sheet signals. If still unclear, return "roll".
 7e-i. fanfoldSize is the FAN-FOLD repeat length in inches — the distance of one fold, NOT the cross-perf spacing and NOT the label depth.
-   - Look for "Fanfolded @ X\"" (e.g. "Fanfolded @ 12.25\"" -> 12.25), or the Prepress repeat (e.g. "12.25\" repeat & 98 teeth" -> 12.25).
+   - Look for "Fanfold @ X\"", "Fanfolded @ X\"" or "Folded Every X\"" (e.g. "Folded Every 12\" In Packs Of 1000" -> 12) (e.g. "Fanfold @ 10\" (650 folds per pack / 10 labels per fold)" -> 10, "Fanfolded @ 12.25\"" -> 12.25), or the Prepress repeat (e.g. "12.25\" repeat & 98 teeth" -> 12.25).
    - This is usually larger than the label depth. e.g. label depth 6", cross-perf 6.125", but fanfold 12.25". Prefer the "Fanfolded @" value.
    - If no fanfold value is present, return null.
-7e-ii. labelsPerFoldSheet is the number of labels on one fold sheet, e.g. "# of labels per fold sheet is 4" -> 4. If absent, return null.
-7e-iii. labelsPerPack is the labels per pack/bag, e.g. "poly bag in 2,000's" or "packs of 2,000" -> 2000. If absent, return null.
+7e-ii. labelsPerFoldSheet is the number of labels on one fold sheet, e.g. "# of labels per fold sheet is 4" -> 4, "10 labels per fold" -> 10. If absent, return null.
+7e-iii. labelsPerPack is the labels per pack/bag, e.g. "poly bag in 2,000's" or "packs of 2,000" -> 2000. If the docket gives folds and labels per fold instead (e.g. "650 folds per pack / 10 labels per fold"), return folds x labels per fold (650 x 10 -> 6500). If absent, return null.
+7e-iii-b. foldsPerPack is the number of folds in one pack, e.g. "650 folds per pack" -> 650. If absent, return null.
+7e-iii-b2. Packs: labelsPerPack also comes from "In Packs Of 1000" -> 1000, "packs of 1,000", "1,000/pack", "wrapped in 500's", "paper band in 250's", "banded in 1,000's", "poly bag in 2,000's".
+   packsPerCarton is the packs in one carton, e.g. "2,000 (2 packs x 1,000) / carton" -> 2, "26,000 (6,500 x 4)" -> 4. If absent, return null.
+   countInPacks is true when the job is finished/counted in packs: words like "Bindery", "Send to Bindery", "split packs", "paper band", "band", "wrap", "shrink wrap", "In Packs Of". Otherwise false.
+   labelDepth is the label DEPTH in inches from "Label Size: 3.25\" Wide X 12\" Depth" -> 12.
+7e-iii-c. labelsPerCarton is the labels in one carton/box. Look on the "Carton code" line: e.g. "Carton code: 4090 (12.125 x 10.125 x 7.75) / 26,000 (6,500 x 4) / cartons" -> 26000 (the number after the carton size, before its "(packs x count)" breakdown). Also "Carton Code: 01-4022 (12.125\" X 8.625\" X 9.5\") – 2,000 (2 packs x 1,000) / carton" -> 2000, "26,000 per carton", "26M/ctn". Do NOT use the carton code (4090) or the carton dimensions. If absent, return null.
+7e-iii-d. crossPerfOnFold and crossPerfOffFold are the cross perf positions on fan-fold jobs, in inches: "Cross perf on fold @ 6.030 (press)" -> crossPerfOnFold 6.03; "Cross perf off fold @ 14.30 (press)" -> crossPerfOffFold 14.3. If absent, return null.
 7e-iv. group is the "Group:" value exactly as printed, e.g. "DLabel-F", "DLabel-R", "DLabel-N". If absent, return null.
 7e-viii. around is how many labels around the cylinder, from the Prepress line: "3 across x 2 around" -> 2, "8 across x 1 around" -> 1. If absent, return null.
 7e-vii. gearTeeth is the print cylinder gear tooth count, used on printed (colour) jobs. Look on the Prepress line or near the repeat:
@@ -3428,7 +3492,7 @@ Rules:
       if(across){ setVal(tab+"Across", across); setVal(tab+"ImpAcross", across); }
       if(qty) setVal(tab+"ImpLabels", qty);
 
-      let foldNote = "";
+      let foldNote = ""; let foldBoxNote = "";
       if(tab === "sheeter"){
         // Sheeter jobs always run an 11" sheet, 1 across. Confirm against the docket's label sheet depth.
         const SHEETER_SHEET = 11, SHEETER_ACROSS = 1;
@@ -3464,22 +3528,62 @@ Rules:
           }
         }
         foldNote = " Sheet " + sheet + "\u2033, 1 across.";
+        {
+          const sx = foldFromText(scanTextBlob(parsed));
+          const sPack = normalizeNumber(parsed.labelsPerPack ?? parsed.labels_per_pack) || sx.labelsPerPack;
+          const sPpc = normalizeNumber(parsed.packsPerCarton ?? parsed.packs_per_carton) || sx.packsPerCarton;
+          let sBox = normalizeNumber(parsed.labelsPerCarton ?? parsed.labels_per_carton) || sx.labelsPerCarton;
+          if(!sBox && sPack && sPpc) sBox = sPack * sPpc;
+          if(sBox) setVal("sheeterLabelsPerCarton", sBox);
+          if(sPack) setVal("sheeterPackLabels", sPack);
+          if(parsed.countInPacks === true || sx.countInPacks){ setCountBy("sheeter", "packs", true); if(sPack) foldNote += " Counting in packs of " + formatNumber(sPack) + "."; }
+        }
       }
       if(tab === "folder"){
-        // Fan-fold size is the fold repeat (e.g. "Fanfolded @ 12.25"). Fall back to the prepress/label repeat only if needed.
-        const foldSize = normalizeNumber(parsed.fanfoldSize ?? parsed.fanfold_size ?? parsed.foldSize ?? parsed.fold_size ?? parsed.cutoff);
+        // Fan-fold size is the fold repeat (e.g. "Fanfold @ 10\"" or "Fanfolded @ 12.25\"").
+        const fx = foldFromText(scanTextBlob(parsed));
+        const foldSize = normalizeNumber(parsed.fanfoldSize ?? parsed.fanfold_size ?? parsed.foldSize ?? parsed.fold_size) || fx.fanfold || normalizeNumber(parsed.cutoff);
         if(foldSize) setVal("folderFoldSize", foldSize);
         // Gear size is ALWAYS Fanfold Size x 8 (it isn't printed on the docket) — compute it.
         updateFolderGear(true);
 
         // B.Bunch counter inputs, if the docket states them.
-        const lpf  = normalizeNumber(parsed.labelsPerFoldSheet ?? parsed.labels_per_fold_sheet ?? parsed.labelsPerFold);
-        const pack = normalizeNumber(parsed.labelsPerPack ?? parsed.labels_per_pack ?? parsed.packSize);
+        let lpf  = normalizeNumber(parsed.labelsPerFoldSheet ?? parsed.labels_per_fold_sheet ?? parsed.labelsPerFold) || fx.labelsPerFold;
+        // Not stated? One fold holds fanfold ÷ label depth labels (folded every 12", 12" labels -> 1 per fold).
+        const depth = normalizeNumber(parsed.labelDepth ?? parsed.label_depth) || fx.labelDepth;
+        if(!lpf && foldSize && depth && foldSize >= depth) lpf = Math.round(foldSize / depth);
+        let fpp  = normalizeNumber(parsed.foldsPerPack ?? parsed.folds_per_pack) || fx.foldsPerPack;
+        let pack = normalizeNumber(parsed.labelsPerPack ?? parsed.labels_per_pack ?? parsed.packSize) || fx.labelsPerPack;
+        if(!pack && fpp && lpf) pack = fpp * lpf;                       // 650 folds x 10 labels = 6,500 per pack
+        if(!fpp && pack && lpf) fpp = Math.round(pack / lpf);         // 1,000 labels ÷ 1 per fold = 1,000 folds
         if(lpf)  setVal("bbLabelsPerFold", lpf);
-        if(pack) setVal("bbPackSize", pack);
+        if(pack){ setVal("bbPackSize", pack); setVal("folderPackLabels", pack); }
+        if(fpp){ setVal("rcFoldsPerPack", fpp); setVal("folderPackFolds", fpp); }
         if(typeof calcBBunch === "function") calcBBunch();
+        // Labels per box: the carton line (e.g. "/ 26,000 (6,500 x 4) /"); if it can't be read,
+        // folds per pack x labels per fold x across (650 x 10 x 4 = 26,000).
+        const acrossNow = normalizeNumber((document.getElementById("folderAcross") || {}).value);
+        let perBox = normalizeNumber(parsed.labelsPerCarton ?? parsed.labels_per_carton ?? parsed.labelsPerBox ?? parsed.labels_per_box) || fx.labelsPerCarton;
+        const ppc = normalizeNumber(parsed.packsPerCarton ?? parsed.packs_per_carton) || fx.packsPerCarton;
+        let perBoxWorked = false;
+        if(!perBox && pack && ppc){ perBox = pack * ppc; perBoxWorked = true; }            // 2 packs x 1,000
+        if(!perBox && acrossNow){
+          if(fpp && lpf){ perBox = fpp * lpf * acrossNow; perBoxWorked = true; }
+          else if(pack){ perBox = pack * acrossNow; perBoxWorked = true; }
+        }
+        if(parsed.countInPacks === true || fx.countInPacks) setCountBy("folder", "packs", true);
+        if(perBox) setVal("folderLabelsPerCarton", perBox);
+        // Cross perf positions (fan-fold jobs only).
+        const xOn  = normalizeNumber(parsed.crossPerfOnFold ?? parsed.cross_perf_on_fold) || fx.crossOn;
+        const xOff = normalizeNumber(parsed.crossPerfOffFold ?? parsed.cross_perf_off_fold) || fx.crossOff;
+        if(xOn)  setVal("crossPerfOnFold", xOn);
+        if(xOff) setVal("crossPerfOffFold", xOff);
+        if(perBoxWorked) foldBoxNote = (pack && ppc && perBox === pack * ppc)
+          ? " Labels per box worked out: " + ppc + " packs × " + formatNumber(pack) + " = " + formatNumber(perBox) + "."
+          : " Labels per box worked out: " + fpp + " folds × " + lpf + " labels × " + acrossNow + " across = " + formatNumber(perBox) + ".";
+        if(countByPacks("folder")) foldBoxNote += " Counting in packs of " + formatNumber(pack || 0) + ".";
 
-        foldNote = foldSize ? (" Fanfold " + foldSize + " in, gear " + Math.round(foldSize*8) + ".") : "";
+        foldNote = (foldSize ? (" Fanfold " + foldSize + " in, gear " + Math.round(foldSize*8) + ".") : "") + (foldBoxNote || "");
       }
 
       calcImprFor(tab);
@@ -3973,8 +4077,9 @@ let rsNotice = null;           // { key, kind, html }
 // Fields that hold a shift's COUNT (not the job definition) — stripped from the saved job, rolled forward on recall.
 const RS_COUNT_IDS = ["rollMasterStart","rollMasterEnd","rollTallyInput","rollQtyInput","extraAmount",
   "sheeterStartBox","sheeterEndBox","sheeterTotalBoxes","sheeterMasterStart","sheeterMasterEnd",
-  "folderStartBox","folderEndBox","folderTotalBoxes","folderMasterStart","folderMasterEnd","rsSessionId"];
-const RS_PROGRESS_IDS = ["rollMasterEnd","sheeterMasterEnd","folderMasterEnd","sheeterTotalBoxes","folderTotalBoxes","sheeterEndBox","folderEndBox"];
+  "folderStartBox","folderEndBox","folderTotalBoxes","folderMasterStart","folderMasterEnd","rsSessionId",
+  "sheeterTotalPacks","folderTotalPacks"];
+const RS_PROGRESS_IDS = ["rollMasterEnd","sheeterMasterEnd","folderMasterEnd","sheeterTotalBoxes","folderTotalBoxes","sheeterEndBox","folderEndBox","sheeterTotalPacks","folderTotalPacks"];
 
 let toastTimer = null;
 function showToast(html, ms){
@@ -4033,7 +4138,7 @@ function progSig(ws){
   const i = ws.inputs || {};
   return JSON.stringify([ (ws.tally && ws.tally.roll) || [], i.extraAmount || "",
     ["rollMasterStart","rollMasterEnd","sheeterStartBox","sheeterEndBox","sheeterTotalBoxes","sheeterMasterStart","sheeterMasterEnd",
-     "folderStartBox","folderEndBox","folderTotalBoxes","folderMasterStart","folderMasterEnd"].map(id => String(i[id] || "").trim()) ]);
+     "folderStartBox","folderEndBox","folderTotalBoxes","folderMasterStart","folderMasterEnd","sheeterTotalPacks","folderTotalPacks"].map(id => String(i[id] || "").trim()) ]);
 }
 function hasProgressSnap(ws){
   if(!ws) return false;
@@ -4078,11 +4183,15 @@ function sessionFromScreen(prefix, results){
   if(prefix === "roll"){
     sess.rolls = (inputs.tally || []).filter(x=>!rollIsEmpty(x)).map(normRoll);
   }else{
-    sess.startBox = gn(prefix + "StartBox");
-    sess.endBox = gn(prefix + "EndBox");
-    sess.totalBoxes = inputs.totalBoxes;
-    sess.labelsPerBox = inputs.labelsPerBox;
-    if(!sess.endBox && sess.startBox && sess.totalBoxes) sess.endBox = sess.startBox + sess.totalBoxes - 1;
+    if(inputs.countUnit === "packs"){
+      sess.countUnit = "packs"; sess.packs = inputs.totalBoxes; sess.labelsPerPack = inputs.labelsPerBox;
+    }else{
+      sess.startBox = gn(prefix + "StartBox");
+      sess.endBox = gn(prefix + "EndBox");
+      sess.totalBoxes = inputs.totalBoxes;
+      sess.labelsPerBox = inputs.labelsPerBox;
+      if(!sess.endBox && sess.startBox && sess.totalBoxes) sess.endBox = sess.startBox + sess.totalBoxes - 1;
+    }
   }
   return sess;
 }
@@ -4532,7 +4641,10 @@ function snapshotInputs(prefix, results){
       start: gn("rollMasterStart"), end: gn("rollMasterEnd"),
       repeat: getRollRepeat(), across: getRollAcross() };
   }
-  return { totalBoxes: gn(prefix+"TotalBoxes"), labelsPerBox: gn(prefix+"LabelsPerCarton"),
+  const packs = countByPacks(prefix);
+  return { totalBoxes: packs ? gn(prefix+"TotalPacks") : gn(prefix+"TotalBoxes"),
+    labelsPerBox: packs ? (packLabelsFor(prefix) || null) : gn(prefix+"LabelsPerCarton"),
+    countUnit: packs ? "packs" : "boxes",
     start: gn(prefix+"MasterStart"), end: gn(prefix+"MasterEnd"),
     repeat: gn(prefix+"Repeat"), across: gn(prefix+"Across") };
 }
@@ -4549,7 +4661,16 @@ function commitJob(prefix){
     rsRec.status = "open"; rsRec.completedAt = null; saveRunSheets();
   }
   // Saving the same screen again updates this shift's entry instead of double-counting it.
-  const linkedSid = screenSessionId();
+  // But if that saved shift has since changed on screen, make sure that's what the operator means.
+  let linkedSid = screenSessionId();
+  const linkedSess = linkedSid && rsRec ? (rsRec.sessions || []).find(x=>x.id === linkedSid) : null;
+  if(linkedSid && !linkedSess){ setScreenSessionId(null); linkedSid = null; }
+  if(linkedSess && linkedSess.progSig !== progSig(captureWorkspace())){
+    const ok = confirm("You already saved a count from this screen (" + rsWhen(linkedSess.savedAt) + ").\n\n" +
+      "OK = correct that saved shift with these numbers.\n" +
+      "Cancel = leave it. To count a new shift, tap \u201cStart next shift\u201d at the top of Count.");
+    if(!ok) return false;
+  }
   const prior = linkedSid ? shiftLog.find(e=>e.runSessionId === linkedSid) : null;
   const entry = {
     id: prior ? prior.id : Date.now(),
@@ -4569,6 +4690,19 @@ function commitJob(prefix){
   saveShiftLog();
   renderShiftLog();
   lastSavedSig[prefix] = resultsSignature(prefix); // mark current results as saved
+  // Get Count ready for the next shift straight away, so the next save adds a new shift
+  // instead of overwriting this one. (Fix a saved shift with Edit in My Shift.)
+  const after = currentRunSheet();
+  if(after && entry.runSessionId){
+    try{
+      loadContinuation(after);
+      lastSavedSig[prefix] = null;
+      renderRunSheetUI();
+      if(typeof renderJobHeader === "function") renderJobHeader();
+      if(typeof showToast === "function")
+        showToast("Shift saved to the run sheet. Count is ready for the next shift — picks up at <b>" + escHtml(continuationText(after) || "the start") + "</b>.", 5500);
+    }catch(e){}
+  }
   return true;
 }
 function removeShiftEntry(id){
@@ -5125,7 +5259,7 @@ const QE = {
   qeFanfold:    { folder:["folderFoldSize"] },
   qeFolderBox:  { folder:["folderLabelsPerCarton"] },
   qeFoldSheet:  { folder:["bbLabelsPerFold"] },
-  qePack:       { folder:["bbPackSize"] },
+  qePack:       { folder:["bbPackSize","folderPackLabels"], sheeter:["sheeterPackLabels"] },
   qeStock:      { all:["stockInfo"] },
   qeAround:     { roll:["jobAround"] }
 };
@@ -5325,6 +5459,10 @@ function qeNext(fromEl){
 
 function qeDone(){
   document.activeElement && document.activeElement.blur && document.activeElement.blur();
+  if(qeTypeSel === "folder"){
+    const fb = document.getElementById("qeFolderBox"), g = typeof folderBoxGuess === "function" ? folderBoxGuess() : null;
+    if(fb && !String(fb.value).trim() && g){ fb.value = String(g); qeApply("qeFolderBox"); qeProgress(); }
+  }
   switchTab(qeTypeSel);
   const card = document.getElementById("quickEntryCard");
   if(card) card.classList.remove("open");
@@ -6013,6 +6151,32 @@ function isColorJob(colors){
     .map(x=>String(x).trim()).filter(Boolean);
   return arr.length > 0 && !arr.every(c => /^plain$|^none$|^0\s*\/\s*0$|^no print/i.test(c));
 }
+// Everything the model returned as text, so fold details can be found even if a field came back empty.
+function scanTextBlob(parsed){
+  const j = v => Array.isArray(v) ? v.join(" \n ") : String(v || "");
+  return [parsed.rawText, parsed.raw_text, j(parsed.notes), j(parsed.dies), parsed.materialDescription, parsed.stockInfo].map(j).join(" \n ");
+}
+function foldFromText(blob){
+  const s = String(blob || "");
+  const num = m => m ? parseFloat(String(m[1]).replace(/,/g, "")) : null;
+  const out = {};
+  out.fanfold = num(s.match(/fan\s*-?\s*fold(?:ed)?\s*(?:size)?\s*(?:@|at|:)\s*(\d+(?:\.\d+)?)/i)) ||
+                num(s.match(/fold(?:ed)?\s+every\s*(\d+(?:\.\d+)?)/i));
+  out.labelsPerPack = num(s.match(/packs?\s+of\s+(\d[\d,]*)/i)) ||
+                      num(s.match(/(\d[\d,]*)\s*(?:labels\s*)?(?:per|\/)\s*pack\b/i)) ||
+                      num(s.match(/(?:wrapped|banded|paper\s*band(?:ed)?|bundled|poly\s*bag(?:ged)?)\s+in\s+(\d[\d,]*)\s*['’]?s\b/i));
+  out.packsPerCarton = num(s.match(/\(\s*(\d{1,3})\s*packs?\s*x\s*[\d,]+\s*\)/i)) || num(s.match(/\(\s*[\d,]+\s*x\s*(\d{1,3})\s*\)/i));
+  out.labelDepth = num(s.match(/label\s*size[^\n]*?x\s*(\d+(?:\.\d+)?)\s*["″”]?\s*depth/i));
+  out.countInPacks = /\bbindery\b|paper\s*band|\bband(?:s|ed)?\b|shrink\s*wrap|\bwrap(?:ped)?\b|split\s+packs|in\s+packs\s+of/i.test(s);
+  out.foldsPerPack = num(s.match(/(\d[\d,]*)\s*folds?\s*(?:per|\/)\s*(?:pack|bag)/i));
+  out.labelsPerFold = num(s.match(/(\d{1,3})\s*labels?\s*(?:per|\/)\s*fold/i));
+  out.crossOn = num(s.match(/cross\s*-?\s*perf\s+on\s+(?:the\s+)?fold\s*(?:@|at|:)?\s*(\d+(?:\.\d+)?)/i));
+  out.crossOff = num(s.match(/cross\s*-?\s*perf\s+off\s+(?:the\s+)?fold\s*(?:@|at|:)?\s*(\d+(?:\.\d+)?)/i));
+  out.labelsPerCarton = num(s.match(/carton\s*code[^\n]*?\)\s*[\/–—-]\s*(\d[\d,]{3,})\s*\(/i)) ||
+                        num(s.match(/(\d[\d,]{3,})\s*(?:labels\s*)?(?:per|\/)\s*(?:carton|ctn|box)\b/i));
+  Object.keys(out).forEach(k => { if(k !== "countInPacks" && !(out[k] > 0)) out[k] = null; });
+  return out;
+}
 function acrossFromText(blob){
   const s = String(blob||"");
   const pats = [/\brun\s+(\d{1,2})\s*(?:-\s*)?across/i, /\b(\d{1,2})\s*(?:-\s*)?across\s*x\s*\d+\s*around/i,
@@ -6200,8 +6364,9 @@ function calcShift(prefix, mode){
   const end = cleanNumber(prefix + "MasterEnd");
 
   // Total Labels
+  const byPacks = prefix !== "roll" && countByPacks(prefix);
   const rawTally = (prefix === "roll") ? tallyTotal("roll")
-    : (cleanNumber(prefix + "TotalBoxes") || 0);  // sheeter/folder: one total-boxes field
+    : (byPacks ? (cleanNumber(prefix + "TotalPacks") || 0) : (cleanNumber(prefix + "TotalBoxes") || 0));  // sheeter/folder: boxes or packs
   let totalLabels;
   if(prefix === "roll"){
     const ex = computeExtraLabels();
@@ -6211,9 +6376,9 @@ function calcShift(prefix, mode){
       ? ("Calculated WITH extra labels (+" + formatNumber(Math.round(ex.labels || 0)) + " labels)")
       : "Calculated without extra labels");
   }else{
-    const perCarton = cleanNumber(prefix + "LabelsPerCarton");
+    const perCarton = byPacks ? packLabelsFor(prefix) : cleanNumber(prefix + "LabelsPerCarton");
     if(!Number.isFinite(perCarton) || perCarton <= 0){
-      if(errEl) errEl.textContent = "Enter Labels per Carton to convert cartons into labels.";
+      if(errEl) errEl.textContent = byPacks ? "Enter Labels per Pack to convert packs into labels." : "Enter Labels per Carton to convert cartons into labels.";
       return false;
     }
     totalLabels = rawTally * perCarton;
@@ -6403,6 +6568,7 @@ const ICON = {
   back: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>',
   jobs: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="6" rx="1.5"/><rect x="4" y="14" width="16" height="6" rx="1.5"/></svg>',
   shift: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>',
+  upload: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-9 9"/></svg>',
   setup: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 10h6"/><path d="M9 14h6"/><path d="M9 18h3"/></svg>',
   run: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3.5v3"/><path d="M20.5 12h-3"/><path d="M12 20.5v-3"/><path d="M3.5 12h3"/></svg>',
   count: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4v16"/><path d="M10 4v16"/><path d="M14 4v16"/><path d="M18 4v16"/><path d="M3 15 21 9"/></svg>',
@@ -6434,6 +6600,7 @@ function buildShell(){
   vJobs.insertAdjacentHTML("beforeend",
     '<div class="jobs-actions">' +
       '<button type="button" class="ja-scan" id="jobsScanBtn">' + ICON.scan + 'Scan docket</button>' +
+      '<button type="button" class="ja-up" id="jobsUploadBtn">' + ICON.upload + 'Upload docket</button>' +
       '<button type="button" class="ja-enter" id="jobsEnterBtn">' + ICON.keys + 'Enter docket</button>' +
     '</div>' +
     '<label class="jobs-search">' + ICON.search + '<span style="position:absolute;left:-9999px">Find a job</span>' +
@@ -6469,6 +6636,10 @@ function buildShell(){
   if(reset){ reset.textContent = "End shift & start a new one"; vShift.appendChild(reset); }
 
   // Settings view: API key + display toggles, scan/manual mode, decimal display, theme.
+  // "Hide Job Info" no longer applies — Job Info is part of Setup now.
+  { const chk = document.getElementById("hideJobInfoChk"); const row = chk ? chk.closest("label") : null;
+    if(row){ let h = row.previousElementSibling; row.hidden = true;
+      if(h && h.tagName === "H2"){ const dv = h.previousElementSibling; h.hidden = true; if(dv && dv.classList.contains("settings-divider")) dv.hidden = true; } } }
   const sp = document.getElementById("settingsPanel");
   if(sp){ sp.classList.remove("hidden"); vSet.appendChild(sp); }
   const mode = document.querySelector(".mode-card");
@@ -6496,6 +6667,17 @@ function buildShell(){
   const lib = document.getElementById("runSheetLibCard"); if(lib) lib.style.display = "none";
   const rsCard = document.getElementById("runSheetCard");
   if(rsCard) rsCard.insertAdjacentHTML("afterend", '<button type="button" class="primary" id="shareJobBtn" style="margin-top:4px">Share job report</button>');
+  // Shared run sheets need every operator on the app — shelved for a future team version.
+  const rsPanel = document.getElementById("panel-runsheet");
+  if(rsPanel) rsPanel.insertAdjacentHTML("beforebegin",
+    '<section class="card soon-card" id="historySoon" data-st="history">' +
+      '<span class="soon-pill">Coming later</span>' +
+      '<h2>Shift-to-shift run sheets</h2>' +
+      '<p>Hand a job over between shifts: the next operator picks up the box, roll and press counter right where you left off, and everyone on the job sees the whole run so far.</p>' +
+      '<p>This needs every operator on the app, so it\'s planned for a future team version.</p>' +
+      '<ul><li>Shared job history across phones</li><li>Hand-over at shift change</li><li>Job totals for supervisors</li></ul>' +
+      '<p class="soon-note">Your own shifts are still saved on this phone — see <b>Shift</b>, and each job\'s progress on <b>Jobs</b>.</p>' +
+    '</section>');
   if(tabBar){
     const ms = tabBar.querySelector('[data-tab="myshift"]'); if(ms) ms.remove();
     const rs = tabBar.querySelector('[data-tab="runsheet"]'); if(rs) rs.remove();
@@ -6516,7 +6698,8 @@ function buildShell(){
   const jn = document.createElement("nav");
   jn.id = "jobNav"; jn.setAttribute("aria-label", "Job");
   jn.innerHTML = STAGES.map(([v,l]) =>
-    '<button type="button" data-stage-go="' + v + '"><span class="nav-pill">' + ICON[v] + '</span>' + l + '</button>').join("");
+    '<button type="button" data-stage-go="' + v + '"' + (STAGE_SOON[v] ? ' class="soon"' : '') + '><span class="nav-pill">' + ICON[v] +
+    (STAGE_SOON[v] ? '<span class="nav-soon">Soon</span>' : '') + '</span>' + l + '</button>').join("");
   document.body.appendChild(jn);
 }
 
@@ -6536,6 +6719,7 @@ function pairButtons(){
 /* ---- Stage 2: a job is Setup → Run → Count (+ History) ---- */
 const STAGE_KEY = "RC_STAGE_V1";
 const STAGES = [["setup","Setup"],["run","Run"],["count","Count"],["history","History"]];
+const STAGE_SOON = { history:true };   // shown as a future update
 const STAGE_OF = { "ECCI Counter":"run", "Even Rolls":"run", "Impressions":"run", "Press Counts":"run", "Core Size":"run",
   "Finished Roll":"run", "Gear Size":"run", "B.Bunch Counter":"run", "End of Job Count":"count",
   "Sheeter Job":"setup", "Folder Job":"setup" };
@@ -6607,7 +6791,7 @@ function setStage(st){
       setup: ["Job setup", "Entered once. Every number on Run and Count uses these values."],
       run: ["Run the job", type === "roll" ? "Set the press and plan even rolls." : "Set the press for this " + rsTypeLabel(type).toLowerCase() + " job."],
       count: ["Count this shift", "Add what came off the press, then save the shift."],
-      history: ["Job history", "Every shift saved on this docket, on this phone."]
+      history: ["Job history", "A future update."]
     }[st];
     hd.innerHTML = '<h2>' + words[0] + '</h2><p>' + escHtml(words[1]) + '</p>';
   }
@@ -6618,6 +6802,7 @@ function setStage(st){
   }
   if(st === "run"){ renderRunStrip(); renderRunPlan(); }
   if(st === "count"){ renderPlanChip(); ["roll","sheeter","folder"].forEach(p => { try{ liveShift(p); }catch(e){} }); }
+  if(st === "count") ["sheeter","folder"].forEach(p => { try{ renderCountMode(p); }catch(e){} });
   if(st === "setup" && typeof qeProgress === "function"){ try{ qeRefresh(); }catch(e){} }
   if(st === "history" && typeof renderRunSheetUI === "function"){ try{ renderRunSheetUI(); }catch(e){} }
   window.scrollTo(0, 0);
@@ -6637,6 +6822,55 @@ function renderPlanChip(){
   const n = planLabelsPerRoll();
   b.hidden = !n;
   if(n){ b.dataset.labels = n; b.innerHTML = 'Use plan: <b>' + formatNumber(n) + '</b> labels per roll'; }
+}
+
+/* ---- Packs: folder and sheeter jobs can be counted in packs instead of boxes ---- */
+function countByPacks(pre){ return ((document.getElementById(pre + "CountBy") || {}).value || "") === "packs"; }
+function labelsPerFoldFor(pre){
+  return pre === "folder" ? rnum(((document.getElementById("bbLabelsPerFold") || {}).value || "")) : null;
+}
+// Labels per pack: typed, or folds per pack x labels per fold.
+function packLabelsFor(pre){
+  const n = id => rnum(((document.getElementById(id) || {}).value || ""));
+  const typed = n(pre + "PackLabels");
+  if(typed > 0) return typed;
+  const folds = n(pre + "PackFolds"), lpf = labelsPerFoldFor(pre);
+  return folds > 0 && lpf > 0 ? folds * lpf : null;
+}
+function setCountBy(pre, mode, quiet){
+  const h = document.getElementById(pre + "CountBy");
+  if(h) h.value = mode === "packs" ? "packs" : "boxes";
+  renderCountMode(pre);
+  if(!quiet){ try{ liveShift(pre); saveAllInputs(); }catch(e){} }
+}
+function renderCountMode(pre){
+  const packs = countByPacks(pre);
+  const bs = document.getElementById(pre + "BoxSec"), ps = document.getElementById(pre + "PackSec");
+  if(bs) bs.hidden = packs;
+  if(ps) ps.hidden = !packs;
+  document.querySelectorAll('[data-countby-for="' + pre + '"] button').forEach(b => {
+    const on = b.dataset.countby === (packs ? "packs" : "boxes");
+    b.classList.toggle("active", on); b.setAttribute("aria-pressed", String(on));
+  });
+  const lab = document.querySelector("#" + pre + "Labels");
+  const cap = lab ? lab.parentElement.querySelector(".sc-label") : null;
+  if(cap) cap.textContent = packs ? "Total Labels (Packs × Labels/Pack)" : "Total Labels (Boxes × Labels/Box)";
+  // Folds per pack: show the worked-out value as a hint.
+  const pf = document.getElementById(pre + "PackFolds"), pl = document.getElementById(pre + "PackLabels");
+  const lpf = labelsPerFoldFor(pre);
+  if(pf){
+    const lab2 = rnum((pl || {}).value);
+    pf.placeholder = lab2 > 0 && lpf > 0 ? formatNumber(Math.round(lab2 / lpf)) + " (labels ÷ " + lpf + " per fold)" : "e.g. 1000";
+  }
+  if(pl){
+    const f = rnum((pf || {}).value);
+    pl.placeholder = f > 0 && lpf > 0 ? formatNumber(f * lpf) + " (folds × " + lpf + " per fold)" : "e.g. 1000";
+  }
+  const tot = document.getElementById(pre + "PackTotalNote");
+  if(tot){
+    const per = packLabelsFor(pre), qty = rnum(((document.getElementById("jobQuantity") || {}).value || ""));
+    tot.textContent = per > 0 && qty > 0 ? "Whole job: " + formatNumber(Math.ceil(qty / per)) + " packs of " + formatNumber(per) + "." : "";
+  }
 }
 
 /* ---- Design build-out: Count screen ---- */
@@ -6678,6 +6912,22 @@ function buildCount(){
         parts.forEach(x => { if(x) boxSec.appendChild(x); });
         const lpc = lab(pre + "LabelsPerCarton"); if(lpc) lpc.textContent = "Labels per box";
         const tb = lab(pre + "TotalBoxes"); if(tb) tb.textContent = "Boxes done this shift";
+        // Count by boxes or packs.
+        boxSec.insertAdjacentHTML("beforebegin",
+          '<div class="seg-toggle ct-countby" data-countby-for="' + pre + '" role="group" aria-label="Count by">' +
+            '<button type="button" data-countby="boxes" class="active">Count boxes</button>' +
+            '<button type="button" data-countby="packs">Count packs</button></div>' +
+          '<input type="hidden" id="' + pre + 'CountBy" value="boxes">');
+        boxSec.insertAdjacentHTML("afterend",
+          '<div class="ct-sec" id="' + pre + 'PackSec" hidden><h3 class="ct-h">Packs</h3>' +
+            '<div class="ct-grid">' +
+              '<div><label for="' + pre + 'PackLabels">Labels per pack</label><input id="' + pre + 'PackLabels" inputmode="decimal" placeholder="e.g. 1000"></div>' +
+              (pre === "folder" ? '<div><label for="' + pre + 'PackFolds">Folds per pack</label><input id="' + pre + 'PackFolds" inputmode="decimal" placeholder="e.g. 1000"></div>' : '') +
+            '</div>' +
+            '<label for="' + pre + 'TotalPacks">Packs done this shift</label>' +
+            '<input id="' + pre + 'TotalPacks" inputmode="decimal" placeholder="e.g. 40" style="font-size:22px;font-weight:800;">' +
+            '<div class="ct-ra" id="' + pre + 'PackTotalNote"></div>' +
+          '</div>');
       }
     }
     // Where the counter block goes: roll after the extras; sheeter/folder after labels-per-box.
@@ -6687,7 +6937,7 @@ function buildCount(){
       const extra = card.querySelector(".extra-block");
       if(extra) extra.after(sec); else if(err) err.before(sec);
     }else{
-      const bs = el(pre + "BoxSec");
+      const bs = el(pre + "PackSec") || el(pre + "BoxSec");
       if(bs) bs.after(sec); else if(raRow) raRow.after(sec); else if(err) err.before(sec);
     }
     // Results heading + save button.
@@ -6695,10 +6945,22 @@ function buildCount(){
     const save = el(pre + "CompleteJobBtn");
     if(save) save.classList.add("ct-save");
     card.querySelectorAll(".clear-mini").forEach(c => { c.textContent = "Clear this count"; });
+    if(!document.getElementById(pre + "MarkDone")) card.insertAdjacentHTML("beforeend",
+      '<button type="button" class="ct-done" id="' + pre + 'MarkDone" data-markdone="1">Mark this job done</button>');
     // Live results: no Calculate button needed.
-    [pre + "MasterStart", pre + "MasterEnd", pre + "TotalBoxes", pre + "LabelsPerCarton", pre + "StartBox", pre + "EndBox", pre + "Repeat", pre + "Across"]
+    [pre + "MasterStart", pre + "MasterEnd", pre + "TotalBoxes", pre + "LabelsPerCarton", pre + "StartBox", pre + "EndBox", pre + "Repeat", pre + "Across",
+     pre + "TotalPacks", pre + "PackLabels", pre + "PackFolds"]
       .forEach(id => { const x = el(id); if(x){ x.addEventListener("input", () => liveShiftSoon(pre)); x.addEventListener("change", () => liveShiftSoon(pre)); } });
   });
+  document.addEventListener("click", e => {
+    const b = e.target.closest && e.target.closest("[data-countby]");
+    if(!b) return;
+    const g = b.closest("[data-countby-for]");
+    if(g) setCountBy(g.dataset.countbyFor, b.dataset.countby);
+  });
+  ["sheeter","folder"].forEach(pre => ["PackLabels","PackFolds"].forEach(suf => {
+    const x = document.getElementById(pre + suf); if(x) x.addEventListener("input", () => renderCountMode(pre));
+  }));
   const list = document.getElementById("rollTallyList");
   if(list && window.MutationObserver) new MutationObserver(() => liveShiftSoon("roll")).observe(list, { childList:true, subtree:true });
   ["extraAmount"].forEach(id => { const x = document.getElementById(id); if(x) x.addEventListener("input", () => liveShiftSoon("roll")); });
@@ -6715,7 +6977,7 @@ function liveShiftSoon(pre){
 function liveShift(pre){
   if(typeof calcShift !== "function") return;
   const v = id => ((document.getElementById(id) || {}).value || "").trim();
-  const hasCount = pre === "roll" ? (tallyTotal("roll") > 0) : rnum(v(pre + "TotalBoxes")) > 0;
+  const hasCount = pre === "roll" ? (tallyTotal("roll") > 0) : rnum(v(countByPacks(pre) ? pre + "TotalPacks" : pre + "TotalBoxes")) > 0;
   const err = document.getElementById(pre + "ShiftError");
   const set = (id, t) => { const e = document.getElementById(id); if(e) e.textContent = t; };
   if(!hasCount && !v(pre + "MasterEnd")){
@@ -6737,6 +6999,16 @@ function liveShift(pre){
 }
 function renderCountBits(pre){
   const v = id => ((document.getElementById(id) || {}).value || "").trim();
+  if(pre !== "roll"){
+    renderCountMode(pre);
+    // Labels per pack follows Setup (and folds x labels per fold) until it's typed here.
+    const pl = document.getElementById(pre + "PackLabels");
+    const setupPack = pre === "folder" ? rnum(v("bbPackSize")) : null;
+    if(pl && !v(pre + "PackLabels") && setupPack > 0 && document.activeElement !== pl) pl.value = String(setupPack);
+    const pf = document.getElementById(pre + "PackFolds");
+    const scannedFolds = rnum(v("rcFoldsPerPack"));
+    if(pf && !v(pre + "PackFolds") && scannedFolds > 0 && document.activeElement !== pf) pf.value = String(scannedFolds);
+  }
   if(pre === "roll"){
     const q = document.getElementById("rollQtyInput");
     if(q && document.activeElement !== q && !String(q.value).trim()){ q.value = "1"; if(typeof updateAddRollBtn === "function") updateAddRollBtn(); }
@@ -6869,7 +7141,13 @@ function buildSetup(){
   put(layout, ["qeRepeat","qeAcross","qeAround","qeCarrier","qeSheet","qeFanfold"]);
   put(mat, ["qeStock"]);
   mat.querySelector(".su-grid").insertAdjacentHTML("beforeend", '<div class="su-f full su-thick" id="suThick"></div>');
-  put(mat, ["crossPerfTPI","rollDirection"]);
+  put(mat, ["crossPerfOnFold","crossPerfOffFold","crossPerfTPI","rollDirection"]);
+  const typeOnly = (id, types) => { const el = mat.querySelector("#" + id); const w = el ? el.parentElement : null; if(w) w.dataset.qefor = types; };
+  typeOnly("rollDirection", "roll sheeter");
+  typeOnly("crossPerfOnFold", "folder");
+  typeOnly("crossPerfOffFold", "folder");
+  const th = mat.querySelector("#suThick"); if(th) th.dataset.qefor = "roll";
+  document.querySelectorAll("#quickEntryCard [data-qefor]").forEach(f=>f.classList.toggle("qe-hide", !f.dataset.qefor.split(" ").includes(qeTypeSel)));
   ["colorsList","aniloxList","diesList"].forEach(id=>{
     const el = document.getElementById(id);
     const blk = el ? (id === "aniloxList" ? document.getElementById("aniloxWrap") : el.closest(".full")) : null;
@@ -6951,9 +7229,17 @@ function renderSetupThickness(){
   box.innerHTML = '<span class="su-thick-l">Thickness <span class="src-tag ' + (est ? "est" : "scan") + '">' + (est ? "Estimated" : "Found") + '</span></span>' +
     '<span class="su-thick-v"><b>' + (Math.round(mil * 100) / 100) + ' mil</b>' + (est ? ' · estimated from stock — check it if counters run off' : (srcTxt && srcTxt !== "—" ? ' · ' + escHtml(srcTxt) : '')) + '</span>';
 }
+// Folder: labels per box can be worked out as labels per pack (folds x labels per fold) x across.
+function folderBoxGuess(){
+  const n = id => rnum(((document.getElementById(id) || {}).value || ""));
+  const pack = n("qePack") || n("bbPackSize"), across = n("qeAcross") || n("folderAcross");
+  return pack > 0 && across > 0 ? pack * across : null;
+}
 function renderSetupCheck(need){
   const b = document.getElementById("suCheck");
   if(!b) return;
+  const fb = document.getElementById("qeFolderBox");
+  if(fb){ const g = folderBoxGuess(); fb.placeholder = g ? formatNumber(g) + " (pack × across)" : "e.g. 4000"; }
   renderSrcTags();
   renderSetupThickness();
   const missing = (need || []).filter(id => { const el = document.getElementById(id); return !(el && String(el.value).trim()); });
@@ -6982,6 +7268,8 @@ function svcMsg(kind, html){
 }
 function renderScanService(){
   const svc = scanService();
+  const ks = document.getElementById("apiKeyState");
+  if(ks) ks.textContent = safeGet("ROLL_CALC_GEMINI_API_KEY") ? "Saved" : "Not set";
   const u = document.getElementById("svcUrl"), c = document.getElementById("svcCode");
   if(u && document.activeElement !== u) u.value = svc.url;
   if(c && document.activeElement !== c) c.value = svc.code;
@@ -7311,7 +7599,7 @@ function shiftReportText(){
     const parts = [];
     if(e.rolls) parts.push(e.rolls + (e.rolls === 1 ? " roll" : " rolls"));
     const inp = e.inputs || {};
-    if(inp.totalBoxes) parts.push(inp.totalBoxes + (inp.totalBoxes === 1 ? " box" : " boxes"));
+    if(inp.totalBoxes){ const pk = inp.countUnit === "packs"; parts.push(inp.totalBoxes + (pk ? (inp.totalBoxes === 1 ? " pack" : " packs") : (inp.totalBoxes === 1 ? " box" : " boxes"))); }
     parts.push(n0(e.labels) + " labels");
     if(e.qty) parts.push("order " + n0(rnum(e.qty)));
     L.push("  " + parts.join(" · "));
@@ -7456,6 +7744,10 @@ function renderRunStrip(){
     if(type === "folder"){
       const bb = ((document.getElementById("bbCounter") || {}).textContent || "").trim();
       if(bb && bb !== "—" && /\d/.test(bb)) chips.push(["B.Bunch counter", bb]);
+      const xo = ((document.getElementById("crossPerfOnFold") || {}).value || "").trim();
+      const xf = ((document.getElementById("crossPerfOffFold") || {}).value || "").trim();
+      if(xo) chips.push(["Cross perf on fold", xo + "″"]);
+      if(xf) chips.push(["Cross perf off fold", xf + "″"]);
     }
   }
   if(!chips.length){
@@ -7492,16 +7784,16 @@ function jobEntries(){
   const map = new Map();
   Object.values(runSheets || {}).forEach(r=>{
     map.set(r.key, { key:r.key, docket:r.docket, customer:r.customer || "", type:r.jobType || "", status:r.status || "open",
-      updatedAt:r.updatedAt || r.createdAt || 0, completedAt:r.completedAt || null, rec:r, wsId:null,
+      updatedAt:r.updatedAt || r.createdAt || 0, createdAt:r.createdAt || r.updatedAt || 0, completedAt:r.completedAt || null, rec:r, wsId:null,
       qty: rnum(((r.job || {}).inputs || {}).jobQuantity) });
   });
   (docketWorkspaces || []).forEach(ws=>{
     const k = normDocketKey(ws.label);
     if(!k || k === "UNTITLED") return;
     const e = map.get(k);
-    if(e){ e.wsId = ws.id; if(!e.qty) e.qty = rnum((ws.inputs || {}).jobQuantity); return; }
+    if(e){ e.wsId = ws.id; if(!e.qty) e.qty = rnum((ws.inputs || {}).jobQuantity); if(ws.id && (!e.createdAt || ws.id < e.createdAt)) e.createdAt = ws.id; return; }
     map.set(k, { key:k, docket:ws.label, customer:ws.customer || "", type:ws.tab || "", status:"open",
-      updatedAt:ws.id, completedAt:null, rec:null, wsId:ws.id, qty: rnum((ws.inputs || {}).jobQuantity) });
+      updatedAt:ws.id, createdAt:ws.id, completedAt:null, rec:null, wsId:ws.id, qty: rnum((ws.inputs || {}).jobQuantity) });
   });
   return [...map.values()];
 }
@@ -7510,16 +7802,21 @@ function jobProgress(e){
   const pct = e.qty > 0 ? Math.min(100, t.labels / e.qty * 100) : null;
   return { t, pct };
 }
+const JOBS_SHUT_KEY = "RC_JOBS_SHUT_V1";
+function jobsSecShut(id){ try{ return (JSON.parse(safeGet(JOBS_SHUT_KEY) || "{}") || {})[id] === true; }catch(e){ return false; } }
+function toggleJobsSec(id){
+  let m = {}; try{ m = JSON.parse(safeGet(JOBS_SHUT_KEY) || "{}") || {}; }catch(e){}
+  m[id] = !m[id]; safeSet(JOBS_SHUT_KEY, JSON.stringify(m));
+  renderJobsHome();
+}
 function renderJobsHome(){
   const list = document.getElementById("jobsList");
   if(!list) return;
   const q = ((document.getElementById("jobsSearch") || {}).value || "").trim().toLowerCase();
   const openKey = runKeyNow();
   const all = jobEntries().filter(e => !q || (e.docket + " " + e.customer).toLowerCase().includes(q));
-  const active = all.filter(e => e.status !== "completed").sort((a,b)=>{
-    if(a.key === openKey) return -1; if(b.key === openKey) return 1;
-    return (b.updatedAt || 0) - (a.updatedAt || 0);
-  });
+  // Newest job first (when it was started on this phone).
+  const active = all.filter(e => e.status !== "completed").sort((a,b)=>(b.createdAt || 0) - (a.createdAt || 0));
   const done = all.filter(e => e.status === "completed").sort((a,b)=>(b.completedAt || b.updatedAt || 0) - (a.completedAt || a.updatedAt || 0));
   const card = e => {
     const { t, pct } = jobProgress(e);
@@ -7551,8 +7848,15 @@ function renderJobsHome(){
   if(!active.length && !done.length){
     html = '<div class="jobs-empty">' + (q ? "No jobs match." : "No jobs yet. Scan or enter a docket to start one.") + '</div>';
   }else{
-    if(active.length) html += '<div class="jobs-sec"><span>In progress · ' + active.length + '</span></div>' + active.map(card).join("");
-    if(done.length) html += '<div class="jobs-sec" style="margin-top:18px"><span>Completed · ' + done.length + '</span></div>' + done.map(card).join("");
+    const sec = (id, label, items) => {
+      const shut = !q && jobsSecShut(id);
+      return '<div class="jobs-group' + (shut ? ' shut' : '') + '" data-jobsgroup="' + id + '">' +
+        '<button type="button" class="jobs-sec" data-jobssec="' + id + '" aria-expanded="' + !shut + '"><span>' + label + ' · ' + items.length + '</span>' +
+        '<span class="jobs-sec-chev" aria-hidden="true">' + ICON.chev + '</span></button>' +
+        '<div class="jobs-group-body">' + items.map(card).join("") + '</div></div>';
+    };
+    if(active.length) html += sec("active", "In progress", active);
+    if(done.length) html += sec("done", "Completed", done);
   }
   list.innerHTML = html;
 }
@@ -7583,13 +7887,13 @@ function startNewJob(){
   }
 }
 
-function scanNewJob(){
+function scanNewJob(fromUpload){
   const key = scanAuth();
   if(!key){
     showToast('Scanning isn\'t set up — add a scan service or API key in <b>Settings</b>, or use <b>Enter docket</b>.', 6000);
     return;
   }
-  const input = document.getElementById("docketCameraInput");
+  const input = document.getElementById(fromUpload === true ? "docketUploadInput" : "docketCameraInput");
   currentStage = "setup";
   showView("job");
   if(input) input.click();   // the scan handler parks the current docket and starts a new one
@@ -7655,6 +7959,16 @@ function bindShell(){
   on("addPressBtn", "click", addPress);
   on("replayIntroBtn", "click", showIntro);
   on("runCountBtn", "click", () => setStage("count"));
+  on("jobsUploadBtn", "click", () => scanNewJob(true));
+  document.addEventListener("click", e => {
+    const t = e.target.closest && e.target.closest("[data-jobssec]");
+    if(t){ toggleJobsSec(t.dataset.jobssec); return; }
+    if(e.target.closest && e.target.closest("[data-markdone]")){
+      if(!currentRunSheet()){ showToast("Save a shift on this job first.", 3500); return; }
+      markRunSheetCompleted();
+      if(currentRunSheet() && currentRunSheet().status === "completed"){ showToast("Job marked done. It's under <b>Completed</b> on Jobs.", 4000); showView("jobs"); }
+    }
+  });
   document.addEventListener("click", e => {
     if(!(e.target.closest && e.target.closest("#ctNextShift"))) return;
     const rec = currentRunSheet();
