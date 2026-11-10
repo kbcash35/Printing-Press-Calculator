@@ -3475,9 +3475,12 @@ Rules:
       showSuccess(successId,"Label scan complete. Material thickness is saved and ready.");
     }else{
     // Universal scan: detect job type and open that tab unless a tab was forced.
-    if(!opts.tab){ tab = detectJobType(parsed); switchTab(tab); }
-    // Shared job info (docket #, quantities, dies, colors, notes) for every job type.
-    fillJobInfo(parsed, fields);
+    // The docket decides the job type — whatever screen or type was showing before doesn't matter.
+    if(!opts.tab){ tab = detectJobType(parsed); }
+    switchTab(tab);
+    if(typeof qeSetType === "function") qeSetType(tab, false);
+    // Shared job info (docket #, quantity, dies, colours, notes) + this job type's own section.
+    fillJobInfo(parsed, fields, tab);
     if(tab === "sheeter" || tab === "folder"){
       const repeat = normalizeNumber(parsed.repeatLength ?? parsed.repeat_length ?? fields.repeat);
       const across = normalizeNumber(parsed.labelsAcross ?? parsed.labels_across ?? fields.across);
@@ -3785,6 +3788,9 @@ function handleDocketPhoto(file){
   const hasCurrent = String((document.getElementById("docketNumber")||{}).value || "").trim() !== "";
   if(hasCurrent && typeof newDocket === "function"){
     newDocket();   // syncs the current docket, then opens a blank workspace for the incoming scan
+  }else if(typeof applyWorkspace === "function"){
+    // No docket on screen: clear anything typed for another job type so the scan starts clean.
+    applyWorkspace({ inputs:{}, tally:{ roll:[], sheeter:[], folder:[] }, joblists:{ dies:[], colors:[], notes:[], anilox:[] }, tab:"roll" });
   }
   runGeminiScan(file,"docket");
 }
@@ -6184,7 +6190,7 @@ function acrossFromText(blob){
   for(const p of pats){ const m = s.match(p); if(m){ const n = +m[1]; if(n > 0 && n <= 24) return n; } }
   return null;
 }
-function fillJobInfo(parsed, fields){
+function fillJobInfo(parsed, fields, jobType){
   // Remember the stock/material so manual anilox regeneration has context.
   aniloxStock = String(
     parsed.stockInfo ?? parsed.stock ?? parsed.material ?? parsed.materialDescription ?? parsed.material_description ??
@@ -6208,8 +6214,15 @@ function fillJobInfo(parsed, fields){
       Array.isArray(parsed.dies) ? parsed.dies.join(" ") : parsed.dies,
       Array.isArray(parsed.notes) ? parsed.notes.join(" ") : parsed.notes].map(x=>String(x||"")).join(" \n "));
   }
-  if(scanRepeat){ ["roll","sheeter","folder"].forEach(t=>setIf(t+"Repeat", scanRepeat)); setIf("ecciRepeat", scanRepeat); setIf("impRepeat", scanRepeat); setIf("pcRepeat", scanRepeat); }
-  if(scanAcross){ ["roll","sheeter","folder"].forEach(t=>setIf(t+"Across", scanAcross)); setIf("ecciAcross", scanAcross); setIf("impAcross", scanAcross); setIf("pcAcross", scanAcross); }
+  // Only the detected job type's section is filled (sheeter/folder fill their own repeat/across below).
+  const jt = jobType || "roll";
+  if(jt === "roll"){
+    if(scanRepeat){ setIf("rollRepeat", scanRepeat); setIf("ecciRepeat", scanRepeat); setIf("impRepeat", scanRepeat); setIf("pcRepeat", scanRepeat); }
+    if(scanAcross){ setIf("rollAcross", scanAcross); setIf("ecciAcross", scanAcross); setIf("impAcross", scanAcross); setIf("pcAcross", scanAcross); }
+  }else if(jt === "folder"){
+    if(scanRepeat) setIf("folderRepeat", scanRepeat);
+    if(scanAcross) setIf("folderAcross", scanAcross);
+  }
   setIf("jobQuantity", normalizeNumber(parsed.totalQuantity ?? parsed.total_quantity ?? parsed.quantity));
   setIf("salesQuantity", normalizeNumber(parsed.salesQuantity ?? parsed.sales_quantity));
   setIf("crossPerfTPI", parsed.crossPerfTPI ?? parsed.cross_perf_tpi ?? null);
