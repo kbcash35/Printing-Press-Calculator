@@ -2730,12 +2730,13 @@ materialThickness must be the total construction caliper expressed in inches as 
 }
 
 function deriveDocketNumber(explicit, productionOrder){
-  const clean = v => String(v ?? "").trim();
-  const e = clean(explicit).replace(/[^0-9A-Za-z]/g,"");
+  const clean = v => String(v ?? "").trim().replace(/[^0-9A-Za-z]/g,"").toUpperCase();
+  const po = clean(productionOrder), e = clean(explicit);
+  // "D201455963" -> "1455963" (drop D + the 2-digit prefix). The production order wins when it's readable.
+  if(/^D\d{9}$/.test(po)) return po.slice(3);
+  if(/^D\d{9}$/.test(e)) return e.slice(3);
+  if(/^20\d{7}$/.test(e)) return e.slice(2);          // "201455963" -> "1455963"
   if(e) return e;
-  const po = clean(productionOrder).replace(/[^0-9A-Za-z]/g,"");
-  if(!po) return "";
-  // Drop the first 3 characters: "D201371660" -> "1371660".
   return po.length > 3 ? po.slice(3) : po;
 }
 
@@ -3286,13 +3287,18 @@ Required JSON schema:
   "notes": string[] | null,
   "rollDirection": string | null,
   "jobType": string | null,
+  "salesUnit": string | null,
   "group": string | null,
   "materialSpecCode": string | null,
   "materialDescription": string | null,
-  "materialThickness": number | null
+  "materialThickness": number | null,
+  "jobDescriptionText": string | null
 }
 
 Strict rules:
+0. jobDescriptionText: copy the ENTIRE "Job description" section WORD FOR WORD, every line, in order, joined with newlines
+   (Label Size, Stock, Die(s), perfs, "Folded Every…", Colour, Prepress, Bindery, Carton Code, quantities — everything).
+   Also include the "Sales quantity" line (e.g. "Sales quantity: 75 CT2000"). Do not summarise or skip lines. This is required.
 1. repeatLength must come from Carrier Depth / Depth / Repeat Depth only.
    - Prefer Carrier Depth if visible.
    - On a "Carrier Size: X\" wide x Y\" depth" line, repeatLength is the DEPTH value Y.
@@ -3305,7 +3311,8 @@ Strict rules:
    - Look for "Quantity", "Total Quantity", "Order Qty", "Total Qty", "Finished Qty", "Total Labels".
    - Strip commas. "320,000" -> 320000.
    - This is the grand total, not the per-roll amount.
-4. finishedRollQuantity is the labels PER finished roll (the put-up / roll size).
+4. finishedRollQuantity is the labels PER finished roll (the put-up / roll size). ONLY for roll jobs.
+   - A "CT" unit is CARTONS, not rolls: "Sales quantity: 75 CT2000" means 2,000 labels per carton -> labelsPerCarton 2000, finishedRollQuantity null.
    - Look for "Per Roll", "Roll Qty", "/ roll", "Labels per Roll", "Rewind Qty", "M/Roll", "5000/ roll" -> 5000.
    - The unit code after Sales quantity also gives it: "Sales quantity: 105 RL5000" -> 5000. "RL2500" -> 2500.
    - Strip commas.
@@ -3345,8 +3352,9 @@ Strict rules:
    - Capture each separate instruction as its own array entry. Omit pure material/size lines already captured elsewhere. If none, return [].
 7d. rollDirection is the roll/rewind direction.
    - Look for "Roll Direction", e.g. "Roll Direction # 1" -> "1". Return just the number/letter if clear, otherwise the full text.
+7d-ii. salesUnit is the unit code after the Sales quantity, exactly as printed, e.g. "RL5000", "CT2000", "CT500".
 7e. jobType: return EXACTLY one of "roll", "sheeter", or "folder".
-   - "folder" (fan-fold) signals: the words "Fanfold"/"Fanfolded"/"folded"/"folds per pack"/"folds per ctn"/"fold sheet", "keep on L2 for folding", a Group ending in "-F" (e.g. "DLabel-F"), or fold-related cartoning. If ANY fold signal is present, return "folder".
+   - "folder" (fan-fold) signals: "Folded Every 12\"" / "Folded Every X In Packs Of N", "Send to Bindery" with folding, the words "Fanfold"/"Fanfolded"/"folded"/"folds per pack"/"folds per ctn"/"fold sheet", "keep on L2 for folding", a Group ending in "-F" (e.g. "DLabel-F"), or fold-related cartoning. If ANY fold signal is present, return "folder".
    - "roll" signals: "/ roll", "RL####", "Roll Direction", "Rewind", a "Core code" line, "M/Roll", or a Group ending in "-R".
    - "sheeter" signals: a "Sheeter:" die/line, "Label Sheet size" or "Carrier Sheet size", "sheets", "sheeted", "chipboard every N sheets", sheet counts, or a carton/UOM like "CT500" (and NOT fanfolded).
    - Fold signals win over roll/sheet signals. If still unclear, return "roll".
@@ -3438,7 +3446,9 @@ Rules:
       const ocrText = await ocrImageToText(file,(pct)=>busy("Reading on device " + pct + "%..."));
       busy("Parsing...");
       if(!ocrText || ocrText.replace(/\s/g,"").length < 12) throw new Error("OCR text too short");
-      return callModel([{text: promptText + "\n\nThe following text was OCR-scanned on-device from a printing docket and may contain minor OCR errors. Parse it:\n\n" + ocrText}]);
+      const r = await callModel([{text: promptText + "\n\nThe following text was OCR-scanned on-device from a printing docket and may contain minor OCR errors. Parse it:\n\n" + ocrText}]);
+      if(r && r.parsed && !r.parsed.rawText) r.parsed.rawText = ocrText;
+      return r;
     };
     // Did the OCR pass actually find anything we can use? If not, we fall back to the image.
     const hasUsableDocket = (p)=>{
@@ -3536,6 +3546,7 @@ Rules:
           const sPack = normalizeNumber(parsed.labelsPerPack ?? parsed.labels_per_pack) || sx.labelsPerPack;
           const sPpc = normalizeNumber(parsed.packsPerCarton ?? parsed.packs_per_carton) || sx.packsPerCarton;
           let sBox = normalizeNumber(parsed.labelsPerCarton ?? parsed.labels_per_carton) || sx.labelsPerCarton;
+          if(!sBox && sx.cartonUnit) sBox = sx.cartonUnit;
           if(!sBox && sPack && sPpc) sBox = sPack * sPpc;
           if(sBox) setVal("sheeterLabelsPerCarton", sBox);
           if(sPack) setVal("sheeterPackLabels", sPack);
@@ -3545,13 +3556,18 @@ Rules:
       if(tab === "folder"){
         // Fan-fold size is the fold repeat (e.g. "Fanfold @ 10\"" or "Fanfolded @ 12.25\"").
         const fx = foldFromText(scanTextBlob(parsed));
-        const foldSize = normalizeNumber(parsed.fanfoldSize ?? parsed.fanfold_size ?? parsed.foldSize ?? parsed.fold_size) || fx.fanfold || normalizeNumber(parsed.cutoff);
+        let foldSize = normalizeNumber(parsed.fanfoldSize ?? parsed.fanfold_size ?? parsed.foldSize ?? parsed.fold_size) || fx.fanfold || normalizeNumber(parsed.cutoff);
+        if(!foldSize){ const g = normalizeNumber(parsed.gearTeeth ?? parsed.gear_teeth) || fx.gear; if(g >= 40) foldSize = Math.round(g / 8 * 1000) / 1000; }   // gear = fanfold x 8
         if(foldSize) setVal("folderFoldSize", foldSize);
         // Gear size is ALWAYS Fanfold Size x 8 (it isn't printed on the docket) — compute it.
         updateFolderGear(true);
 
         // B.Bunch counter inputs, if the docket states them.
         let lpf  = normalizeNumber(parsed.labelsPerFoldSheet ?? parsed.labels_per_fold_sheet ?? parsed.labelsPerFold) || fx.labelsPerFold;
+        if(!normalizeNumber((document.getElementById("folderRepeat") || {}).value)){
+          const rr = fx.repeat || fx.labelDepth;
+          if(rr){ setVal("folderRepeat", rr); setVal("folderImpRepeat", rr); }
+        }
         // Not stated? A fold is two panels, each fanfold ÷ repeat labels long:
         // labels per fold = 2 x fanfold ÷ repeat (folded every 12", 12" repeat -> 2; 10" fanfold, 2" repeat -> 10).
         const depth = normalizeNumber(parsed.repeatLength ?? parsed.repeat_length) || normalizeNumber((document.getElementById("folderRepeat") || {}).value)
@@ -3560,6 +3576,11 @@ Rules:
         let fpp  = normalizeNumber(parsed.foldsPerPack ?? parsed.folds_per_pack) || fx.foldsPerPack;
         let pack = normalizeNumber(parsed.labelsPerPack ?? parsed.labels_per_pack ?? parsed.packSize) || fx.labelsPerPack;
         if(!pack && fpp && lpf) pack = fpp * lpf;                       // 650 folds x 10 labels = 6,500 per pack
+        if(!pack){                                                        // carton "2,000 (2 packs x 1,000)" -> 1,000 per pack
+          const pb = normalizeNumber(parsed.labelsPerCarton ?? parsed.labels_per_carton) || fx.labelsPerCarton || fx.cartonUnit;
+          const pp = normalizeNumber(parsed.packsPerCarton ?? parsed.packs_per_carton) || fx.packsPerCarton;
+          if(pb && pp) pack = Math.round(pb / pp);
+        }
         if(!fpp && pack && lpf) fpp = Math.round(pack / lpf);         // 1,000 labels ÷ 1 per fold = 1,000 folds
         if(lpf)  setVal("bbLabelsPerFold", lpf);
         if(pack){ setVal("bbPackSize", pack); setVal("folderPackLabels", pack); }
@@ -3572,6 +3593,7 @@ Rules:
         let perBox = normalizeNumber(parsed.labelsPerCarton ?? parsed.labels_per_carton ?? parsed.labelsPerBox ?? parsed.labels_per_box) || fx.labelsPerCarton;
         const ppc = normalizeNumber(parsed.packsPerCarton ?? parsed.packs_per_carton) || fx.packsPerCarton;
         let perBoxWorked = false;
+        if(!perBox && fx.cartonUnit) perBox = fx.cartonUnit;                                 // "CT2000"
         if(!perBox && pack && ppc){ perBox = pack * ppc; perBoxWorked = true; }            // 2 packs x 1,000
         if(!perBox && acrossNow){
           if(fpp && lpf){ perBox = fpp * lpf * acrossNow; perBoxWorked = true; }
@@ -3625,6 +3647,9 @@ Rules:
         jobType: String(parsed.jobType ?? parsed.job_type ?? "").toLowerCase()
       };
 
+      // "CT2000" is a carton count, never a finished roll size.
+      { const ct = foldFromText(scanTextBlob(parsed)).cartonUnit;
+        if(ct && docketData.finishedRollQuantity === ct && !/\bRL\s*\d/i.test(scanTextBlob(parsed))) docketData.finishedRollQuantity = null; }
       // A job is treated as a ROLL job if the AI says so, or if roll-only signals are present.
       const isRollJob = docketData.jobType.includes("roll")
         || (!!docketData.rollDirection)
@@ -4115,6 +4140,7 @@ function saveRunSheets(){ safeSet(RUNSHEET_KEY, JSON.stringify(runSheets)); }
 function normDocketKey(v){
   let k = String(v || "").trim().toUpperCase().replace(/\s+/g, "");
   if(/^D\d{9}$/.test(k)) k = k.slice(3);
+  else if(/^20\d{7}$/.test(k)) k = k.slice(2);
   return k;
 }
 function runKeyNow(){ return normDocketKey((document.getElementById("docketNumber") || {}).value); }
@@ -5469,6 +5495,8 @@ function qeNext(fromEl){
 function qeDone(){
   document.activeElement && document.activeElement.blur && document.activeElement.blur();
   if(qeTypeSel === "folder"){
+    const fs = document.getElementById("qeFoldSheet"), fg = typeof folderFoldGuess === "function" ? folderFoldGuess() : null;
+    if(fs && !String(fs.value).trim() && fg){ fs.value = String(fg); qeApply("qeFoldSheet"); }
     const fb = document.getElementById("qeFolderBox"), g = typeof folderBoxGuess === "function" ? folderBoxGuess() : null;
     if(fb && !String(fb.value).trim() && g){ fb.value = String(g); qeApply("qeFolderBox"); qeProgress(); }
   }
@@ -6129,7 +6157,17 @@ function setNotesFromScan(value){
 // Decide which tab a scanned docket belongs to.
 function detectJobType(parsed){
   const explicit = String(parsed.jobType ?? parsed.job_type ?? "").toLowerCase();
+  // Fold wording anywhere on the docket beats whatever type the scanner guessed
+  // ("Folded Every 12\"", "Fanfold @ 10\"", "folds per pack", "fold sheet").
+  const all = (typeof scanTextBlob === "function" ? scanTextBlob(parsed) : "") + " " + String(parsed.group || "");
+  if(/fan\s*-?\s*fold|\bfolded\b|fold(?:ed)?\s+every|folds?\s+per|fold\s+sheet|for\s+folding|dlabel-?f\b|\bz-?fold\b/i.test(all) ||
+     parsed.fanfoldSize || parsed.labelsPerFoldSheet || parsed.foldsPerPack) return "folder";
   if(/fold/.test(explicit)) return "folder";
+  { const fx = typeof foldFromText === "function" ? foldFromText(all) : {};
+    if(fx.cartonUnit && !fx.rollUnit){
+      if(/sheet/.test(explicit)) return "sheeter";
+      if(!/roll|rewind/.test(String(parsed.notes || "") + " " + String(parsed.rollDirection || ""))) return "sheeter";
+    } }
   if(/sheet/.test(explicit)) return "sheeter";
   if(/roll|rewind/.test(explicit)) return "roll";
   // Look across all available text for fold/roll/sheet signals.
@@ -6163,7 +6201,7 @@ function isColorJob(colors){
 // Everything the model returned as text, so fold details can be found even if a field came back empty.
 function scanTextBlob(parsed){
   const j = v => Array.isArray(v) ? v.join(" \n ") : String(v || "");
-  return [parsed.rawText, parsed.raw_text, j(parsed.notes), j(parsed.dies), parsed.materialDescription, parsed.stockInfo].map(j).join(" \n ");
+  return [parsed.jobDescriptionText, parsed.job_description_text, parsed.rawText, parsed.raw_text, j(parsed.notes), j(parsed.dies), parsed.materialDescription, parsed.stockInfo, parsed.salesUnit, parsed.sales_unit].map(j).join(" \n ");
 }
 function foldFromText(blob){
   const s = String(blob || "");
@@ -6174,16 +6212,25 @@ function foldFromText(blob){
   out.labelsPerPack = num(s.match(/packs?\s+of\s+(\d[\d,]*)/i)) ||
                       num(s.match(/(\d[\d,]*)\s*(?:labels\s*)?(?:per|\/)\s*pack\b/i)) ||
                       num(s.match(/(?:wrapped|banded|paper\s*band(?:ed)?|bundled|poly\s*bag(?:ged)?)\s+in\s+(\d[\d,]*)\s*['’]?s\b/i));
-  out.packsPerCarton = num(s.match(/\(\s*(\d{1,3})\s*packs?\s*x\s*[\d,]+\s*\)/i)) || num(s.match(/\(\s*[\d,]+\s*x\s*(\d{1,3})\s*\)/i));
+  out.packsPerCarton = num(s.match(/\(\s*(\d{1,3})\s*packs?\s*x\s*[\d,]+\s*\)/i)) || num(s.match(/\(\s*[\d,]+\s*x\s*(\d{1,3})\s*\)/i)) ||
+                       num(s.match(/(\d{1,3})\s*packs?\s*(?:per|\/)\s*(?:carton|ctn|box)/i));
+  out.stockLine = (s.match(/\bstock\s*:\s*([^\n]{4,120})/i) || [])[1] || null;
   out.labelDepth = num(s.match(/label\s*size[^\n]*?x\s*(\d+(?:\.\d+)?)\s*["″”]?\s*depth/i));
   out.countInPacks = /\bbindery\b|paper\s*band|\bband(?:s|ed)?\b|shrink\s*wrap|\bwrap(?:ped)?\b|split\s+packs|in\s+packs\s+of/i.test(s);
   out.foldsPerPack = num(s.match(/(\d[\d,]*)\s*folds?\s*(?:per|\/)\s*(?:pack|bag)/i));
-  out.labelsPerFold = num(s.match(/(\d{1,3})\s*labels?\s*(?:per|\/)\s*fold/i));
+  out.labelsPerFold = num(s.match(/(\d{1,3})\s*labels?\s*(?:per|\/)\s*fold/i)) || num(s.match(/labels?\s*per\s*fold(?:\s*sheet)?\s*(?:is|:|=)?\s*(\d{1,3})/i));
+  out.gear = num(s.match(/\b(\d{2,3})\s*teeth\b/i)) || num(s.match(/\b(\d{2,3})\s*T\b(?![a-z])/));
   out.crossOn = num(s.match(/cross\s*-?\s*perf\s+on\s+(?:the\s+)?fold\s*(?:@|at|:)?\s*(\d+(?:\.\d+)?)/i));
   out.crossOff = num(s.match(/cross\s*-?\s*perf\s+off\s+(?:the\s+)?fold\s*(?:@|at|:)?\s*(\d+(?:\.\d+)?)/i));
   out.labelsPerCarton = num(s.match(/carton\s*code[^\n]*?\)\s*[\/–—-]\s*(\d[\d,]{3,})\s*\(/i)) ||
                         num(s.match(/(\d[\d,]{3,})\s*(?:labels\s*)?(?:per|\/)\s*(?:carton|ctn|box)\b/i));
-  Object.keys(out).forEach(k => { if(k !== "countInPacks" && !(out[k] > 0)) out[k] = null; });
+  out.cartonUnit = num(s.match(/\bCT\s*(\d[\d,]{1,})\b/));     // "CT2000" = 2,000 labels per carton
+  out.rollUnit = /\bRL\s*\d/i.test(s);
+  // Repeat: "96 Teeth (12\")", "12.25\" repeat", carrier "x 2\" depth"
+  out.repeat = num(s.match(/teeth\s*\(\s*(\d+(?:\.\d+)?)\s*["″”]?\s*\)/i)) ||
+               num(s.match(/(\d+(?:\.\d+)?)\s*["″”]?\s*repeat\b/i)) ||
+               num(s.match(/carrier\s*size[^\n]*?x\s*(\d+(?:\.\d+)?)\s*["″”]?\s*depth/i));
+  Object.keys(out).forEach(k => { if(!["countInPacks","rollUnit","stockLine"].includes(k) && !(out[k] > 0)) out[k] = null; });
   return out;
 }
 function acrossFromText(blob){
@@ -6199,13 +6246,15 @@ function fillJobInfo(parsed, fields, jobType){
     parsed.stockInfo ?? parsed.stock ?? parsed.material ?? parsed.materialDescription ?? parsed.material_description ??
     parsed.paperSpec ?? parsed.extractedPaperSpec ?? lastMaterialDescription ?? ""
   ).trim();
+  // A size ("2\" Depth.") is not a stock — use the docket's "Stock:" line instead.
+  { const sl = foldFromText(scanTextBlob(parsed)).stockLine;
+    if(sl && (!aniloxStock || /^[\d.\s"″”x×]*(?:wide|depth|deep)?\.?$/i.test(aniloxStock) || /\bdepth\b/i.test(aniloxStock) && aniloxStock.length < 14)) aniloxStock = sl.trim(); }
   // Substrate class: prefer the AI's enum, else classify the stock string locally.
   aniloxSubstrateClass = normSubstrateClass(parsed.substrateClass) || classifySubstrateLocal(aniloxStock) || DEFAULT_SUBSTRATE_CLASS;
   const setIf=(id,v)=>{ const el=document.getElementById(id); if(el && v!==null && v!==undefined && v!=="") { el.value=v; el.dispatchEvent(new Event("input",{bubbles:true})); } };
   setIf("stockInfo", aniloxStock);
   const po = parsed.productionOrder ?? parsed.production_order ?? null;
-  let docket = parsed.docketNumber ?? parsed.docket_number ?? null;
-  if(!docket && po && typeof deriveDocketNumber === "function") docket = deriveDocketNumber(po);
+  let docket = deriveDocketNumber(parsed.docketNumber ?? parsed.docket_number ?? null, po);
   setIf("docketNumber", docket || po);
   setIf("customerName", parsed.customer ?? parsed.customerName ?? parsed.customer_name ?? parsed.client ?? null);
   // Repeat / Across feed the End of Job Count on every tab.
@@ -7268,6 +7317,11 @@ function renderSetupThickness(){
     '<span class="su-thick-v"><b>' + (Math.round(mil * 100) / 100) + ' mil</b>' + (est ? ' · estimated from stock — check it if counters run off' : (srcTxt && srcTxt !== "—" ? ' · ' + escHtml(srcTxt) : '')) + '</span>';
 }
 // Folder: labels per box can be worked out as labels per pack (folds x labels per fold) x across.
+function folderFoldGuess(){
+  const n = id => rnum(((document.getElementById(id) || {}).value || ""));
+  const ff = n("qeFanfold") || n("folderFoldSize"), rp = n("qeRepeat") || n("folderRepeat");
+  return ff > 0 && rp > 0 && ff >= rp ? Math.round(2 * ff / rp) : null;
+}
 function folderBoxGuess(){
   const n = id => rnum(((document.getElementById(id) || {}).value || ""));
   const pack = n("qePack") || n("bbPackSize"), across = n("qeAcross") || n("folderAcross");
@@ -7278,6 +7332,8 @@ function renderSetupCheck(need){
   if(!b) return;
   const fb = document.getElementById("qeFolderBox");
   if(fb){ const g = folderBoxGuess(); fb.placeholder = g ? formatNumber(g) + " (pack × across)" : "e.g. 4000"; }
+  const fs = document.getElementById("qeFoldSheet");
+  if(fs){ const g = folderFoldGuess(); fs.placeholder = g ? g + " (2 × fanfold ÷ repeat)" : "e.g. 4"; }
   renderSrcTags();
   renderSetupThickness();
   const missing = (need || []).filter(id => { const el = document.getElementById(id); return !(el && String(el.value).trim()); });
