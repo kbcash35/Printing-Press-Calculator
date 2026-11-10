@@ -3354,7 +3354,7 @@ Strict rules:
    - Look for "Fanfold @ X\"", "Fanfolded @ X\"" or "Folded Every X\"" (e.g. "Folded Every 12\" In Packs Of 1000" -> 12) (e.g. "Fanfold @ 10\" (650 folds per pack / 10 labels per fold)" -> 10, "Fanfolded @ 12.25\"" -> 12.25), or the Prepress repeat (e.g. "12.25\" repeat & 98 teeth" -> 12.25).
    - This is usually larger than the label depth. e.g. label depth 6", cross-perf 6.125", but fanfold 12.25". Prefer the "Fanfolded @" value.
    - If no fanfold value is present, return null.
-7e-ii. labelsPerFoldSheet is the number of labels on one fold sheet, e.g. "# of labels per fold sheet is 4" -> 4, "10 labels per fold" -> 10. If absent, return null.
+7e-ii. labelsPerFoldSheet is the number of labels on one fold sheet, e.g. "# of labels per fold sheet is 4" -> 4, "10 labels per fold" -> 10. If absent, return null (the app works it out as 2 x fanfold ÷ repeat).
 7e-iii. labelsPerPack is the labels per pack/bag, e.g. "poly bag in 2,000's" or "packs of 2,000" -> 2000. If the docket gives folds and labels per fold instead (e.g. "650 folds per pack / 10 labels per fold"), return folds x labels per fold (650 x 10 -> 6500). If absent, return null.
 7e-iii-b. foldsPerPack is the number of folds in one pack, e.g. "650 folds per pack" -> 650. If absent, return null.
 7e-iii-b2. Packs: labelsPerPack also comes from "In Packs Of 1000" -> 1000, "packs of 1,000", "1,000/pack", "wrapped in 500's", "paper band in 250's", "banded in 1,000's", "poly bag in 2,000's".
@@ -3552,9 +3552,11 @@ Rules:
 
         // B.Bunch counter inputs, if the docket states them.
         let lpf  = normalizeNumber(parsed.labelsPerFoldSheet ?? parsed.labels_per_fold_sheet ?? parsed.labelsPerFold) || fx.labelsPerFold;
-        // Not stated? One fold holds fanfold ÷ label depth labels (folded every 12", 12" labels -> 1 per fold).
-        const depth = normalizeNumber(parsed.labelDepth ?? parsed.label_depth) || fx.labelDepth;
-        if(!lpf && foldSize && depth && foldSize >= depth) lpf = Math.round(foldSize / depth);
+        // Not stated? A fold is two panels, each fanfold ÷ repeat labels long:
+        // labels per fold = 2 x fanfold ÷ repeat (folded every 12", 12" repeat -> 2; 10" fanfold, 2" repeat -> 10).
+        const depth = normalizeNumber(parsed.repeatLength ?? parsed.repeat_length) || normalizeNumber((document.getElementById("folderRepeat") || {}).value)
+                      || normalizeNumber(parsed.labelDepth ?? parsed.label_depth) || fx.labelDepth;
+        if(!lpf && foldSize && depth && foldSize >= depth) lpf = Math.round(2 * foldSize / depth);
         let fpp  = normalizeNumber(parsed.foldsPerPack ?? parsed.folds_per_pack) || fx.foldsPerPack;
         let pack = normalizeNumber(parsed.labelsPerPack ?? parsed.labels_per_pack ?? parsed.packSize) || fx.labelsPerPack;
         if(!pack && fpp && lpf) pack = fpp * lpf;                       // 650 folds x 10 labels = 6,500 per pack
@@ -3562,6 +3564,7 @@ Rules:
         if(lpf)  setVal("bbLabelsPerFold", lpf);
         if(pack){ setVal("bbPackSize", pack); setVal("folderPackLabels", pack); }
         if(fpp){ setVal("rcFoldsPerPack", fpp); setVal("folderPackFolds", fpp); }
+        if(lpf) setVal("folderPackPerFold", lpf);
         if(typeof calcBBunch === "function") calcBBunch();
         // Labels per box: the carton line (e.g. "/ 26,000 (6,500 x 4) /"); if it can't be read,
         // folds per pack x labels per fold x across (650 x 10 x 4 = 26,000).
@@ -6840,7 +6843,14 @@ function renderPlanChip(){
 /* ---- Packs: folder and sheeter jobs can be counted in packs instead of boxes ---- */
 function countByPacks(pre){ return ((document.getElementById(pre + "CountBy") || {}).value || "") === "packs"; }
 function labelsPerFoldFor(pre){
-  return pre === "folder" ? rnum(((document.getElementById("bbLabelsPerFold") || {}).value || "")) : null;
+  if(pre !== "folder") return null;
+  const n = id => rnum(((document.getElementById(id) || {}).value || ""));
+  const typed = n("folderPackPerFold");
+  if(typed > 0) return typed;
+  const setup = n("bbLabelsPerFold");
+  if(setup > 0) return setup;
+  const labels = n("folderPackLabels"), folds = n("folderPackFolds");
+  return labels > 0 && folds > 0 ? labels / folds : null;   // labels per pack ÷ folds per pack
 }
 // Labels per pack: typed, or folds per pack x labels per fold.
 function packLabelsFor(pre){
@@ -6873,7 +6883,12 @@ function renderCountMode(pre){
   const lpf = labelsPerFoldFor(pre);
   if(pf){
     const lab2 = rnum((pl || {}).value);
-    pf.placeholder = lab2 > 0 && lpf > 0 ? formatNumber(Math.round(lab2 / lpf)) + " (labels ÷ " + lpf + " per fold)" : "e.g. 1000";
+    pf.placeholder = lab2 > 0 && lpf > 0 ? formatNumber(Math.round(lab2 / lpf)) + " (labels ÷ " + lpf + " per fold)" : "e.g. 500";
+  }
+  const pp = document.getElementById(pre + "PackPerFold");
+  if(pp){
+    const lab3 = rnum((pl || {}).value), f3 = rnum((pf || {}).value);
+    pp.placeholder = lab3 > 0 && f3 > 0 ? String(+(lab3 / f3).toFixed(2)) + " (labels ÷ folds)" : "e.g. 2";
   }
   if(pl){
     const f = rnum((pf || {}).value);
@@ -6935,8 +6950,10 @@ function buildCount(){
           '<div class="ct-sec" id="' + pre + 'PackSec" hidden><h3 class="ct-h">Packs</h3>' +
             '<div class="ct-grid">' +
               '<div><label for="' + pre + 'PackLabels">Labels per pack</label><input id="' + pre + 'PackLabels" inputmode="decimal" placeholder="e.g. 1000"></div>' +
-              (pre === "folder" ? '<div><label for="' + pre + 'PackFolds">Folds per pack</label><input id="' + pre + 'PackFolds" inputmode="decimal" placeholder="e.g. 1000"></div>' : '') +
+              (pre === "folder" ? '<div><label for="' + pre + 'PackFolds">Folds per pack</label><input id="' + pre + 'PackFolds" inputmode="decimal" placeholder="e.g. 500"></div>' +
+                '<div><label for="' + pre + 'PackPerFold">Labels per fold</label><input id="' + pre + 'PackPerFold" inputmode="decimal" placeholder="e.g. 2"></div>' : '') +
             '</div>' +
+            (pre === "folder" ? '<p class="ct-ra" style="margin-top:6px">Any two work out the third: labels per pack = folds per pack × labels per fold.</p>' : '') +
             '<label for="' + pre + 'TotalPacks">Packs done this shift</label>' +
             '<input id="' + pre + 'TotalPacks" inputmode="decimal" placeholder="e.g. 40" style="font-size:22px;font-weight:800;">' +
             '<div class="ct-ra" id="' + pre + 'PackTotalNote"></div>' +
@@ -6971,9 +6988,14 @@ function buildCount(){
     const g = b.closest("[data-countby-for]");
     if(g) setCountBy(g.dataset.countbyFor, b.dataset.countby);
   });
-  ["sheeter","folder"].forEach(pre => ["PackLabels","PackFolds"].forEach(suf => {
-    const x = document.getElementById(pre + suf); if(x) x.addEventListener("input", () => renderCountMode(pre));
+  ["sheeter","folder"].forEach(pre => ["PackLabels","PackFolds","PackPerFold"].forEach(suf => {
+    const x = document.getElementById(pre + suf); if(x) x.addEventListener("input", () => { renderCountMode(pre); liveShiftSoon(pre); });
   }));
+  const ppf = document.getElementById("folderPackPerFold");
+  if(ppf) ppf.addEventListener("change", () => {
+    const v = rnum(ppf.value), bb = document.getElementById("bbLabelsPerFold");
+    if(v > 0 && bb){ bb.value = String(v); bb.dispatchEvent(new Event("input", { bubbles:true })); if(typeof qeRefresh === "function") qeRefresh(); }
+  });
   const list = document.getElementById("rollTallyList");
   if(list && window.MutationObserver) new MutationObserver(() => liveShiftSoon("roll")).observe(list, { childList:true, subtree:true });
   ["extraAmount"].forEach(id => { const x = document.getElementById(id); if(x) x.addEventListener("input", () => liveShiftSoon("roll")); });
@@ -7021,6 +7043,9 @@ function renderCountBits(pre){
     const pf = document.getElementById(pre + "PackFolds");
     const scannedFolds = rnum(v("rcFoldsPerPack"));
     if(pf && !v(pre + "PackFolds") && scannedFolds > 0 && document.activeElement !== pf) pf.value = String(scannedFolds);
+    const ppf = document.getElementById(pre + "PackPerFold");
+    const setupLpf = pre === "folder" ? rnum(v("bbLabelsPerFold")) : null;
+    if(ppf && !v(pre + "PackPerFold") && setupLpf > 0 && document.activeElement !== ppf) ppf.value = String(setupLpf);
   }
   if(pre === "roll"){
     const q = document.getElementById("rollQtyInput");
